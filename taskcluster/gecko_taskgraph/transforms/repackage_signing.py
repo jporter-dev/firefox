@@ -121,12 +121,15 @@ def make_repackage_signing_description(config, jobs):
         for artifact in sorted(dep_job.attributes.get("release_artifacts")):
             basename = os.path.basename(artifact)
             if basename in SIGNING_FORMATS:
-                upstream_artifacts.append({
+                artifact_entry = {
                     "taskId": {"task-reference": f"<{dep_kind}>"},
                     "taskType": "repackage",
                     "paths": [artifact],
-                    "formats": SIGNING_FORMATS[os.path.basename(artifact)],
-                })
+                    "formats": SIGNING_FORMATS[basename],
+                }
+                if basename == "target.installer.msi":
+                    artifact_entry["authenticode_comment"] = "Firefox Installer"
+                upstream_artifacts.append(artifact_entry)
 
         task = {
             "label": label,
