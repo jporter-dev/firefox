@@ -18,6 +18,8 @@ ChromeUtils.defineESModuleGetters(lazy, {
     "moz-src:///toolkit/components/ipprotection/IPProtectionService.sys.mjs",
   IPProtectionStates:
     "moz-src:///toolkit/components/ipprotection/IPProtectionService.sys.mjs",
+  setTimeout: "resource://gre/modules/Timer.sys.mjs",
+  clearTimeout: "resource://gre/modules/Timer.sys.mjs",
 });
 
 ChromeUtils.defineLazyGetter(lazy, "logConsole", () =>
@@ -29,12 +31,16 @@ ChromeUtils.defineLazyGetter(lazy, "logConsole", () =>
   })
 );
 
+const RESTART_BASE_DELAY_MS = 1000;
+const RESTART_MAX_DELAY_MS = 30000;
+
 /**
  * Keeps the proxy connection alive on enterprise builds where the
  * AccessConnector policy is active. Unlike IPPAutoStart, this class:
  *
- *  - Recovers from ERROR states by stopping and restarting immediately.
- *  - Restarts immediately when the proxy stops unexpectedly.
+ *  - Recovers from ERROR states by stopping and requesting a restart.
+ *  - Restarts when the proxy stops unexpectedly.
+ *  - Restarts are deferred and backed off so that repeated failures don't spin the main thread.
  *  - Switches to a new server when the server list is updated.
  *
  * Because this is policy-driven there is no user-facing toggle; the proxy
@@ -44,6 +50,8 @@ class IPPAlwaysOnSingleton {
   #initialized = false;
   #shouldBeRunning = false;
   #startPending = false;
+  #restartTimer = 0;
+  #restartDelayMs = 0;
 
   constructor() {
     this.handleServiceEvent = this.#handleServiceEvent.bind(this);
@@ -91,6 +99,7 @@ class IPPAlwaysOnSingleton {
     this.#initialized = false;
     this.#shouldBeRunning = false;
     this.#startPending = false;
+    this.#cancelStartRequest();
 
     lazy.IPProtectionService.removeEventListener(
       "IPProtectionService:StateChanged",
@@ -106,17 +115,84 @@ class IPPAlwaysOnSingleton {
     );
   }
 
-  #tryStart() {
-    if (this.#startPending) {
-      return;
-    }
+  /**
+   * Returns true if a start request would be blocked by the current state of
+   * the service, proxy, or server list.
+   */
+  #isStartBlocked() {
     if (
       lazy.IPPProxyManager.state === lazy.IPPProxyStates.ACTIVE &&
       lazy.IPPProxyManager.channelFilter()?.proxyInfo
     ) {
+      return true;
+    }
+    return !lazy.IPProtectionServerlist.hasList;
+  }
+
+  /**
+   * Requests a start of the proxy, with exponential backoff on repeated failures.
+   *
+   * @param {boolean} [resetBackoff]
+   *   Reset the backoff delay to the base value.
+   */
+  #requestStart(resetBackoff = false) {
+    if (resetBackoff) {
+      this.#cancelStartRequest();
+    }
+    if (this.#startPending || this.#restartTimer) {
       return;
     }
-    if (!lazy.IPProtectionServerlist.hasList) {
+    if (this.#isStartBlocked()) {
+      return;
+    }
+
+    const delay = this.#restartDelayMs;
+    this.#restartDelayMs = Math.min(
+      this.#restartDelayMs ? this.#restartDelayMs * 2 : RESTART_BASE_DELAY_MS,
+      RESTART_MAX_DELAY_MS
+    );
+    this.#restartTimer = lazy.setTimeout(() => {
+      this.#restartTimer = 0;
+      if (!this.#shouldBeRunning || !this.alwaysOnEnabled) {
+        return;
+      }
+      this.#tryStart();
+    }, delay);
+  }
+
+  #cancelStartRequest() {
+    if (this.#restartTimer) {
+      lazy.clearTimeout(this.#restartTimer);
+      this.#restartTimer = 0;
+    }
+    this.#restartDelayMs = 0;
+  }
+
+  /**
+   * Stops the proxy and, once it settles, requests a fresh start.
+   *
+   * @param {boolean} [resetBackoff] Reset the backoff delay to the base value.
+   */
+  #stopThenRestart(resetBackoff = false) {
+    lazy.IPPProxyManager.stop(false).then(
+      () => {
+        if (this.#shouldBeRunning && this.alwaysOnEnabled) {
+          this.#requestStart(resetBackoff);
+        }
+      },
+      e => lazy.logConsole.error("Failed to stop proxy:", e)
+    );
+  }
+
+  /**
+   * Attempts to start the proxy immediately, if not already
+   * pending and not blocked by the current state.
+   */
+  #tryStart() {
+    if (this.#startPending) {
+      return;
+    }
+    if (this.#isStartBlocked()) {
       return;
     }
     lazy.logConsole.info("Starting proxy");
@@ -124,6 +200,15 @@ class IPPAlwaysOnSingleton {
     lazy.IPPProxyManager.start(
       false,
       PrivateBrowsingUtils.permanentPrivateBrowsing
+    ).then(
+      result => {
+        if (!result?.started) {
+          this.#startPending = false;
+        }
+      },
+      () => {
+        this.#startPending = false;
+      }
     );
   }
 
@@ -139,7 +224,7 @@ class IPPAlwaysOnSingleton {
 
       case lazy.IPProtectionStates.READY:
         this.#shouldBeRunning = true;
-        this.#tryStart();
+        this.#requestStart(true);
         break;
 
       default:
@@ -158,23 +243,18 @@ class IPPAlwaysOnSingleton {
     switch (lazy.IPPProxyManager.state) {
       case lazy.IPPProxyStates.ACTIVE:
         this.#startPending = false;
+        this.#cancelStartRequest();
         break;
 
       case lazy.IPPProxyStates.READY:
         this.#startPending = false;
-        this.#tryStart();
+        this.#requestStart();
         break;
 
       case lazy.IPPProxyStates.ERROR:
         this.#startPending = false;
-        lazy.IPPProxyManager.stop(false).then(
-          () => {
-            if (this.#shouldBeRunning && this.alwaysOnEnabled) {
-              this.#tryStart();
-            }
-          },
-          e => lazy.logConsole.error("Failed to stop proxy:", e)
-        );
+        // Repeated failures back off; don't reset the delay.
+        this.#stopThenRestart();
         break;
 
       default:
@@ -204,35 +284,22 @@ class IPPAlwaysOnSingleton {
         lazy.logConsole.debug("Switching to updated server");
         const { error } = lazy.IPPProxyManager.switch();
         if (error) {
-          lazy.IPPProxyManager.stop(false).then(
-            () => {
-              if (this.#shouldBeRunning && this.alwaysOnEnabled) {
-                this.#tryStart();
-              }
-            },
-            e => lazy.logConsole.error("Failed to stop proxy:", e)
-          );
+          // Fresh server list, reset backoff so the reconnect isn't delayed.
+          this.#stopThenRestart(true);
         }
         break;
       }
 
       case lazy.IPPProxyStates.ERROR:
-        // A fresh server list may resolve the error; stop and restart immediately.
+        // A fresh server list may resolve the error; reset backoff to retry promptly.
         if (this.#shouldBeRunning) {
-          lazy.IPPProxyManager.stop(false).then(
-            () => {
-              if (this.#shouldBeRunning && this.alwaysOnEnabled) {
-                this.#tryStart();
-              }
-            },
-            e => lazy.logConsole.error("Failed to stop proxy:", e)
-          );
+          this.#stopThenRestart(true);
         }
         break;
 
       case lazy.IPPProxyStates.READY:
-        if (this.#shouldBeRunning && !this.#startPending) {
-          this.#tryStart();
+        if (this.#shouldBeRunning) {
+          this.#requestStart(true);
         }
         break;
 
