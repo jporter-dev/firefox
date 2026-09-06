@@ -35,9 +35,9 @@ object SettingsAutofillSelectors : SelectorContainer {
 
     val AUTOFILL_ADDRESSES_TOGGLE =
         Selector(
-            strategy = SelectorStrategy.ESPRESSO_BY_ID,
-            value = "autofill_addresses_toggle",
-            description = "Autofill Addresses Toggle",
+            strategy = SelectorStrategy.ESPRESSO_BY_TEXT,
+            value = getStringResource(R.string.preferences_addresses_save_and_autofill_addresses_2),
+            description = "Save and fill addresses option",
             groups = setOf(Group.AUTOFILL_SETTINGS),
             readiness = PageReadinessProfiles.READY_CONTENT,
         )

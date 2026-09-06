@@ -46,8 +46,8 @@ object SettingsSavedPasswordsSelectors : SelectorContainer {
 
     val LOGINS_SECURITY_DIALOG_LATER_BUTTON =
         Selector(
-            strategy = SelectorStrategy.UIAUTOMATOR2_BY_TEXT,
-            value = getStringResource(R.string.logins_warning_dialog_later),
+            strategy = SelectorStrategy.UIAUTOMATOR2_BY_RAW_RES,
+            value = "android:id/button2",
             description = "Logins security dialog later button",
             groups = setOf(Group.LOGINS_SECURITY_DIALOG),
         )

@@ -77,6 +77,13 @@ class PageReadinessContract private constructor(private val rules: List<PageRead
     val declaredProfiles: Set<PageReadinessProfile>
         get() = rules.flatMapTo(mutableSetOf()) { it.profiles }
 
+    fun declaredSelectors(profile: PageReadinessProfile): Set<Selector> =
+        rules
+            .asSequence()
+            .filter { profile in it.profiles }
+            .flatMap { it.condition.declaredSelectors() }
+            .toCollection(linkedSetOf())
+
     fun withRule(rule: PageReadinessRule): PageReadinessContract = PageReadinessContract(rules + rule)
 
     fun evaluate(
@@ -131,6 +138,13 @@ class PageReadinessContract private constructor(private val rules: List<PageRead
         }
     }
 }
+
+private fun PageReadinessCondition.declaredSelectors(): Sequence<Selector> =
+    when (this) {
+        is PageReadinessCondition.Visible -> sequenceOf(selector)
+        is PageReadinessCondition.AllOf -> conditions.asSequence().flatMap { it.declaredSelectors() }
+        is PageReadinessCondition.AnyOf -> conditions.asSequence().flatMap { it.declaredSelectors() }
+    }
 
 private data class ConditionEvaluation(
     val satisfied: Boolean,

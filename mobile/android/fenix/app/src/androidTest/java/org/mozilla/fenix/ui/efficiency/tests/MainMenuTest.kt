@@ -509,13 +509,8 @@ class MainMenuTest : BaseTest() {
 
         // Remove it through Manage extensions -> the add-ons manager.
         on.browserPage.navigateToPage(genericURL.url.toString(), forceNavigation = true)
-        on.mainMenu
-            .navigateToPage()
-            .mozClick(MainMenuSelectors.EXTENSIONS_BUTTON_UIAUTOMATOR)
-            .mozClick(MainMenuSelectors.MANAGE_EXTENSIONS_BUTTON)
-        on.settingsAddonsManager
-            .removeInstalledExtension(addonTitle)
-            .mozClick(SettingsAddonsManagerSelectors.NAVIGATE_BACK_TOOLBAR_BUTTON)
+        on.mainMenu.navigateToPage()
+        on.settingsAddonsManager.navigateToPage().removeInstalledExtension(addonTitle)
 
         // With no extensions installed, the "Try a recommended extension" entry point is shown again.
         on.browserPage.navigateToPage(genericURL.url.toString(), forceNavigation = true)
@@ -540,11 +535,9 @@ class MainMenuTest : BaseTest() {
         // Parity: legacy verifyAddonIsInstalled asserted the addon's install (+) button was invisible;
         // the extension appearing under the Enabled section is the equivalent "installed & enabled" signal.
         on.browserPage.navigateToPage(genericURL.url.toString(), forceNavigation = true)
-        on.mainMenu
-            .navigateToPage()
-            .mozClick(MainMenuSelectors.EXTENSIONS_BUTTON_UIAUTOMATOR)
-            .mozClick(MainMenuSelectors.MANAGE_EXTENSIONS_BUTTON)
+        on.mainMenu.navigateToPage()
         on.settingsAddonsManager
+            .navigateToPage()
             .mozVerify(SettingsAddonsManagerSelectors.ADD_ONS_LIST)
             .mozVerify(SettingsAddonsManagerSelectors.ENABLED_SECTION_TITLE)
             .mozVerify(SettingsAddonsManagerSelectors.INSTALLED_ADDON_ITEM(addonTitle))
@@ -593,14 +586,8 @@ class MainMenuTest : BaseTest() {
 
         // Open the installed extension's detail from Manage extensions and disable it.
         on.browserPage.navigateToPage(genericURL.url.toString(), forceNavigation = true)
-        on.mainMenu
-            .navigateToPage()
-            .mozClick(MainMenuSelectors.EXTENSIONS_BUTTON_UIAUTOMATOR)
-            .mozVerify(MainMenuSelectors.EXTENSIONS_BUTTON_WITH_INSTALLED_EXTENSION(addonTitle))
-            .mozClick(MainMenuSelectors.MANAGE_EXTENSIONS_BUTTON)
-        on.settingsAddonsManager
-            .disableInstalledExtension(addonTitle)
-            .mozClick(SettingsAddonsManagerSelectors.NAVIGATE_BACK_TOOLBAR_BUTTON)
+        on.mainMenu.navigateToPage().mozVerify(MainMenuSelectors.EXTENSIONS_BUTTON_WITH_INSTALLED_EXTENSION(addonTitle))
+        on.settingsAddonsManager.navigateToPage().disableInstalledExtension(addonTitle)
 
         // With the only extension disabled, the menu advertises the "no extensions enabled" entry point.
         on.browserPage.navigateToPage(genericURL.url.toString(), forceNavigation = true)

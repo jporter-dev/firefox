@@ -9,6 +9,7 @@ import org.mozilla.fenix.helpers.DataGenerationHelper.getRecommendedExtensionTit
 import org.mozilla.fenix.helpers.HomeActivityIntentTestRule
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTimeLong
 import org.mozilla.fenix.ui.efficiency.helpers.BasePage
+import org.mozilla.fenix.ui.efficiency.helpers.PageStateTracker
 import org.mozilla.fenix.ui.efficiency.navigation.NavigationFacts
 import org.mozilla.fenix.ui.efficiency.navigation.NavigationRegistry
 import org.mozilla.fenix.ui.efficiency.navigation.NavigationStep
@@ -70,7 +71,10 @@ class MainMenuPage(composeRule: AndroidComposeTestRule<HomeActivityIntentTestRul
             steps =
                 listOf(
                     NavigationStep.Click(MainMenuSelectors.PASSWORDS_BUTTON),
-                    NavigationStep.ClickIfPresent(SettingsSavedPasswordsSelectors.LOGINS_SECURITY_DIALOG_LATER_BUTTON),
+                    NavigationStep.ClickIfPresent(
+                        SettingsSavedPasswordsSelectors.LOGINS_SECURITY_DIALOG_LATER_BUTTON,
+                        timeout = 5_000,
+                    ),
                 ),
         )
     }
@@ -96,6 +100,7 @@ class MainMenuPage(composeRule: AndroidComposeTestRule<HomeActivityIntentTestRul
         // already tore the dialog down, clicking OK is a no-op rather than a "Failed to click UiObject"
         // failure. Mirrors the legacy closeAddonInstallCompletePrompt, which ignored the click result.
         mozClickIfPresent(SettingsAddonsManagerSelectors.ADDON_INSTALL_COMPLETED_OK_BUTTON)
+        PageStateTracker.currentPageName = "BrowserPage"
         return addonTitle
     }
 }

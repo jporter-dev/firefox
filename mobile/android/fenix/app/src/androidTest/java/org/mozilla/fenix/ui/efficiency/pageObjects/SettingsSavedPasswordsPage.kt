@@ -34,7 +34,10 @@ class SettingsSavedPasswordsPage(composeRule: AndroidComposeTestRule<HomeActivit
                     NavigationStep.Click(MainMenuSelectors.SETTINGS_BUTTON),
                     NavigationStep.Click(SettingsSelectors.PASSWORDS_BUTTON),
                     NavigationStep.Click(SettingsPasswordsSelectors.SAVED_PASSWORDS_OPTION),
-                    NavigationStep.ClickIfPresent(SettingsSavedPasswordsSelectors.LOGINS_SECURITY_DIALOG_LATER_BUTTON),
+                    NavigationStep.ClickIfPresent(
+                        SettingsSavedPasswordsSelectors.LOGINS_SECURITY_DIALOG_LATER_BUTTON,
+                        timeout = 5_000,
+                    ),
                 ),
         )
 
@@ -46,7 +49,10 @@ class SettingsSavedPasswordsPage(composeRule: AndroidComposeTestRule<HomeActivit
                 listOf(
                     NavigationStep.Click(HomeSelectors.MAIN_MENU_BUTTON),
                     NavigationStep.Click(MainMenuSelectors.PASSWORDS_BUTTON),
-                    NavigationStep.ClickIfPresent(SettingsSavedPasswordsSelectors.LOGINS_SECURITY_DIALOG_LATER_BUTTON),
+                    NavigationStep.ClickIfPresent(
+                        SettingsSavedPasswordsSelectors.LOGINS_SECURITY_DIALOG_LATER_BUTTON,
+                        timeout = 5_000,
+                    ),
                 ),
         )
 
@@ -57,7 +63,10 @@ class SettingsSavedPasswordsPage(composeRule: AndroidComposeTestRule<HomeActivit
                 listOf(
                     NavigationStep.Click(BrowserPageSelectors.MAIN_MENU_BUTTON),
                     NavigationStep.Click(MainMenuSelectors.PASSWORDS_BUTTON),
-                    NavigationStep.ClickIfPresent(SettingsSavedPasswordsSelectors.LOGINS_SECURITY_DIALOG_LATER_BUTTON),
+                    NavigationStep.ClickIfPresent(
+                        SettingsSavedPasswordsSelectors.LOGINS_SECURITY_DIALOG_LATER_BUTTON,
+                        timeout = 5_000,
+                    ),
                 ),
         )
 

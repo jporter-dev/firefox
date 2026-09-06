@@ -21,6 +21,7 @@ data class NavigationFact(val name: String) {
 }
 
 object NavigationFacts {
+    val BOOKMARKS_HAVE_ITEMS = NavigationFact("BOOKMARKS_HAVE_ITEMS")
     val RETURN_SURFACE_BROWSER = NavigationFact("RETURN_SURFACE_BROWSER")
     val RETURN_SURFACE_HOME = NavigationFact("RETURN_SURFACE_HOME")
 

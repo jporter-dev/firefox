@@ -12,7 +12,7 @@ sealed class NavigationStep {
 
     data class LongClick(val selector: Selector) : NavigationStep()
 
-    data class ClickIfPresent(val selector: Selector) : NavigationStep()
+    data class ClickIfPresent(val selector: Selector, val timeout: Long = 3_000) : NavigationStep()
 
     data class Swipe(val selector: Selector, val direction: SwipeDirection = SwipeDirection.UP) : NavigationStep()
 

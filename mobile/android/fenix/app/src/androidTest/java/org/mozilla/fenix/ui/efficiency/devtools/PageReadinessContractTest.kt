@@ -65,6 +65,27 @@ class PageReadinessContractTest {
     }
 
     @Test
+    fun declaredSelectorsIncludeCustomRuleAlternatives() {
+        val identity = selector("identity", PageReadinessProfiles.IDENTITY_ANCHOR)
+        val emptyState = selector("empty state")
+        val populatedState = selector("populated state")
+        val contract =
+            PageReadinessContract.fromSelectors(listOf(identity))
+                .withRule(
+                    PageReadinessRule(
+                        name = "content-state",
+                        profiles = setOf(PageReadinessProfile.IDENTIFIED),
+                        condition = PageReadinessCondition.anyOf(emptyState, populatedState),
+                    )
+                )
+
+        assertEquals(
+            setOf(identity, emptyState, populatedState),
+            contract.declaredSelectors(PageReadinessProfile.IDENTIFIED),
+        )
+    }
+
+    @Test
     fun conditionalRulesUseThePlannedNavigationState() {
         val signedIn = NavigationFact("SIGNED_IN")
         val accountControl = selector("account control")

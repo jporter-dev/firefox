@@ -282,13 +282,10 @@ object MainMenuSelectors : SelectorContainer {
             groups = setOf(Group.EXPANDED_EXTENSIONS_MENU_ITEMS),
         )
 
-    // The collapsed Extensions main-menu row once an extension is installed: it advertises the addon
-    // name in its content description. Mirrors the legacy verifyExtensionsButtonWithInstalledExtension
-    // (itemWithResIdAndDescription("mainMenu.extensions", <addon>)).
     @Suppress("FunctionName")
     fun EXTENSIONS_BUTTON_WITH_INSTALLED_EXTENSION(addonTitle: String = "") =
         Selector(
-            strategy = SelectorStrategy.UIAUTOMATOR_WITH_RES_ID_AND_DESCRIPTION_CONTAINS,
+            strategy = SelectorStrategy.COMPOSE_BY_TAG_AND_CONTENT_DESCRIPTION_SUBSTRING,
             value = MenuDialogTestTag.EXTENSIONS,
             secondaryValue = addonTitle,
             description = "Extensions menu row advertising installed extension '$addonTitle'",

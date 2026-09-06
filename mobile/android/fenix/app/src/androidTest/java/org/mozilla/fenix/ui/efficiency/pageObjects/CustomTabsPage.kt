@@ -15,17 +15,22 @@ import org.mozilla.fenix.helpers.TestAssetHelper.waitingTime
 import org.mozilla.fenix.ui.efficiency.helpers.BasePage
 import org.mozilla.fenix.ui.efficiency.helpers.PageStateTracker
 import org.mozilla.fenix.ui.efficiency.navigation.NavigationRegistry
+import org.mozilla.fenix.ui.efficiency.navigation.NavigationRoutePurpose
+import org.mozilla.fenix.ui.efficiency.navigation.NavigationStep
 import org.mozilla.fenix.ui.efficiency.selectors.BrowserPageSelectors
 import org.mozilla.fenix.ui.efficiency.selectors.CustomTabsSelectors
 
 class CustomTabsPage(composeRule: AndroidComposeTestRule<HomeActivityIntentTestRule, *>) : BasePage(composeRule) {
     override val pageName = "CustomTabsPage"
 
-    // Custom tabs are LAUNCH-reached: they run in their own activity (CustomTabActivity), started by firing
-    // a custom-tabs intent at IntentReceiverActivity — not by navigating a click-path from HomePage. So there
-    // is no INBOUND NavigationRegistry edge; use launchCustomTab() as the entry point (it sets the page state).
-
     init {
+        NavigationRegistry.register(
+            from = "AppEntry",
+            to = pageName,
+            steps = listOf(NavigationStep.Action { launchCustomTab("about:blank") }),
+            purpose = NavigationRoutePurpose.COVERAGE,
+        )
+
         // Outbound 0-step edge for the "Open in Firefox" flow: the menu click that converts the custom tab
         // into a normal tab is performed by the test, and this edge only carries navigateToPage() past its
         // single-pass mozIsOnPageNow() check into the polling mozWaitForPageToLoad(). That poll is what

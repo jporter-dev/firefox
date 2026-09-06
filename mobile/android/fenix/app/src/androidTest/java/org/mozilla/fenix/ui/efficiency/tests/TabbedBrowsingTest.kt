@@ -244,7 +244,7 @@ class TabbedBrowsingTest : BaseTest() {
         closeApp(composeRule.activityRule)
         restartApp(composeRule.activityRule)
 
-        on.home.mozVerify(HomeSelectors.PRIVATE_BROWSING_INFO_CARD_TITLE)
+        on.home.navigateToPage().mozVerify(HomeSelectors.PRIVATE_BROWSING_INFO_CARD_TITLE)
         on.tabDrawer.navigateToPage().mozVerify(TabDrawerSelectors.EMPTY_PRIVATE_TABS_LIST)
     }
 

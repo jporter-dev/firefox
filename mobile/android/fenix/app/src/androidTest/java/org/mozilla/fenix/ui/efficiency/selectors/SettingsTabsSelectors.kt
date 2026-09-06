@@ -23,11 +23,11 @@ object SettingsTabsSelectors : SelectorContainer {
             description = "Tabs toolbar title",
         )
 
-    val NEW_TAB_PAGE_TOGGLE =
+    val INACTIVE_TABS_TITLE =
         Selector(
-            strategy = SelectorStrategy.ESPRESSO_BY_ID,
-            value = "new_tab_page_toggle",
-            description = "New Tab Page Toggle Switch",
+            strategy = SelectorStrategy.ESPRESSO_BY_TEXT,
+            value = getStringResource(R.string.preferences_inactive_tabs_title),
+            description = "Inactive tabs title",
             groups = setOf(Group.TAB_SETTINGS),
             readiness = PageReadinessProfiles.READY_CONTENT,
         )

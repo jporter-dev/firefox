@@ -26,20 +26,13 @@ object SettingsCustomizeSelectors : SelectorContainer {
             description = "Customize toolbar title",
         )
 
-    val SHOW_TOOLBAR_TOGGLE =
-        Selector(
-            strategy = SelectorStrategy.ESPRESSO_BY_ID,
-            value = "show_toolbar_toggle",
-            description = "Show Toolbar Toggle",
-            groups = setOf(Group.CUSTOMIZE_SETTINGS),
-            readiness = PageReadinessProfiles.READY_CONTENT,
-        )
-
     val SHOW_TAB_BAR_TOGGLE =
         Selector(
             strategy = SelectorStrategy.ESPRESSO_BY_TEXT,
             value = getStringResource(R.string.preference_tab_strip_show),
             description = "Show tab bar toggle",
+            groups = setOf(Group.CUSTOMIZE_SETTINGS),
+            readiness = PageReadinessProfiles.READY_CONTENT,
             scrollDirection = SwipeDirection.UP,
         )
 

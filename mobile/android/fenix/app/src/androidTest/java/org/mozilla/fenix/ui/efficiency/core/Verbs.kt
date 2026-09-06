@@ -467,7 +467,7 @@ fun VerbHost.pageReady(
     val deadline = SystemClock.uptimeMillis() + timeout
     var wait = policy.firstGap()
     var evaluation = evaluate()
-    if (!evaluation.satisfied && lastRetryableProblem != null && dismissOverlays()) {
+    if (!evaluation.satisfied && dismissOverlays()) {
         evaluation = evaluate()
     }
     while (!evaluation.satisfied && evaluation.hasContract && SystemClock.uptimeMillis() < deadline) {
@@ -476,7 +476,7 @@ fun VerbHost.pageReady(
         evaluation = evaluate()
     }
 
-    if (!evaluation.satisfied && lastRetryableProblem != null && dismissOverlays()) {
+    if (!evaluation.satisfied && dismissOverlays()) {
         evaluation = evaluate()
     }
 

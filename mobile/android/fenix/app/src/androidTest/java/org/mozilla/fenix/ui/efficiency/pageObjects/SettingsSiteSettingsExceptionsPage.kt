@@ -44,8 +44,8 @@ class SettingsSiteSettingsExceptionsPage(composeRule: AndroidComposeTestRule<Hom
         super.readinessContract()
             .withRule(
                 PageReadinessRule(
-                    name = "site-exceptions-content-loaded",
-                    profiles = PageReadinessProfiles.READY_CONTENT,
+                    name = "site-exceptions-content-state",
+                    profiles = PageReadinessProfiles.IDENTITY_ANCHOR,
                     condition =
                         PageReadinessCondition.anyOf(
                             SettingsSiteSettingsExceptionsSelectors.EMPTY_EXCEPTIONS_LIST,

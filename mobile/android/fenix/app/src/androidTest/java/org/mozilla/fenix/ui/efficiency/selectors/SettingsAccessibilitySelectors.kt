@@ -24,21 +24,13 @@ object SettingsAccessibilitySelectors : SelectorContainer {
             description = "Accessibility toolbar title",
         )
 
-    val USE_SYSTEM_FONT_SIZE_TOGGLE =
-        Selector(
-            strategy = SelectorStrategy.ESPRESSO_BY_ID,
-            value = "use_system_font_size_toggle",
-            description = "Use System Font Size Toggle",
-            groups = setOf(Group.ACCESSIBILITY_SETTINGS),
-            readiness = PageReadinessProfiles.READY_CONTENT,
-        )
-
     val AUTOMATIC_FONT_SIZING_TITLE =
         Selector(
             strategy = SelectorStrategy.ESPRESSO_BY_TEXT,
             value = getStringResource(R.string.preference_accessibility_auto_size_2),
             description = "The Automatic font sizing title",
-            groups = setOf(Group.FONT_SIZING),
+            groups = setOf(Group.ACCESSIBILITY_SETTINGS, Group.FONT_SIZING),
+            readiness = PageReadinessProfiles.READY_CONTENT,
         )
 
     val AUTOMATIC_FONT_SIZING_SUMMARY =

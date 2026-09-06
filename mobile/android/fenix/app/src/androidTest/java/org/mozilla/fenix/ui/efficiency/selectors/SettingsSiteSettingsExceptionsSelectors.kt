@@ -6,7 +6,6 @@ package org.mozilla.fenix.ui.efficiency.selectors
 
 import org.mozilla.fenix.R
 import org.mozilla.fenix.helpers.DataGenerationHelper.getStringResource
-import org.mozilla.fenix.ui.efficiency.helpers.PageReadinessProfiles
 import org.mozilla.fenix.ui.efficiency.helpers.Selector
 import org.mozilla.fenix.ui.efficiency.helpers.SelectorContainer
 import org.mozilla.fenix.ui.efficiency.helpers.SelectorGroup
@@ -23,18 +22,10 @@ object SettingsSiteSettingsExceptionsSelectors : SelectorContainer {
             description = "Site settings exceptions toolbar title",
         )
 
-    val EXCEPTIONS_ROOT =
-        Selector(
-            strategy = SelectorStrategy.ESPRESSO_BY_ID,
-            value = "container",
-            description = "Site settings exceptions content",
-            readiness = PageReadinessProfiles.IDENTITY_ANCHOR,
-        )
-
     val EMPTY_EXCEPTIONS_LIST =
         Selector(
-            strategy = SelectorStrategy.ESPRESSO_BY_TEXT,
-            value = "No site exceptions",
+            strategy = SelectorStrategy.ESPRESSO_BY_ID,
+            value = "empty_exception_container",
             description = "Empty site settings exceptions list",
             groups = setOf(Group.EMPTY_SITE_SETTINGS_EXCEPTIONS_LIST),
         )

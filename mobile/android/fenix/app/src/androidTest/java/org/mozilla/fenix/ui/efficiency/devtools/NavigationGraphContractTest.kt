@@ -32,7 +32,7 @@ class NavigationGraphContractTest : BaseTest() {
         val diagnostics = NavigationRegistry.diagnostics()
 
         assertEquals(54, diagnostics.pages.size)
-        assertEquals(102, diagnostics.edges.size)
+        assertEquals(107, diagnostics.edges.size)
         assertTrue(diagnostics.duplicateRegistrations.isEmpty())
         assertEquals(
             setOf(

@@ -43,7 +43,7 @@ object AddToHomeScreenSelectors : SelectorContainer {
     @Suppress("FunctionName")
     fun HOME_SCREEN_SHORTCUT(shortcutTitle: String = "") =
         Selector(
-            strategy = SelectorStrategy.UIAUTOMATOR2_BY_TEXT,
+            strategy = SelectorStrategy.UIAUTOMATOR_WITH_TEXT,
             value = shortcutTitle,
             description = "Device home screen shortcut with title: $shortcutTitle",
             groups = setOf(Group.DEVICE_HOME_SCREEN_ITEM),

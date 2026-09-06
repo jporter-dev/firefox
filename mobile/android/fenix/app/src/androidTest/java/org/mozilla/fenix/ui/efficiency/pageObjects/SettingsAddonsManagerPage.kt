@@ -8,6 +8,7 @@ import androidx.compose.ui.test.junit4.AndroidComposeTestRule
 import org.mozilla.fenix.helpers.HomeActivityIntentTestRule
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTimeLong
 import org.mozilla.fenix.ui.efficiency.helpers.BasePage
+import org.mozilla.fenix.ui.efficiency.navigation.NavigationFacts
 import org.mozilla.fenix.ui.efficiency.navigation.NavigationOptions
 import org.mozilla.fenix.ui.efficiency.navigation.NavigationRegistry
 import org.mozilla.fenix.ui.efficiency.navigation.NavigationStep
@@ -32,9 +33,27 @@ class SettingsAddonsManagerPage(composeRule: AndroidComposeTestRule<HomeActivity
         )
 
         NavigationRegistry.register(
+            from = "MainMenuPage",
+            to = pageName,
+            steps =
+                listOf(
+                    NavigationStep.Click(MainMenuSelectors.EXTENSIONS_BUTTON_UIAUTOMATOR),
+                    NavigationStep.Click(MainMenuSelectors.MANAGE_EXTENSIONS_BUTTON),
+                ),
+        )
+
+        NavigationRegistry.register(
             from = pageName,
             to = "HomePage",
             steps = listOf(NavigationStep.Click(SettingsAddonsManagerSelectors.NAVIGATE_BACK_TOOLBAR_BUTTON)),
+            requires = setOf(NavigationFacts.RETURN_SURFACE_HOME),
+        )
+
+        NavigationRegistry.register(
+            from = pageName,
+            to = "BrowserPage",
+            steps = listOf(NavigationStep.Click(SettingsAddonsManagerSelectors.NAVIGATE_BACK_TOOLBAR_BUTTON)),
+            requires = setOf(NavigationFacts.RETURN_SURFACE_BROWSER),
         )
     }
 

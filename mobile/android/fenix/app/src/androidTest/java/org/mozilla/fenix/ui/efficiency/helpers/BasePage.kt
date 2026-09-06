@@ -122,9 +122,9 @@ abstract class BasePage(protected val composeRule: AndroidComposeTestRule<HomeAc
     internal fun declaredReadinessProfiles(): Set<PageReadinessProfile> = readinessContract().declaredProfiles
 
     internal fun declaredIdentityFingerprint(): Set<Triple<SelectorStrategy, String, String?>> =
-        selectorCatalog.all
-            .filter { PageReadinessProfile.IDENTIFIED in it.readiness }
-            .mapTo(mutableSetOf()) { Triple(it.strategy, it.value, it.secondaryValue) }
+        readinessContract().declaredSelectors(PageReadinessProfile.IDENTIFIED).mapTo(mutableSetOf()) {
+            Triple(it.strategy, it.value, it.secondaryValue)
+        }
 
     companion object {
         // Mirrors the minimum displayed-area Espresso's click() action requires before it will tap.
@@ -223,7 +223,8 @@ abstract class BasePage(protected val composeRule: AndroidComposeTestRule<HomeAc
                     when (navigationStep) {
                         is NavigationStep.Click -> mozClick(navigationStep.selector, navigationActionWait)
                         is NavigationStep.LongClick -> mozLongClick(navigationStep.selector, navigationActionWait)
-                        is NavigationStep.ClickIfPresent -> mozClickIfPresent(navigationStep.selector)
+                        is NavigationStep.ClickIfPresent ->
+                            mozClickIfPresent(navigationStep.selector, timeout = navigationStep.timeout)
                         is NavigationStep.Swipe -> mozSwipeTo(navigationStep.selector, navigationStep.direction)
                         is NavigationStep.OpenNotificationsTray -> mozOpenNotificationsTray()
                         is NavigationStep.Action -> navigationStep.action()
