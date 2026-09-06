@@ -62,7 +62,7 @@ class SearchTest : BaseTest(LaunchConfig(isPocketEnabled = false)) {
     // Legacy SearchTest drives these URLs off SearchMockServerRule, whose dispatcher 404s everything
     // except searchResults.html. That is load-bearing for verifyTabsSearchWithOpenTabsTest: the tabs
     // never load, so they have no title and the awesomebar row shows the URL, which is what the
-    // suggestion assertions match on. fenixTestRule.mockWebServer serves the asset for real, the tab
+    // suggestion assertions match on. BaseTest's mockWebServer serves the asset for real, the tab
     // gets the title "Test_Page_1", and the same assertions cannot match. Keep this rule to preserve
     // the legacy environment rather than re-pointing the assertions at titles.
     @get:Rule val searchMockServerRule = SearchMockServerRule()

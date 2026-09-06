@@ -15,9 +15,6 @@ import org.mozilla.fenix.ui.efficiency.selectors.ShareOverlaySelectors
 
 class CollectionsTest : BaseTest() {
 
-    private val mockWebServer
-        get() = fenixTestRule.mockWebServer
-
     // TestRail link: https://mozilla.testrail.io/index.php?/cases/view/343422
     @SmokeTest
     @Test

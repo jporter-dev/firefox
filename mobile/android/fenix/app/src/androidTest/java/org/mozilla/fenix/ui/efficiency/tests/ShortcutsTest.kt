@@ -14,9 +14,6 @@ import org.mozilla.fenix.ui.efficiency.selectors.MainMenuSelectors
 
 class ShortcutsTest : BaseTest() {
 
-    private val mockWebServer
-        get() = fenixTestRule.mockWebServer
-
     // TestRail link: https://mozilla.testrail.io/index.php?/cases/view/532598
     @SmokeTest
     @Test

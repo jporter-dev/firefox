@@ -15,9 +15,6 @@ import org.mozilla.fenix.ui.efficiency.selectors.TabDrawerSelectors
 
 class CrashReportingTest : BaseTest() {
 
-    private val mockWebServer
-        get() = fenixTestRule.mockWebServer
-
     // TestRail link: https://mozilla.testrail.io/index.php?/cases/view/1681928
     @SmokeTest
     @Test

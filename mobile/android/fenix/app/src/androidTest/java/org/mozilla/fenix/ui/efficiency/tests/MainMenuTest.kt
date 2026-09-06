@@ -43,9 +43,6 @@ import org.mozilla.fenix.ui.efficiency.selectors.WebCompatReporterSelectors
 
 class MainMenuTest : BaseTest() {
 
-    private val mockWebServer
-        get() = fenixTestRule.mockWebServer
-
     @Before
     fun disablePromptAbuserDetector() {
         PromptAbuserDetector.validationsEnabled = false

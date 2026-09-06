@@ -15,9 +15,6 @@ import org.mozilla.fenix.ui.efficiency.selectors.HomeSelectors
 class HistoryTest : BaseTest() {
 
     // TODO (I. RIOS 3/20/2026): add to BaseTest for State Machine
-    private val mockWebServer
-        get() = fenixTestRule.mockWebServer
-
     @Ignore("Covered by verifyNavigationReachability[0: HistoryPage (TBD) — Navigation Reachability]")
     @Test
     fun verifyHistorySectionTest() {

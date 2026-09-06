@@ -21,9 +21,6 @@ import org.mozilla.fenix.ui.efficiency.selectors.SettingsSelectors
 
 class SettingsHomepageTest : BaseTest() {
 
-    private val mockWebServer
-        get() = fenixTestRule.mockWebServer
-
     @Ignore("Covered by verifyNavigationReachability[1: SettingsHomepagePage (TBD) — Navigation Reachability]")
     @Test
     fun verifySettingsHomepageLoadsTest() {

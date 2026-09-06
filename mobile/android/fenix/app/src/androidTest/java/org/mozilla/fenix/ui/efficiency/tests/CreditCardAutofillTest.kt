@@ -12,9 +12,6 @@ import org.mozilla.fenix.ui.efficiency.helpers.BaseTest
 import org.mozilla.fenix.ui.efficiency.selectors.SettingsAutofillSelectors
 
 class CreditCardAutofillTest : BaseTest() {
-    private val mockWebServer
-        get() = fenixTestRule.mockWebServer
-
     // TestRail link: https://mozilla.testrail.io/index.php?/cases/view/1512792
     // Converted from legacy CreditCardAutofillTest.verifyCreditCardAutofillTest
     @SmokeTest

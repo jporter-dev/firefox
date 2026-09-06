@@ -11,6 +11,7 @@ import androidx.test.espresso.Espresso
 import androidx.test.espresso.base.DefaultFailureHandler
 import androidx.test.platform.app.InstrumentationRegistry
 import leakcanary.NoLeakAssertionFailedError
+import mockwebserver3.MockWebServer
 import org.junit.After
 import org.junit.Before
 import org.junit.Rule
@@ -19,7 +20,6 @@ import org.junit.rules.TestWatcher
 import org.junit.runner.Description
 import org.junit.runners.model.Statement
 import org.mozilla.fenix.ext.components
-import org.mozilla.fenix.helpers.FenixTestRule
 import org.mozilla.fenix.helpers.HomeActivityIntentTestRule
 import org.mozilla.fenix.helpers.IdlingResourceHelper.unregisterAllIdlingResources
 import org.mozilla.fenix.helpers.TestHelper.appContext
@@ -46,18 +46,15 @@ import org.mozilla.fenix.ui.efficiency.navigation.PageCatalog
  * A LOWER `order` is applied further out, so this is also the order they run in.
  *
  * -2 [finalizeAttempt] emits the terminal attempt record after every other rule -1 [sampleOnArrival] records what the
- * device arrived carrying, before anything clears it 0 FenixTestRule (legacy) GrantPermissionRule -> TestSetupRule ->
- * MockWebServerRule 1 [composeRuleWithCleanup] the per-test clear, then the activity, then the failure dump 2
- * [recordTestBoundaries] test start/end and the state samples around them 3 [memoryLeaksRule] the leak assertion, inert
- * unless the run sets the detect-leaks argument
+ * device arrived carrying, before anything clears it 0 [EfficiencyTestRule] applies the declared environment and
+ * mock-server requirements 1 [composeRuleWithCleanup] establishes the app-data boundary, launches the activity, and
+ * captures failures 2 [recordTestBoundaries] records the result and state 3 [memoryLeaksRule] performs the leak
+ * assertion when the run sets the detect-leaks argument
  *
  * ## What is cleared, and by which of them
  *
- * FenixTestRule at order 0 is inherited from the legacy suite, and clears more than its name suggests: history,
- * bookmarks, site permissions, the downloads folder, and all notifications. It also sets portrait orientation,
- * back-gesture navigation on, data saver off, the debug drawer off, and on API 34 stops system UI reading the
- * clipboard. It grants POST_NOTIFICATIONS unconditionally, and starts a MockWebServer for every test whether the test
- * uses one or not.
+ * [EfficiencyTestRule] owns device and package-external setup without inheriting `FenixTestRule` or `TestSetupRule`.
+ * Its behavior comes from [EfficiencyExecutionRequirements] and is recorded before the activity launches.
  *
  * [AppDataCleaner] at order 1 owns the enforced app-data boundary: its allowlisted test preferences, bookmarks, pinned
  * sites, history, site permissions, sessions, autofill addresses and cards, saved logins, tabs, in-memory downloads,
@@ -81,7 +78,10 @@ import org.mozilla.fenix.ui.efficiency.navigation.PageCatalog
  * records on `EffJson`. Four tools outside this repository parse them, so the shape is a contract and lives in
  * logging/log-format.json.
  */
-abstract class BaseTest(private val defaultLaunchConfig: LaunchConfig = LaunchConfig()) {
+abstract class BaseTest(
+    private val defaultLaunchConfig: LaunchConfig = LaunchConfig(),
+    private val defaultExecutionRequirements: EfficiencyExecutionRequirements = EfficiencyExecutionRequirements(),
+) {
 
     private companion object {
         /** Espresso's failure handler is a process-wide singleton; installing it is a one-off. */
@@ -100,14 +100,15 @@ abstract class BaseTest(private val defaultLaunchConfig: LaunchConfig = LaunchCo
      */
     protected open fun launchConfig(): LaunchConfig = defaultLaunchConfig
 
+    protected open fun executionRequirements(description: Description): EfficiencyExecutionRequirements =
+        defaultExecutionRequirements
+
     /**
      * What the device arrived carrying, sampled before anything clears it.
      *
-     * Order -1 so it is OUTSIDE FenixTestRule. A lower order is applied further out, and FenixTestRule at 0 wraps
-     * TestSetupRule, whose before() clears history, bookmarks, site permissions, the downloads folder and
-     * notifications. Sampling anywhere inside that reads what survived cleanup, not what the worker or previous test
-     * delivered. The raw arrival sample is evidence only; the enforced isolation sample is taken after the harness's
-     * own cleanup.
+     * Order -1 keeps this outside environment and app-data setup. Sampling anywhere inside those rules reads what
+     * survived cleanup, not what the worker or previous test delivered. The raw arrival sample is evidence only; the
+     * enforced isolation sample is taken after the harness's own cleanup.
      */
     @get:Rule(order = -1)
     val sampleOnArrival: TestRule = TestRule { base, description ->
@@ -119,7 +120,14 @@ abstract class BaseTest(private val defaultLaunchConfig: LaunchConfig = LaunchCo
         }
     }
 
-    @get:Rule(order = 0) val fenixTestRule: FenixTestRule = FenixTestRule()
+    private val attemptFinalization = AttemptFinalization()
+    private val efficiencyTestRule =
+        EfficiencyTestRule(::executionContextFor, attemptFinalization::recordCleanupFailure)
+
+    @get:Rule(order = 0) val executionRule: TestRule = efficiencyTestRule
+
+    protected val mockWebServer: MockWebServer
+        get() = efficiencyTestRule.mockWebServer
 
     // Built per test rather than declared as a plain @get:Rule, because the activity flags come
     // from launchConfig(), which subclasses override --- so the config has to be read before the
@@ -127,12 +135,13 @@ abstract class BaseTest(private val defaultLaunchConfig: LaunchConfig = LaunchCo
     // once, so it could not be reused across tests even if the flags were fixed.
     private var _composeRule: AndroidComposeTestRule<HomeActivityIntentTestRule, *>? = null
     private var _pageContext: PageContext? = null
-    private val attemptFinalization = AttemptFinalization()
+    private var _executionContext: EfficiencyExecutionContext? = null
 
     @get:Rule(order = -2)
     val finalizeAttempt: TestRule = TestRule { base, description ->
         object : Statement() {
             override fun evaluate() {
+                executionContextFor(description)
                 val reporter = installedReporter()
                 reporter.reset()
                 attemptFinalization.reset()
@@ -142,6 +151,7 @@ abstract class BaseTest(private val defaultLaunchConfig: LaunchConfig = LaunchCo
                 } catch (t: Throwable) {
                     finalFailure = t
                 } finally {
+                    attemptFinalization.finishCleanup()
                     runCatching {
                         reporter.record(
                             "attemptEnd",
@@ -149,6 +159,7 @@ abstract class BaseTest(private val defaultLaunchConfig: LaunchConfig = LaunchCo
                         )
                     }
                 }
+                _executionContext = null
                 finalFailure?.let { throw it }
             }
         }
@@ -170,7 +181,7 @@ abstract class BaseTest(private val defaultLaunchConfig: LaunchConfig = LaunchCo
             checkNotNull(_composeRule) {
                 "composeRule read before the activity rule built it. Rules run outermost-first by " +
                     "ascending order: -2 finalizes the attempt, -1 samples arrival, 0 is " +
-                    "FenixTestRule, 1 builds this, and 2 records boundaries. Anything at a lower " +
+                    "the execution rule, 1 builds this, and 2 records boundaries. Anything at a lower " +
                     "order than 1, or outside a test body, runs before this exists."
             }
 
@@ -192,7 +203,7 @@ abstract class BaseTest(private val defaultLaunchConfig: LaunchConfig = LaunchCo
             override fun evaluate() {
                 val lifecycleTrace = ActivityLifecycleTrace.start(description.displayName)
                 try {
-                    val cfg = launchConfig()
+                    val cfg = currentExecutionContext.launchConfig
                     _pageContext = null
                     NavigationRegistry.reset()
                     requireAppDataCleanup("before", description.displayName)
@@ -228,6 +239,13 @@ abstract class BaseTest(private val defaultLaunchConfig: LaunchConfig = LaunchCo
                                 override fun evaluate() {
                                     var testFailure: Throwable? = null
                                     try {
+                                        ActivityEnvironment.applyOrientation(
+                                            phase = "before",
+                                            testId = description.displayName,
+                                            requirement = currentExecutionContext.requirements.orientation,
+                                        ) {
+                                            composeRule.activity
+                                        }
                                         base.evaluate()
                                     } catch (t: Throwable) {
                                         testFailure = t
@@ -312,7 +330,6 @@ abstract class BaseTest(private val defaultLaunchConfig: LaunchConfig = LaunchCo
                                 attemptFinalization.recordCleanupFailure("stateIsolation")
                                 appCleanupFailures += it
                             }
-                        attemptFinalization.finishCleanup()
                         appCleanupFailures.firstOrNull()?.let { primaryFailure ->
                             appCleanupFailures.drop(1).forEach(primaryFailure::addSuppressed)
                         }
@@ -365,7 +382,7 @@ abstract class BaseTest(private val defaultLaunchConfig: LaunchConfig = LaunchCo
                 // The launch configuration goes on the record, because "was this test even running the
                 // app it expects?" is otherwise unanswerable after the fact. testStart has always taken
                 // meta; nothing was filling it, so every trace claimed a default launch.
-                installedReporter().testStart(description.displayName, launchConfig().asMeta())
+                installedReporter().testStart(description.displayName, currentExecutionContext.asMeta())
             }
 
             override fun succeeded(description: Description) {
@@ -414,6 +431,24 @@ abstract class BaseTest(private val defaultLaunchConfig: LaunchConfig = LaunchCo
      * decides which runs first and neither should care.
      */
     private fun installedReporter(): TimedReporter = TestLogging.installed()
+
+    protected val currentExecutionContext: EfficiencyExecutionContext
+        get() = checkNotNull(_executionContext) { "Execution context is unavailable outside a running test" }
+
+    private fun executionContextFor(description: Description): EfficiencyExecutionContext {
+        _executionContext?.let { existing ->
+            check(existing.testId == description.displayName) {
+                "Execution context for ${existing.testId} cannot run ${description.displayName}"
+            }
+            return existing
+        }
+        return EfficiencyExecutionContext(
+                testId = description.displayName,
+                launchConfig = launchConfig(),
+                requirements = executionRequirements(description),
+            )
+            .also { _executionContext = it }
+    }
 
     private fun requireAppDataCleanup(phase: String, testId: String) {
         val failed = AppDataCleaner.clear(phase, testId)

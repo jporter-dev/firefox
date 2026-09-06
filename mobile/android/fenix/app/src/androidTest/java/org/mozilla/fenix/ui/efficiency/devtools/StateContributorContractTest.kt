@@ -18,6 +18,7 @@ import org.mozilla.fenix.ui.efficiency.helpers.BaseTest
 import org.mozilla.fenix.ui.efficiency.helpers.HarnessPreferenceState
 import org.mozilla.fenix.ui.efficiency.helpers.HarnessSearchState
 import org.mozilla.fenix.ui.efficiency.helpers.StateProbe
+import org.mozilla.fenix.ui.efficiency.helpers.StateResourcePolicy
 
 @RunWith(AndroidJUnit4::class)
 class StateContributorContractTest : BaseTest() {
@@ -30,7 +31,16 @@ class StateContributorContractTest : BaseTest() {
         assertEquals(fields.size, fields.toSet().size)
         assertTrue(descriptors.all { it.schemaVersion > 0 && it.fields.isNotEmpty() })
         assertTrue(descriptors.all { it.boundaryBaseline.keys.all(it.fields::contains) })
-        assertTrue(descriptors.filter { it.boundaryBaseline.isNotEmpty() }.all { it.controlDrivers.isNotEmpty() })
+        assertTrue(
+            descriptors
+                .filter { it.policy == StateResourcePolicy.RESTORE }
+                .all { it.boundaryBaseline.isNotEmpty() && it.controlDrivers.isNotEmpty() }
+        )
+        assertTrue(
+            descriptors
+                .filter { it.policy == StateResourcePolicy.OBSERVE }
+                .all { it.boundaryBaseline.isEmpty() && it.controlDrivers.isEmpty() }
+        )
         assertTrue(descriptors.flatMap { it.controlDrivers }.all(String::isNotBlank))
     }
 
@@ -49,6 +59,7 @@ class StateContributorContractTest : BaseTest() {
             assertEquals(descriptor.fields, contribution.values.keys)
             assertEquals(descriptor.captureCost, contribution.captureCost)
             assertEquals(descriptor.sensitivity, contribution.sensitivity)
+            assertEquals(descriptor.policy, contribution.policy)
             assertEquals(descriptor.includeInCompatibilityState, contribution.includeInCompatibilityState)
             assertEquals(descriptor.boundaryBaseline, contribution.boundaryBaseline)
             assertEquals(descriptor.controlDrivers, contribution.controlDrivers)

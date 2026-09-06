@@ -23,9 +23,6 @@ import org.mozilla.fenix.ui.efficiency.selectors.TranslationsSelectors
 
 class TranslationsTest : BaseTest(LaunchConfig(isPageLoadTranslationsPromptEnabled = true)) {
 
-    private val mockWebServer
-        get() = fenixTestRule.mockWebServer
-
     @SmokeTest
     @Test
     fun verifyTheFirstTranslationNotNowButtonFunctionalityTest() {

@@ -24,9 +24,6 @@ import org.mozilla.fenix.ui.efficiency.selectors.ToolbarSelectors
 
 class TabbedBrowsingTest : BaseTest() {
 
-    private val mockWebServer
-        get() = fenixTestRule.mockWebServer
-
     // TestRail link: https://mozilla.testrail.io/index.php?/cases/view/1046683
     @Test
     fun verifySyncedTabsWhenUserIsNotSignedInTest() {

@@ -30,9 +30,6 @@ import org.mozilla.fenix.ui.efficiency.selectors.ToolbarSelectors
 
 class CustomTabsTest : BaseTest() {
 
-    private val mockWebServer
-        get() = fenixTestRule.mockWebServer
-
     // Required by verifyDownloadInACustomTabTest: without it the download prompt's Download button
     // resolves and the click reports success, but the click is dropped as prompt abuse, so the dialog
     // stays open and the failure surfaces later as a missing snackbar. See bug 2060299.

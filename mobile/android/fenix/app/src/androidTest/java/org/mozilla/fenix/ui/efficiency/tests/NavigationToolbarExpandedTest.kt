@@ -26,9 +26,6 @@ import org.mozilla.fenix.ui.efficiency.selectors.ToolbarSelectors
 
 class NavigationToolbarExpandedTest : BaseTest(LaunchConfig(shouldUseExpandedToolbar = true)) {
 
-    private val mockWebServer
-        get() = fenixTestRule.mockWebServer
-
     // TestRail link: https://mozilla.testrail.io/index.php?/cases/view/3333211
     // Converted from legacy NavigationToolbarExpandedTest.verifyTheExpandedToolbarAddBookmarkButtonTest
     @SmokeTest

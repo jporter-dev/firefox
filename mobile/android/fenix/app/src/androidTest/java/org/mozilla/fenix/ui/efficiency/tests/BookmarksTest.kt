@@ -29,9 +29,6 @@ import org.mozilla.fenix.ui.efficiency.selectors.TabDrawerSelectors
 class BookmarksTest : BaseTest() {
 
     // TODO (I. RIOS 3/20/2026): add to BaseTest for State Machine
-    private val mockWebServer
-        get() = fenixTestRule.mockWebServer
-
     private var importedBookmarksFile: File? = null
 
     @After

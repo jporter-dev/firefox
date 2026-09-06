@@ -37,8 +37,7 @@ import org.mozilla.fenix.ui.efficiency.logging.TestLogging
  * not create. [clear] returns what failed and puts it on the structured stream; BaseTest then fails the boundary while
  * preserving any earlier test failure as the primary error.
  *
- * `FenixTestRule` still performs overlapping legacy cleanup outside this rule. This list deliberately repeats the app
- * resources the efficiency harness promises so its contract does not depend on that implementation detail.
+ * This is the only app-data cleanup list used by efficiency tests; legacy setup rules are not part of their lifecycle.
  */
 object AppDataCleaner {
 

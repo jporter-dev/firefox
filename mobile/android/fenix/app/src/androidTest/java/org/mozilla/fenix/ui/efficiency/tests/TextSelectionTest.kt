@@ -11,9 +11,6 @@ import org.mozilla.fenix.ui.efficiency.helpers.BaseTest
 
 class TextSelectionTest : BaseTest() {
 
-    private val mockWebServer
-        get() = fenixTestRule.mockWebServer
-
     // TestRail link: https://mozilla.testrail.io/index.php?/cases/view/2326832
     @SmokeTest
     @Test

@@ -15,12 +15,20 @@ enum class StateSensitivity {
     AGGREGATE_ONLY,
 }
 
+enum class StateResourcePolicy {
+    OBSERVE,
+    RESTORE,
+    PRESERVE,
+    UNSUPPORTED,
+}
+
 interface StateContributor {
     val name: String
     val schemaVersion: Int
     val fields: Set<String>
     val captureCost: StateCaptureCost
     val sensitivity: StateSensitivity
+    val policy: StateResourcePolicy
     val includeInCompatibilityState: Boolean
     val boundaryBaseline: Map<String, Any?>
     val controlDrivers: Set<String>
@@ -33,6 +41,7 @@ data class StateContribution(
     val schemaVersion: Int,
     val captureCost: StateCaptureCost,
     val sensitivity: StateSensitivity,
+    val policy: StateResourcePolicy,
     val includeInCompatibilityState: Boolean,
     val boundaryBaseline: Map<String, Any?>,
     val controlDrivers: Set<String>,
@@ -46,6 +55,7 @@ data class StateContribution(
             "sensitivity" to sensitivity.name,
             "includeInCompatibilityState" to includeInCompatibilityState,
             "boundaryPolicy" to if (boundaryBaseline.isEmpty()) "OBSERVE" else "ENFORCE",
+            "resourcePolicy" to policy.name,
             "boundaryBaseline" to boundaryBaseline,
             "controlDrivers" to controlDrivers.sorted(),
             "complete" to values.values.none { it is String && it.startsWith("unreadable:") },

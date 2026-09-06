@@ -12,9 +12,6 @@ import org.mozilla.fenix.ui.efficiency.navigation.LaunchConfig
 import org.mozilla.fenix.ui.efficiency.selectors.HomeSelectors
 
 class HomeTest : BaseTest(LaunchConfig(isPocketEnabled = false, isRecentlyVisitedFeatureEnabled = false)) {
-    private val mockWebServer
-        get() = fenixTestRule.mockWebServer
-
     // TestRail link: https://mozilla.testrail.io/index.php?/cases/view/235396
     @Test
     fun homeScreenItemsTest() {

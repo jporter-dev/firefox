@@ -17,9 +17,6 @@ import org.mozilla.fenix.ui.efficiency.selectors.SettingsSelectors
 
 class SettingsAddonsTest : BaseTest() {
 
-    private val mockWebServer
-        get() = fenixTestRule.mockWebServer
-
     // Converted from legacy SettingsAddonsTest.verifyUBlockWorksInPrivateModeTest
     // TestRail link: https://mozilla.testrail.io/index.php?/cases/view/561594
     @SmokeTest

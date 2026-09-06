@@ -51,6 +51,7 @@ object StateProbe {
                         "recentlyClosedStoreTabs",
                     ),
                 captureCost = StateCaptureCost.IN_MEMORY,
+                policy = StateResourcePolicy.RESTORE,
                 boundaryBaseline =
                     mapOf(
                         "tabs" to 0,
@@ -83,6 +84,7 @@ object StateProbe {
                 fields = setOf("history", "bookmarks", "topSites"),
                 captureCost = StateCaptureCost.STORAGE_IO,
                 sensitivity = StateSensitivity.AGGREGATE_ONLY,
+                policy = StateResourcePolicy.RESTORE,
                 boundaryBaseline = mapOf("history" to 0, "bookmarks" to 0),
                 controlDrivers = setOf("history", "bookmarks", "pinnedSites"),
             ) {
@@ -112,6 +114,7 @@ object StateProbe {
                 fields = setOf("logins", "addresses", "creditCards"),
                 captureCost = StateCaptureCost.STORAGE_IO,
                 sensitivity = StateSensitivity.AGGREGATE_ONLY,
+                policy = StateResourcePolicy.RESTORE,
                 boundaryBaseline = mapOf("logins" to 0, "addresses" to 0, "creditCards" to 0),
                 controlDrivers = setOf("logins", "autofill"),
             ) {
@@ -135,6 +138,7 @@ object StateProbe {
                 fields = setOf("sitePermissions", "savedSessions"),
                 captureCost = StateCaptureCost.STORAGE_IO,
                 sensitivity = StateSensitivity.AGGREGATE_ONLY,
+                policy = StateResourcePolicy.RESTORE,
                 boundaryBaseline = mapOf("sitePermissions" to 0, "savedSessions" to 0),
                 controlDrivers = setOf("permissions", "sessions"),
             ) {
@@ -156,6 +160,7 @@ object StateProbe {
                 fields = setOf("collections", "tabGroups", "tabGroupAssignments", "recentlyClosedTabs"),
                 captureCost = StateCaptureCost.STORAGE_IO,
                 sensitivity = StateSensitivity.AGGREGATE_ONLY,
+                policy = StateResourcePolicy.RESTORE,
                 boundaryBaseline =
                     mapOf(
                         "collections" to 0,
@@ -197,6 +202,7 @@ object StateProbe {
                 name = "appRuntime",
                 fields = setOf("searchActive", "voiceInputRequested", "voiceInputResult"),
                 captureCost = StateCaptureCost.IN_MEMORY,
+                policy = StateResourcePolicy.RESTORE,
                 boundaryBaseline =
                     mapOf(
                         "searchActive" to false,
@@ -221,6 +227,7 @@ object StateProbe {
                 name = "preferences",
                 fields = setOf("preferenceOverrideCount", "preferenceOverrideIds"),
                 captureCost = StateCaptureCost.IN_MEMORY,
+                policy = StateResourcePolicy.RESTORE,
                 boundaryBaseline =
                     mapOf("preferenceOverrideCount" to 0, "preferenceOverrideIds" to emptyList<String>()),
                 controlDrivers = setOf("preferences"),
@@ -254,6 +261,7 @@ object StateProbe {
                     ),
                 captureCost = StateCaptureCost.STORAGE_IO,
                 sensitivity = StateSensitivity.AGGREGATE_ONLY,
+                policy = StateResourcePolicy.RESTORE,
                 includeInCompatibilityState = false,
                 boundaryBaseline =
                     mapOf(
@@ -311,6 +319,7 @@ object StateProbe {
                 name = "launcher",
                 fields = setOf("launcherIcon"),
                 captureCost = StateCaptureCost.PACKAGE_MANAGER,
+                policy = StateResourcePolicy.RESTORE,
                 boundaryBaseline = mapOf("launcherIcon" to "default"),
                 controlDrivers = setOf("launcherIcon"),
             ) {
@@ -320,6 +329,7 @@ object StateProbe {
                 name = "executionIdentity",
                 fields = setOf("processId"),
                 captureCost = StateCaptureCost.IN_MEMORY,
+                policy = StateResourcePolicy.OBSERVE,
             ) {
                 mapOf("processId" to observe(Process::myPid))
             },
@@ -345,6 +355,7 @@ object StateProbe {
                 schemaVersion = contributor.schemaVersion,
                 captureCost = contributor.captureCost,
                 sensitivity = contributor.sensitivity,
+                policy = contributor.policy,
                 includeInCompatibilityState = contributor.includeInCompatibilityState,
                 boundaryBaseline = contributor.boundaryBaseline,
                 controlDrivers = contributor.controlDrivers,
@@ -449,6 +460,7 @@ object StateProbe {
         fields: Set<String>,
         captureCost: StateCaptureCost,
         sensitivity: StateSensitivity = StateSensitivity.NONE,
+        policy: StateResourcePolicy,
         includeInCompatibilityState: Boolean = true,
         boundaryBaseline: Map<String, Any?> = emptyMap(),
         controlDrivers: Set<String> = emptySet(),
@@ -460,6 +472,7 @@ object StateProbe {
             override val fields = fields
             override val captureCost = captureCost
             override val sensitivity = sensitivity
+            override val policy = policy
             override val includeInCompatibilityState = includeInCompatibilityState
             override val boundaryBaseline = boundaryBaseline
             override val controlDrivers = controlDrivers

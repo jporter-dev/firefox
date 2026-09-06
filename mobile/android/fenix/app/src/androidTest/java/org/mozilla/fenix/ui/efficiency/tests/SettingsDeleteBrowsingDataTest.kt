@@ -16,9 +16,6 @@ import org.mozilla.fenix.ui.efficiency.selectors.HistorySelectors
 
 class SettingsDeleteBrowsingDataTest : BaseTest() {
 
-    private val mockWebServer
-        get() = fenixTestRule.mockWebServer
-
     @Ignore(
         "Covered by verifyNavigationReachability[1: SettingsDeleteBrowsingDataPage (TBD) — Navigation Reachability]"
     )

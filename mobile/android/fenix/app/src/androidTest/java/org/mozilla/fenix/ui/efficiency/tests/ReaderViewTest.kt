@@ -15,9 +15,6 @@ import org.mozilla.fenix.ui.efficiency.selectors.ToolbarSelectors
 
 class ReaderViewTest : BaseTest() {
 
-    private val mockWebServer
-        get() = fenixTestRule.mockWebServer
-
     private val estimatedReadingTime = "1 - 2 minutes"
 
     // ReaderViewPage is not part of PageContext (the appearance controls are a transient overlay the
