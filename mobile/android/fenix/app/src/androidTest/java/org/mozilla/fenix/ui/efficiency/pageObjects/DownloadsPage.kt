@@ -8,8 +8,8 @@ import androidx.compose.ui.test.junit4.AndroidComposeTestRule
 import org.mozilla.fenix.helpers.HomeActivityIntentTestRule
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTime
 import org.mozilla.fenix.ui.efficiency.helpers.BasePage
+import org.mozilla.fenix.ui.efficiency.navigation.NavigationGraph
 import org.mozilla.fenix.ui.efficiency.navigation.NavigationOptions
-import org.mozilla.fenix.ui.efficiency.navigation.NavigationRegistry
 import org.mozilla.fenix.ui.efficiency.navigation.NavigationStep
 import org.mozilla.fenix.ui.efficiency.selectors.BrowserPageSelectors
 import org.mozilla.fenix.ui.efficiency.selectors.DownloadsSelectors
@@ -19,8 +19,8 @@ import org.mozilla.fenix.ui.efficiency.selectors.MainMenuSelectors
 class DownloadsPage(composeRule: AndroidComposeTestRule<HomeActivityIntentTestRule, *>) : BasePage(composeRule) {
     override val pageName = "DownloadsPage"
 
-    init {
-        NavigationRegistry.register(
+    internal override fun registerNavigation(builder: NavigationGraph.Builder) {
+        builder.register(
             from = "HomePage",
             to = pageName,
             steps =
@@ -32,7 +32,7 @@ class DownloadsPage(composeRule: AndroidComposeTestRule<HomeActivityIntentTestRu
 
         // The downloads manager is also reachable from the browser's own three-dot menu, which is how
         // a download test gets there (routing browser -> home -> downloads would lose the loaded page).
-        NavigationRegistry.register(
+        builder.register(
             from = "BrowserPage",
             to = pageName,
             steps =
@@ -42,7 +42,7 @@ class DownloadsPage(composeRule: AndroidComposeTestRule<HomeActivityIntentTestRu
                 ),
         )
 
-        NavigationRegistry.register(
+        builder.register(
             from = pageName,
             to = "BrowserPage",
             steps = listOf(NavigationStep.Click(DownloadsSelectors.NAVIGATE_BACK_TOOLBAR_BUTTON)),

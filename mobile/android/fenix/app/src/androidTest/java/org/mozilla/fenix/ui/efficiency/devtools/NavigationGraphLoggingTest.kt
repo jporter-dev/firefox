@@ -11,16 +11,15 @@ import java.io.File
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.fenix.ui.efficiency.helpers.BaseTest
-import org.mozilla.fenix.ui.efficiency.navigation.NavigationRegistry
 
 @RunWith(AndroidJUnit4::class)
-class NavigationRegistryLoggingTest : BaseTest() {
+class NavigationGraphLoggingTest : BaseTest() {
     @Test
     fun logImportantNavigationPairs() {
-        NavigationRegistry.logAllPaths("AppEntry", "BookmarksPage")
-        NavigationRegistry.logAllPaths("AppEntry", "HistoryPage")
-        NavigationRegistry.logAllPaths("SettingsPage", "ToolbarComponent")
-        NavigationRegistry.logAllPaths("SettingsTabsPage", "ShareOverlayPage")
+        on.navigationGraph.logAllPaths("AppEntry", "BookmarksPage")
+        on.navigationGraph.logAllPaths("AppEntry", "HistoryPage")
+        on.navigationGraph.logAllPaths("SettingsPage", "ToolbarComponent")
+        on.navigationGraph.logAllPaths("SettingsTabsPage", "ShareOverlayPage")
     }
 
     @Test
@@ -30,11 +29,8 @@ class NavigationRegistryLoggingTest : BaseTest() {
 
     @Test
     fun logNavigationPlanSummary() {
-        // on initializes the navigation registry and must be called
-        // first for all page pairs to be graphed and logged
-        on
-        NavigationRegistry.logGraph()
-        NavigationRegistry.logPathSummary()
+        on.navigationGraph.logGraph()
+        on.navigationGraph.logPathSummary()
     }
 
     @Test
@@ -45,7 +41,7 @@ class NavigationRegistryLoggingTest : BaseTest() {
         val outputDir = context.getExternalFilesDir(null)!!
         val file = File(outputDir, "navigation-graph.dot")
 
-        NavigationRegistry.exportDotToFile(file)
+        on.navigationGraph.exportDotToFile(file)
 
         Log.i("NavigationGraphExportTest", "DOT file written to ${file.absolutePath}")
     }

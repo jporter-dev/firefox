@@ -48,9 +48,12 @@ data class NavigationRouteTrait(val name: String) {
 }
 
 data class NavigationState(
-    val page: String,
+    val node: NavigationNodeId,
     val facts: Set<NavigationFact> = emptySet(),
 ) {
+    val page: String
+        get() = node.value
+
     fun normalized(): NavigationState = copy(facts = NavigationFacts.normalize(page, facts))
 }
 

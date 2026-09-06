@@ -10,7 +10,7 @@ import org.mozilla.fenix.ui.efficiency.helpers.BasePage
 import org.mozilla.fenix.ui.efficiency.helpers.PageReadinessCondition
 import org.mozilla.fenix.ui.efficiency.helpers.PageReadinessProfiles
 import org.mozilla.fenix.ui.efficiency.helpers.PageReadinessRule
-import org.mozilla.fenix.ui.efficiency.navigation.NavigationRegistry
+import org.mozilla.fenix.ui.efficiency.navigation.NavigationGraph
 import org.mozilla.fenix.ui.efficiency.navigation.NavigationStep
 import org.mozilla.fenix.ui.efficiency.selectors.BrowserPageSelectors
 import org.mozilla.fenix.ui.efficiency.selectors.HomeSelectors
@@ -23,8 +23,8 @@ class SettingsSavedPasswordsPage(composeRule: AndroidComposeTestRule<HomeActivit
     BasePage(composeRule) {
     override val pageName = "SettingsSavedPasswordsPage"
 
-    init {
-        NavigationRegistry.register(
+    internal override fun registerNavigation(builder: NavigationGraph.Builder) {
+        builder.register(
             from = "HomePage",
             to = pageName,
             variant = "via-settings",
@@ -41,7 +41,7 @@ class SettingsSavedPasswordsPage(composeRule: AndroidComposeTestRule<HomeActivit
                 ),
         )
 
-        NavigationRegistry.register(
+        builder.register(
             from = "HomePage",
             to = pageName,
             variant = "direct-main-menu",
@@ -56,7 +56,7 @@ class SettingsSavedPasswordsPage(composeRule: AndroidComposeTestRule<HomeActivit
                 ),
         )
 
-        NavigationRegistry.register(
+        builder.register(
             from = "BrowserPage",
             to = pageName,
             steps =
@@ -70,7 +70,7 @@ class SettingsSavedPasswordsPage(composeRule: AndroidComposeTestRule<HomeActivit
                 ),
         )
 
-        NavigationRegistry.register(
+        builder.register(
             from = pageName,
             to = "BrowserPage",
             steps =

@@ -9,74 +9,112 @@ import java.io.File
 import java.util.PriorityQueue
 import org.mozilla.fenix.ui.efficiency.helpers.PageReadinessProfile
 
-object NavigationRegistry {
-    private const val TAG = "NavigationRegistry"
+class NavigationGraph
+private constructor(
+    private val graph: Map<String, List<NavigationEdge>>,
+    private val checkpointVerifiers: Map<String, (NavigationCheckpoint) -> Boolean>,
+    private val nodes: Map<String, NavigationNode>,
+) {
+    class Builder(private val declaredNodes: Set<NavigationNode>? = null) {
+        private val graph = mutableMapOf<String, MutableList<NavigationEdge>>()
+        private val checkpointVerifiers = mutableMapOf<String, (NavigationCheckpoint) -> Boolean>()
 
-    private val graph = mutableMapOf<String, MutableList<NavigationEdge>>()
-    private val duplicateRegistrations = mutableListOf<NavigationEdge>()
-    private val checkpointVerifiers = mutableMapOf<String, (NavigationCheckpoint) -> Boolean>()
+        fun register(
+            from: String,
+            to: String,
+            steps: List<NavigationStep>,
+            effects: List<NavigationEffect> = emptyList(),
+            launch: LaunchConfig? = null,
+            variant: String? = null,
+            purpose: NavigationRoutePurpose = NavigationRoutePurpose.SETUP,
+            arrival: NavigationArrival = NavigationArrival.ACTION,
+            requires: Set<NavigationFact> = emptySet(),
+            forbids: Set<NavigationFact> = emptySet(),
+            provides: Set<NavigationFact> = emptySet(),
+            invalidates: Set<NavigationFact> = emptySet(),
+            traits: Set<NavigationRouteTrait> = emptySet(),
+        ) {
+            val resolvedArrival =
+                if (declaredNodes == null && steps.isEmpty() && effects.isEmpty()) {
+                    NavigationArrival.EDGE_COMPLETION
+                } else {
+                    arrival
+                }
+            require((requires intersect forbids).isEmpty()) {
+                "Navigation route '$from->$to' cannot require and forbid the same fact"
+            }
+            require((provides intersect invalidates).isEmpty()) {
+                "Navigation route '$from->$to' cannot provide and invalidate the same fact"
+            }
+            require(steps.isNotEmpty() || effects.isNotEmpty() || resolvedArrival != NavigationArrival.ACTION) {
+                "Zero-step navigation route '$from->$to' must declare how arrival is observed"
+            }
+            require(resolvedArrival == NavigationArrival.ACTION || steps.isEmpty()) {
+                "${resolvedArrival.name} route '$from->$to' cannot contain UI actions"
+            }
 
-    fun reset() {
-        graph.clear()
-        duplicateRegistrations.clear()
-        checkpointVerifiers.clear()
-    }
+            val edge =
+                NavigationEdge(
+                    source = NavigationNodeId(from),
+                    target = NavigationNodeId(to),
+                    steps = steps,
+                    effects = effects,
+                    launch = launch,
+                    routeVariant = variant?.let(::NavigationRouteVariant),
+                    purpose = purpose,
+                    arrival = resolvedArrival,
+                    requires = requires,
+                    forbids = forbids,
+                    provides = provides,
+                    invalidates = invalidates,
+                    traits = traits,
+                )
+            check(graph.values.flatten().none { it.routeId == edge.routeId }) {
+                "Duplicate navigation route '${edge.id}' ($steps, launch=$launch)"
+            }
+            val endpointRoutes = graph[from].orEmpty().filter { it.to == to }
+            check(endpointRoutes.isEmpty() || (variant != null && endpointRoutes.none { it.variant == null })) {
+                "Multiple navigation routes for $from -> $to require explicit variants"
+            }
+            graph.getOrPut(from) { mutableListOf() }.add(edge)
+        }
 
-    fun register(
-        from: String,
-        to: String,
-        steps: List<NavigationStep>,
-        launch: LaunchConfig? = null,
-        variant: String? = null,
-        purpose: NavigationRoutePurpose = NavigationRoutePurpose.SETUP,
-        requires: Set<NavigationFact> = emptySet(),
-        forbids: Set<NavigationFact> = emptySet(),
-        provides: Set<NavigationFact> = emptySet(),
-        invalidates: Set<NavigationFact> = emptySet(),
-        traits: Set<NavigationRouteTrait> = emptySet(),
-    ) {
-        require(variant == null || routeVariantPattern.matches(variant)) {
-            "Navigation route variant must match ${routeVariantPattern.pattern}: '$variant'"
+        fun registerCheckpointVerifier(page: String, verifier: (NavigationCheckpoint) -> Boolean) {
+            check(checkpointVerifiers.putIfAbsent(page, verifier) == null) {
+                "Duplicate navigation checkpoint verifier for '$page'"
+            }
         }
-        require((requires intersect forbids).isEmpty()) {
-            "Navigation route '$from->$to' cannot require and forbid the same fact"
-        }
-        require((provides intersect invalidates).isEmpty()) {
-            "Navigation route '$from->$to' cannot provide and invalidate the same fact"
-        }
-        val edge =
-            NavigationEdge(
-                from = from,
-                to = to,
-                steps = steps,
-                launch = launch,
-                variant = variant,
-                purpose = purpose,
-                requires = requires,
-                forbids = forbids,
-                provides = provides,
-                invalidates = invalidates,
-                traits = traits,
+
+        fun build(): NavigationGraph {
+            val endpoints = buildSet {
+                graph.values.flatten().forEach { edge ->
+                    add(edge.from)
+                    add(edge.to)
+                }
+            }
+            val nodeCatalog =
+                declaredNodes?.associateBy { it.id.value }
+                    ?: endpoints.associateWith { NavigationNode(NavigationNodeId(it), NavigationNodeKind.PAGE) }
+            val unknownEndpoints = endpoints - nodeCatalog.keys
+            check(unknownEndpoints.isEmpty()) {
+                "Navigation routes reference undeclared nodes: ${unknownEndpoints.sorted().joinToString()}"
+            }
+            val unknownVerifiers = checkpointVerifiers.keys - nodeCatalog.keys
+            check(unknownVerifiers.isEmpty()) {
+                "Checkpoint verifiers reference undeclared nodes: ${unknownVerifiers.sorted().joinToString()}"
+            }
+            val requiredVerifiers =
+                endpoints.filter { nodeCatalog.getValue(it).kind == NavigationNodeKind.PAGE }.toSet()
+            val missingVerifiers = requiredVerifiers - checkpointVerifiers.keys
+            check(declaredNodes == null || missingVerifiers.isEmpty()) {
+                "Navigable nodes lack checkpoint verifiers: ${missingVerifiers.sorted().joinToString()}"
+            }
+
+            return NavigationGraph(
+                graph = graph.mapValues { (_, edges) -> edges.toList() },
+                checkpointVerifiers = checkpointVerifiers.toMap(),
+                nodes = nodeCatalog,
             )
-        if (graph.values.flatten().any { it.id == edge.id }) {
-            duplicateRegistrations += edge
-            error("Duplicate navigation route '${edge.id}' ($steps, launch=$launch)")
-        }
-        val endpointRoutes = graph[from].orEmpty().filter { it.to == to }
-        if (endpointRoutes.isNotEmpty() && (variant == null || endpointRoutes.any { it.variant == null })) {
-            error("Multiple navigation routes for $from -> $to require explicit variants")
-        }
-        graph.getOrPut(from) { mutableListOf() }.add(edge)
-
-        Log.i(TAG, "Registered navigation: ${edge.id} with ${steps.size} step(s)")
-        steps.forEachIndexed { index, step ->
-            Log.i(TAG, "   Step ${index + 1}: $step")
-        }
-    }
-
-    fun registerCheckpointVerifier(page: String, verifier: (NavigationCheckpoint) -> Boolean) {
-        check(checkpointVerifiers.putIfAbsent(page, verifier) == null) {
-            "Duplicate navigation checkpoint verifier for '$page'"
         }
     }
 
@@ -100,7 +138,7 @@ object NavigationRegistry {
     ): NavigationPath? {
         options.validateDestination(to)
 
-        val initialState = NavigationState(from, initialFacts).normalized()
+        val initialState = NavigationState(NavigationNodeId(from), initialFacts).normalized()
         val initialWaypointIndex = options.advanceWaypoint(0, from)
         val initialWaypointPageIndices = if (initialWaypointIndex == 1) setOf(0) else emptySet()
         val eligibleSelfLoopExists =
@@ -198,7 +236,7 @@ object NavigationRegistry {
         NavigationGraphDiagnostics(
             pages = getAllPages(),
             edges = graph.values.flatten().toList(),
-            duplicateRegistrations = duplicateRegistrations.toList(),
+            nodes = nodes.values.toSet(),
         )
 
     /**
@@ -354,7 +392,7 @@ object NavigationRegistry {
 
     fun toDot(): String {
         return buildString {
-            appendLine("digraph NavigationRegistry {")
+            appendLine("digraph NavigationGraph {")
             appendLine("  rankdir=LR;")
             appendLine("  node [shape=box];")
 
@@ -389,8 +427,6 @@ object NavigationRegistry {
             { candidate -> candidate.edges.joinToString(">") { it.id } },
         )
 
-    private val routeVariantPattern = Regex("[a-z][a-z0-9-]*")
-
     private data class PathCandidate(
         val state: NavigationState,
         val states: List<NavigationState>,
@@ -414,6 +450,10 @@ object NavigationRegistry {
         val traversedRequiredRoutes: Set<String>,
         val hasMoved: Boolean,
     )
+
+    private companion object {
+        const val TAG = "NavigationGraph"
+    }
 }
 
 /** Represents one distinct navigation path through the graph. */
@@ -453,7 +493,7 @@ data class NavigationPath(
 data class NavigationGraphDiagnostics(
     val pages: Set<String>,
     val edges: List<NavigationEdge>,
-    val duplicateRegistrations: List<NavigationEdge>,
+    val nodes: Set<NavigationNode>,
 ) {
     val zeroStepEdges: List<NavigationEdge>
         get() = edges.filter { it.steps.isEmpty() }

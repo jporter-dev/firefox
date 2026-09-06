@@ -14,7 +14,8 @@ import org.mozilla.fenix.helpers.HomeActivityIntentTestRule
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTime
 import org.mozilla.fenix.ui.efficiency.helpers.BasePage
 import org.mozilla.fenix.ui.efficiency.helpers.PageStateTracker
-import org.mozilla.fenix.ui.efficiency.navigation.NavigationRegistry
+import org.mozilla.fenix.ui.efficiency.navigation.NavigationArrival
+import org.mozilla.fenix.ui.efficiency.navigation.NavigationGraph
 import org.mozilla.fenix.ui.efficiency.navigation.NavigationRoutePurpose
 import org.mozilla.fenix.ui.efficiency.navigation.NavigationStep
 import org.mozilla.fenix.ui.efficiency.selectors.BrowserPageSelectors
@@ -23,11 +24,11 @@ import org.mozilla.fenix.ui.efficiency.selectors.CustomTabsSelectors
 class CustomTabsPage(composeRule: AndroidComposeTestRule<HomeActivityIntentTestRule, *>) : BasePage(composeRule) {
     override val pageName = "CustomTabsPage"
 
-    init {
-        NavigationRegistry.register(
+    internal override fun registerNavigation(builder: NavigationGraph.Builder) {
+        builder.register(
             from = "AppEntry",
             to = pageName,
-            steps = listOf(NavigationStep.Action { launchCustomTab("about:blank") }),
+            steps = listOf(NavigationStep.LaunchCustomTab("about:blank")),
             purpose = NavigationRoutePurpose.COVERAGE,
         )
 
@@ -37,10 +38,11 @@ class CustomTabsPage(composeRule: AndroidComposeTestRule<HomeActivityIntentTestR
         // absorbs the ~1s CustomTabActivity -> HomeActivity transition, during which the engineView anchor
         // isn't in the tree yet — without the edge, a slow transition makes path-finding fail with
         // "No navigation path found to 'BrowserPage'" (intermittent). Mirrors MainMenuPage -> BrowserPage.
-        NavigationRegistry.register(
+        builder.register(
             from = pageName,
             to = "BrowserPage",
             steps = listOf(),
+            arrival = NavigationArrival.EDGE_COMPLETION,
         )
     }
 
@@ -68,9 +70,8 @@ class CustomTabsPage(composeRule: AndroidComposeTestRule<HomeActivityIntentTestR
      * hands over the existing tab — a test that means to exercise the external entry point cannot substitute one for
      * the other.
      *
-     * Not a NavigationRegistry edge for the same reason launchCustomTab is not: it is an intent rather than a
-     * click-path. Sets the page state to BrowserPage, since that is where it lands; the caller should then assert on
-     * `on.browserPage` rather than continuing to chain off the custom tab.
+     * This direct test helper is not a setup route. It sets the page state to BrowserPage, since that is where it
+     * lands; the caller should then assert on `on.browserPage` rather than continuing to chain off the custom tab.
      */
     fun openUrlFromExternalLink(url: String) {
         val context = InstrumentationRegistry.getInstrumentation().targetContext

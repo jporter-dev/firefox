@@ -7,7 +7,7 @@ package org.mozilla.fenix.ui.efficiency.pageObjects
 import androidx.compose.ui.test.junit4.AndroidComposeTestRule
 import org.mozilla.fenix.helpers.HomeActivityIntentTestRule
 import org.mozilla.fenix.ui.efficiency.helpers.BasePage
-import org.mozilla.fenix.ui.efficiency.navigation.NavigationRegistry
+import org.mozilla.fenix.ui.efficiency.navigation.NavigationGraph
 import org.mozilla.fenix.ui.efficiency.navigation.NavigationStep
 import org.mozilla.fenix.ui.efficiency.selectors.SettingsPrivateBrowsingSelectors
 import org.mozilla.fenix.ui.efficiency.selectors.SettingsSelectors
@@ -16,12 +16,12 @@ class SettingsPrivateBrowsingPage(composeRule: AndroidComposeTestRule<HomeActivi
     BasePage(composeRule) {
     override val pageName = "SettingsPrivateBrowsingPage"
 
-    init {
+    internal override fun registerNavigation(builder: NavigationGraph.Builder) {
         // Reached only via the Settings hub (SettingsPage -> SettingsPrivateBrowsingPage), like every other
         // settings subpage. This page intentionally has NO direct HomePage mega-edge: that made the Home route
         // shorter than the hub route, so BFS routed browser -> Home (via the New tab button, absent on the
         // private browser) instead of browser -> menu -> Settings -> Private browsing.
-        NavigationRegistry.register(
+        builder.register(
             from = pageName,
             to = "SettingsPage",
             steps = listOf(NavigationStep.Click(SettingsSelectors.GO_BACK_BUTTON)),

@@ -32,28 +32,28 @@ import org.mozilla.fenix.ui.efficiency.helpers.PageReadinessCondition
 import org.mozilla.fenix.ui.efficiency.helpers.PageReadinessProfiles
 import org.mozilla.fenix.ui.efficiency.helpers.PageReadinessRule
 import org.mozilla.fenix.ui.efficiency.navigation.NavigationFacts
+import org.mozilla.fenix.ui.efficiency.navigation.NavigationGraph
 import org.mozilla.fenix.ui.efficiency.navigation.NavigationOptions
-import org.mozilla.fenix.ui.efficiency.navigation.NavigationRegistry
 import org.mozilla.fenix.ui.efficiency.navigation.NavigationStep
 import org.mozilla.fenix.ui.efficiency.selectors.SettingsSelectors
 
 class SettingsPage(composeRule: AndroidComposeTestRule<HomeActivityIntentTestRule, *>) : BasePage(composeRule) {
     override val pageName = "SettingsPage"
 
-    init {
-        NavigationRegistry.register(
+    internal override fun registerNavigation(builder: NavigationGraph.Builder) {
+        builder.register(
             from = pageName,
             to = "HomePage",
             steps = listOf(NavigationStep.Click(SettingsSelectors.GO_BACK_BUTTON)),
             requires = setOf(NavigationFacts.RETURN_SURFACE_HOME),
         )
-        NavigationRegistry.register(
+        builder.register(
             from = pageName,
             to = "BrowserPage",
             steps = listOf(NavigationStep.Click(SettingsSelectors.GO_BACK_BUTTON)),
             requires = setOf(NavigationFacts.RETURN_SURFACE_BROWSER),
         )
-        NavigationRegistry.register(
+        builder.register(
             from = pageName,
             to = "SettingsAccessibilityPage",
             steps =
@@ -62,12 +62,12 @@ class SettingsPage(composeRule: AndroidComposeTestRule<HomeActivityIntentTestRul
                     NavigationStep.Click(SettingsSelectors.ACCESSIBILITY_BUTTON),
                 ),
         )
-        NavigationRegistry.register(
+        builder.register(
             from = pageName,
             to = "SettingsAutofillPage",
             steps = listOf(NavigationStep.Click(SettingsSelectors.AUTOFILL_BUTTON)),
         )
-        NavigationRegistry.register(
+        builder.register(
             from = pageName,
             to = "SettingsPrivateBrowsingPage",
             steps =
@@ -77,32 +77,32 @@ class SettingsPage(composeRule: AndroidComposeTestRule<HomeActivityIntentTestRul
                     NavigationStep.Click(SettingsSelectors.PRIVATE_BROWSING_BUTTON),
                 ),
         )
-        NavigationRegistry.register(
+        builder.register(
             from = pageName,
             to = "SettingsCustomizePage",
             steps = listOf(NavigationStep.Click(SettingsSelectors.CUSTOMIZE_BUTTON)),
         )
-        NavigationRegistry.register(
+        builder.register(
             from = pageName,
             to = "SettingsHomepagePage",
             steps = listOf(NavigationStep.Click(SettingsSelectors.HOMEPAGE_BUTTON)),
         )
-        NavigationRegistry.register(
+        builder.register(
             from = pageName,
             to = "SettingsPasswordsPage",
             steps = listOf(NavigationStep.Click(SettingsSelectors.PASSWORDS_BUTTON)),
         )
-        NavigationRegistry.register(
+        builder.register(
             from = pageName,
             to = "SettingsSearchPage",
             steps = listOf(NavigationStep.Click(SettingsSelectors.SEARCH_BUTTON)),
         )
-        NavigationRegistry.register(
+        builder.register(
             from = pageName,
             to = "SettingsTabsPage",
             steps = listOf(NavigationStep.Click(SettingsSelectors.TABS_BUTTON)),
         )
-        NavigationRegistry.register(
+        builder.register(
             from = pageName,
             to = "SettingsPageSummariesPage",
             steps =
@@ -112,7 +112,7 @@ class SettingsPage(composeRule: AndroidComposeTestRule<HomeActivityIntentTestRul
                     NavigationStep.Click(SettingsSelectors.PAGE_SUMMARIES_BUTTON),
                 ),
         )
-        NavigationRegistry.register(
+        builder.register(
             from = pageName,
             to = "GooglePlayPage",
             steps =
@@ -121,7 +121,7 @@ class SettingsPage(composeRule: AndroidComposeTestRule<HomeActivityIntentTestRul
                     NavigationStep.Click(SettingsSelectors.RATE_ON_GOOGLE_PLAY_BUTTON),
                 ),
         )
-        NavigationRegistry.register(
+        builder.register(
             from = pageName,
             to = "SettingsAboutPage",
             steps =

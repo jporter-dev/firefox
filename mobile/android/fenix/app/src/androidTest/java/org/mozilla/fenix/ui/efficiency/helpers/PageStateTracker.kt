@@ -5,6 +5,7 @@
 package org.mozilla.fenix.ui.efficiency.helpers
 
 import org.mozilla.fenix.ui.efficiency.navigation.NavigationFact
+import org.mozilla.fenix.ui.efficiency.navigation.NavigationNodeId
 import org.mozilla.fenix.ui.efficiency.navigation.NavigationState
 
 /**
@@ -27,12 +28,12 @@ object PageStateTracker {
     /** Before any navigation has happened. */
     const val ENTRY = "AppEntry"
 
-    @Volatile private var currentState = NavigationState(ENTRY)
+    @Volatile private var currentState = NavigationState(NavigationNodeId(ENTRY))
 
     var currentPageName: String
         get() = currentState.page
         set(value) {
-            currentState = NavigationState(value, currentState.facts).normalized()
+            currentState = NavigationState(NavigationNodeId(value), currentState.facts).normalized()
         }
 
     val currentFacts: Set<NavigationFact>
@@ -53,6 +54,6 @@ object PageStateTracker {
 
     /** Back to "nowhere yet". Called per test, so one test's last page is not the next test's first. */
     fun reset() {
-        currentState = NavigationState(ENTRY)
+        currentState = NavigationState(NavigationNodeId(ENTRY))
     }
 }

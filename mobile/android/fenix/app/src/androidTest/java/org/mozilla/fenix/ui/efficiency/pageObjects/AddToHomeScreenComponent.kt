@@ -7,19 +7,21 @@ package org.mozilla.fenix.ui.efficiency.pageObjects
 import androidx.compose.ui.test.junit4.AndroidComposeTestRule
 import org.mozilla.fenix.helpers.HomeActivityIntentTestRule
 import org.mozilla.fenix.ui.efficiency.helpers.BasePage
+import org.mozilla.fenix.ui.efficiency.navigation.NavigationArrival
+import org.mozilla.fenix.ui.efficiency.navigation.NavigationGraph
 import org.mozilla.fenix.ui.efficiency.navigation.NavigationOptions
-import org.mozilla.fenix.ui.efficiency.navigation.NavigationRegistry
 import org.mozilla.fenix.ui.efficiency.selectors.AddToHomeScreenSelectors
 
 class AddToHomeScreenComponent(composeRule: AndroidComposeTestRule<HomeActivityIntentTestRule, *>) :
     BasePage(composeRule) {
     override val pageName = "AddToHomeScreenComponent"
 
-    init {
-        NavigationRegistry.register(
+    internal override fun registerNavigation(builder: NavigationGraph.Builder) {
+        builder.register(
             from = pageName,
             to = "BrowserPage",
             steps = listOf(),
+            arrival = NavigationArrival.EDGE_COMPLETION,
         )
     }
 

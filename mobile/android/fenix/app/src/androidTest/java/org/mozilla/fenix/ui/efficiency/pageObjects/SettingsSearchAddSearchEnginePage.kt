@@ -10,8 +10,8 @@ import org.mozilla.fenix.helpers.HomeActivityIntentTestRule
 import org.mozilla.fenix.helpers.TestHelper.mDevice
 import org.mozilla.fenix.helpers.TestHelper.packageName
 import org.mozilla.fenix.ui.efficiency.helpers.BasePage
+import org.mozilla.fenix.ui.efficiency.navigation.NavigationGraph
 import org.mozilla.fenix.ui.efficiency.navigation.NavigationOptions
-import org.mozilla.fenix.ui.efficiency.navigation.NavigationRegistry
 import org.mozilla.fenix.ui.efficiency.navigation.NavigationStep
 import org.mozilla.fenix.ui.efficiency.selectors.SettingsSearchAddSearchEngineSelectors
 import org.mozilla.fenix.ui.efficiency.selectors.SettingsSearchDefaultSearchEngineSelectors
@@ -21,14 +21,14 @@ class SettingsSearchAddSearchEnginePage(composeRule: AndroidComposeTestRule<Home
     BasePage(composeRule) {
     override val pageName = "SettingsSearchAddSearchEnginePage"
 
-    init {
-        NavigationRegistry.register(
+    internal override fun registerNavigation(builder: NavigationGraph.Builder) {
+        builder.register(
             from = "SettingsSearchDefaultSearchEnginePage",
             to = pageName,
             steps = listOf(NavigationStep.Click(SettingsSearchDefaultSearchEngineSelectors.ADD_SEARCH_ENGINE_BUTTON)),
         )
 
-        NavigationRegistry.register(
+        builder.register(
             from = pageName,
             to = "SettingsSearchDefaultSearchEnginePage",
             steps = listOf(NavigationStep.Click(SettingsSelectors.GO_BACK_BUTTON)),

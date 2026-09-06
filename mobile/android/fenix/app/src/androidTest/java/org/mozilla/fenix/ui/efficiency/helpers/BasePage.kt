@@ -58,9 +58,11 @@ import org.mozilla.fenix.ui.efficiency.logging.TestLogging
 import org.mozilla.fenix.ui.efficiency.logging.TimedReporter
 import org.mozilla.fenix.ui.efficiency.navigation.NavigationCheckpoint
 import org.mozilla.fenix.ui.efficiency.navigation.NavigationEdge
+import org.mozilla.fenix.ui.efficiency.navigation.NavigationGraph
+import org.mozilla.fenix.ui.efficiency.navigation.NavigationNodeId
+import org.mozilla.fenix.ui.efficiency.navigation.NavigationOperations
 import org.mozilla.fenix.ui.efficiency.navigation.NavigationOptions
 import org.mozilla.fenix.ui.efficiency.navigation.NavigationPath
-import org.mozilla.fenix.ui.efficiency.navigation.NavigationRegistry
 import org.mozilla.fenix.ui.efficiency.navigation.NavigationState
 import org.mozilla.fenix.ui.efficiency.navigation.NavigationStep
 
@@ -68,14 +70,16 @@ import org.mozilla.fenix.ui.efficiency.navigation.NavigationStep
  * What every page object is.
  *
  * Three things live here and nothing else should. **Navigation**: how to get to this page from wherever the last test
- * step left off, via [NavigationRegistry]. **Host wiring**: the handful of methods the verb executor in `core/` needs
- * from a page, so that the verbs themselves - reporting, polling, overlay retries, failure dumps - can live outside
- * this file. And the **verb vocabulary**, where each verb is one expression naming a primitive from `core/Verbs.kt`.
+ * step left off, via [NavigationGraph]. **Host wiring**: the handful of methods the verb executor in `core/` needs from
+ * a page, so that the verbs themselves - reporting, polling, overlay retries, failure dumps - can live outside this
+ * file. And the **verb vocabulary**, where each verb is one expression naming a primitive from `core/Verbs.kt`.
  *
  * A verb that is more than an expression is a sign the primitive is missing, not that the verb is special. See
  * docs/guides/extending-basepage.md.
  */
 abstract class BasePage(protected val composeRule: AndroidComposeTestRule<HomeActivityIntentTestRule, *>) : VerbHost {
+
+    private lateinit var navigationGraph: NavigationGraph
 
     // --- What the verb executor needs from a page --------------------------------
 
@@ -126,6 +130,13 @@ abstract class BasePage(protected val composeRule: AndroidComposeTestRule<HomeAc
             Triple(it.strategy, it.value, it.secondaryValue)
         }
 
+    internal open fun registerNavigation(builder: NavigationGraph.Builder) = Unit
+
+    internal fun bindNavigationGraph(graph: NavigationGraph) {
+        check(!::navigationGraph.isInitialized) { "Navigation graph is already bound to $pageName" }
+        navigationGraph = graph
+    }
+
     companion object {
         // Mirrors the minimum displayed-area Espresso's click() action requires before it will tap.
         private const val CLICKABLE_VISIBILITY_PERCENT = 90
@@ -170,7 +181,7 @@ abstract class BasePage(protected val composeRule: AndroidComposeTestRule<HomeAc
             Log.i("PageNavigation", "Trying to find path from '$fromPage' to '$pageName'")
 
             path =
-                NavigationRegistry.findPath(
+                navigationGraph.findPath(
                     from = fromPage,
                     to = pageName,
                     options = navigationOptions,
@@ -179,7 +190,7 @@ abstract class BasePage(protected val composeRule: AndroidComposeTestRule<HomeAc
             val selectedPath =
                 path
                     ?: run {
-                        NavigationRegistry.logGraph()
+                        navigationGraph.logGraph()
                         step.fail(
                             "No navigation path found to '$pageName'",
                             facts =
@@ -209,7 +220,7 @@ abstract class BasePage(protected val composeRule: AndroidComposeTestRule<HomeAc
             if (selectedPath.edges.isNotEmpty() && fromPage != PageStateTracker.ENTRY) {
                 val checkpoint = readinessCheckpoints.first()
                 activeReadinessProfile = checkpoint.profile
-                if (!NavigationRegistry.verifyCheckpoint(checkpoint)) {
+                if (!navigationGraph.verifyCheckpoint(checkpoint)) {
                     assertionFailure("Failed to verify $activeReadinessProfile readiness for $fromPage")
                 }
                 activeReadinessProfile = null
@@ -218,6 +229,7 @@ abstract class BasePage(protected val composeRule: AndroidComposeTestRule<HomeAc
             selectedPath.edges.forEachIndexed { edgeIndex, edge ->
                 activeEdge = edge
                 activeReadinessProfile = null
+                edge.effects.forEach(NavigationOperations::apply)
                 edge.steps.forEachIndexed { index, navigationStep ->
                     activeStepIndex = index
                     when (navigationStep) {
@@ -227,7 +239,7 @@ abstract class BasePage(protected val composeRule: AndroidComposeTestRule<HomeAc
                             mozClickIfPresent(navigationStep.selector, timeout = navigationStep.timeout)
                         is NavigationStep.Swipe -> mozSwipeTo(navigationStep.selector, navigationStep.direction)
                         is NavigationStep.OpenNotificationsTray -> mozOpenNotificationsTray()
-                        is NavigationStep.Action -> navigationStep.action()
+                        is NavigationStep.LaunchCustomTab -> NavigationOperations.launchCustomTab(navigationStep.url)
                         is NavigationStep.EnterText -> mozEnterText(url, navigationStep.selector, navigationActionWait)
                         is NavigationStep.EnterTextValue ->
                             mozEnterText(navigationStep.text, navigationStep.selector, navigationActionWait)
@@ -246,7 +258,7 @@ abstract class BasePage(protected val composeRule: AndroidComposeTestRule<HomeAc
                 val pageIndex = edgeIndex + 1
                 val checkpoint = readinessCheckpoints[pageIndex]
                 activeReadinessProfile = checkpoint.profile
-                if (!NavigationRegistry.verifyCheckpoint(checkpoint)) {
+                if (!navigationGraph.verifyCheckpoint(checkpoint)) {
                     assertionFailure("Failed to verify $activeReadinessProfile readiness for ${edge.to}")
                 }
                 PageStateTracker.arrive(selectedPath.states[pageIndex])
@@ -302,7 +314,8 @@ abstract class BasePage(protected val composeRule: AndroidComposeTestRule<HomeAc
                     PageReadinessContext(
                         page = pageName,
                         profile = PageReadinessProfile.IDENTIFIED,
-                        navigationState = NavigationState(pageName, PageStateTracker.currentFacts).normalized(),
+                        navigationState =
+                            NavigationState(NavigationNodeId(pageName), PageStateTracker.currentFacts).normalized(),
                     ),
                 policy = WaitPolicy.Immediate,
             )
@@ -334,7 +347,7 @@ abstract class BasePage(protected val composeRule: AndroidComposeTestRule<HomeAc
         )
 
     fun mozVerifyReadiness(profile: PageReadinessProfile = PageReadinessProfile.INTERACTIVE): BasePage {
-        val state = NavigationState(pageName, PageStateTracker.currentFacts).normalized()
+        val state = NavigationState(NavigationNodeId(pageName), PageStateTracker.currentFacts).normalized()
         if (!mozWaitForPageToLoad(PageReadinessContext(pageName, profile, state))) {
             dumpFailure("mozVerifyReadiness failed: $pageName profile '$profile'")
             assertionFailure("Page '$pageName' did not satisfy readiness profile '$profile'")

@@ -21,7 +21,7 @@ sealed class NavigationStep {
     // who passed a real action expecting it to run.
     object OpenNotificationsTray : NavigationStep()
 
-    data class Action(val action: () -> Unit) : NavigationStep()
+    data class LaunchCustomTab(val url: String) : NavigationStep()
 
     data class EnterText(val selector: Selector) : NavigationStep()
 

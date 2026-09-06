@@ -9,8 +9,8 @@ import androidx.compose.ui.test.junit4.AndroidComposeTestRule
 import org.mozilla.fenix.helpers.HomeActivityIntentTestRule
 import org.mozilla.fenix.ui.efficiency.helpers.BasePage
 import org.mozilla.fenix.ui.efficiency.helpers.Selector
+import org.mozilla.fenix.ui.efficiency.navigation.NavigationGraph
 import org.mozilla.fenix.ui.efficiency.navigation.NavigationOptions
-import org.mozilla.fenix.ui.efficiency.navigation.NavigationRegistry
 import org.mozilla.fenix.ui.efficiency.navigation.NavigationStep
 import org.mozilla.fenix.ui.efficiency.selectors.HomeSelectors
 import org.mozilla.fenix.ui.efficiency.selectors.MainMenuSelectors
@@ -21,8 +21,8 @@ class SettingsDeleteBrowsingDataPage(composeRule: AndroidComposeTestRule<HomeAct
     BasePage(composeRule) {
     override val pageName = "SettingsDeleteBrowsingDataPage"
 
-    init {
-        NavigationRegistry.register(
+    internal override fun registerNavigation(builder: NavigationGraph.Builder) {
+        builder.register(
             from = "HomePage",
             to = pageName,
             steps =
@@ -36,7 +36,7 @@ class SettingsDeleteBrowsingDataPage(composeRule: AndroidComposeTestRule<HomeAct
 
         // Reachable from the Settings screen too, so the page can be opened after browsing (Browser ->
         // MainMenu -> Settings -> here) and not only straight from Home.
-        NavigationRegistry.register(
+        builder.register(
             from = "SettingsPage",
             to = pageName,
             steps =
@@ -48,7 +48,7 @@ class SettingsDeleteBrowsingDataPage(composeRule: AndroidComposeTestRule<HomeAct
 
         // Back out to Settings so the graph can route onward (e.g. to Home, the tab drawer or History)
         // after a deletion, the way the legacy tests do with goBack()/exitMenu().
-        NavigationRegistry.register(
+        builder.register(
             from = pageName,
             to = "SettingsPage",
             steps = listOf(NavigationStep.Click(SettingsSelectors.GO_BACK_BUTTON)),

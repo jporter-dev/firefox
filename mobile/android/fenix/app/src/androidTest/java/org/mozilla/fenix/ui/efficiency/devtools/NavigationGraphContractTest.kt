@@ -12,15 +12,22 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.fenix.ui.efficiency.helpers.BaseTest
 import org.mozilla.fenix.ui.efficiency.helpers.PageReadinessProfile
+import org.mozilla.fenix.ui.efficiency.navigation.NavigationArrival
 import org.mozilla.fenix.ui.efficiency.navigation.NavigationCheckpoint
 import org.mozilla.fenix.ui.efficiency.navigation.NavigationEdge
+import org.mozilla.fenix.ui.efficiency.navigation.NavigationEffect
 import org.mozilla.fenix.ui.efficiency.navigation.NavigationFact
 import org.mozilla.fenix.ui.efficiency.navigation.NavigationFacts
+import org.mozilla.fenix.ui.efficiency.navigation.NavigationGraph
+import org.mozilla.fenix.ui.efficiency.navigation.NavigationNode
+import org.mozilla.fenix.ui.efficiency.navigation.NavigationNodeId
+import org.mozilla.fenix.ui.efficiency.navigation.NavigationNodeKind
 import org.mozilla.fenix.ui.efficiency.navigation.NavigationOptions
 import org.mozilla.fenix.ui.efficiency.navigation.NavigationPath
-import org.mozilla.fenix.ui.efficiency.navigation.NavigationRegistry
+import org.mozilla.fenix.ui.efficiency.navigation.NavigationRouteId
 import org.mozilla.fenix.ui.efficiency.navigation.NavigationRouteTrait
 import org.mozilla.fenix.ui.efficiency.navigation.NavigationState
+import org.mozilla.fenix.ui.efficiency.navigation.NavigationStep
 import org.mozilla.fenix.ui.efficiency.navigation.PageCatalog
 import org.mozilla.fenix.ui.efficiency.navigation.PageObjectKind
 
@@ -28,12 +35,10 @@ import org.mozilla.fenix.ui.efficiency.navigation.PageObjectKind
 class NavigationGraphContractTest : BaseTest() {
     @Test
     fun graphShapeMatchesTheCharacterizedContract() {
-        on
-        val diagnostics = NavigationRegistry.diagnostics()
+        val diagnostics = on.navigationGraph.diagnostics()
 
         assertEquals(54, diagnostics.pages.size)
         assertEquals(107, diagnostics.edges.size)
-        assertTrue(diagnostics.duplicateRegistrations.isEmpty())
         assertEquals(
             setOf(
                 "AddToHomeScreenComponent->BrowserPage",
@@ -46,6 +51,56 @@ class NavigationGraphContractTest : BaseTest() {
             ),
             diagnostics.zeroStepEdges.map { "${it.from}->${it.to}" }.toSet(),
         )
+        assertTrue(diagnostics.zeroStepEdges.all { it.arrival != NavigationArrival.ACTION })
+        assertEquals(
+            NavigationNodeKind.ENTRY,
+            diagnostics.nodes.single { it.id == NavigationNodeId("AppEntry") }.kind,
+        )
+        assertEquals(
+            NavigationNodeKind.EXTERNAL_SURFACE,
+            diagnostics.nodes.single { it.id == NavigationNodeId("GooglePlayPage") }.kind,
+        )
+    }
+
+    @Test
+    fun graphConstructionRejectsUndeclaredEndpoints() {
+        val builder =
+            NavigationGraph.Builder(setOf(NavigationNode(NavigationNodeId("KnownPage"), NavigationNodeKind.PAGE)))
+        builder.register("KnownPage", "MissingPage", listOf(NavigationStep.PressBack))
+
+        val failure = runCatching(builder::build).exceptionOrNull()
+
+        assertTrue(failure is IllegalStateException)
+        assertTrue(failure?.message.orEmpty().contains("MissingPage"))
+    }
+
+    @Test
+    fun productionGraphRequiresAnExplicitZeroStepArrival() {
+        val builder = NavigationGraph.Builder(emptySet())
+
+        val failure = runCatching { builder.register("SourcePage", "TargetPage", emptyList()) }.exceptionOrNull()
+
+        assertTrue(failure is IllegalArgumentException)
+        assertTrue(failure?.message.orEmpty().contains("must declare how arrival is observed"))
+    }
+
+    @Test
+    fun routeIdentityAndEffectsRemainPartOfTheSelectedPath() {
+        val edge =
+            on.navigationGraph
+                .findPath(
+                    "HomePage",
+                    "BookmarksPage",
+                    NavigationOptions(requiredFacts = setOf(NavigationFacts.BOOKMARKS_HAVE_ITEMS)),
+                )
+                ?.edges
+                ?.single()
+
+        assertEquals(
+            NavigationRouteId("HomePage->BookmarksPage#with-searchable-bookmark"),
+            edge?.routeId,
+        )
+        assertTrue(edge?.effects?.single() is NavigationEffect.CreateBookmark)
     }
 
     @Test
@@ -57,7 +112,7 @@ class NavigationGraphContractTest : BaseTest() {
             pages.filter { it.kind == PageObjectKind.NAVIGABLE }.map { it.getter(context).pageName }.toSet()
         val selectorOnlyPages =
             pages.filter { it.kind == PageObjectKind.SELECTOR_ONLY }.map { it.getter(context).pageName }.toSet()
-        val graphPages = NavigationRegistry.diagnostics().pages
+        val graphPages = context.navigationGraph.diagnostics().pages
 
         assertEquals(setOf("AppEntry", "GooglePlayPage"), graphPages - contextPages)
         assertEquals(setOf("CollectionsPage", "MicrosurveysPage", "ShortcutsPage"), selectorOnlyPages)
@@ -91,10 +146,11 @@ class NavigationGraphContractTest : BaseTest() {
 
     @Test
     fun duplicateEdgeRegistrationFailsAtGraphConstruction() {
-        NavigationRegistry.register("DuplicateSource", "DuplicateTarget", emptyList())
+        val builder = NavigationGraph.Builder()
+        builder.register("DuplicateSource", "DuplicateTarget", emptyList())
 
         val failure = runCatching {
-            NavigationRegistry.register("DuplicateSource", "DuplicateTarget", emptyList())
+            builder.register("DuplicateSource", "DuplicateTarget", emptyList())
         }
             .exceptionOrNull()
 
@@ -104,26 +160,22 @@ class NavigationGraphContractTest : BaseTest() {
 
     @Test
     fun routeVariantsAreExplicitAndSelectedDeterministically() {
-        on
-        val path = NavigationRegistry.findPath("HomePage", "SettingsSavedPasswordsPage")
+        val path = on.navigationGraph.findPath("HomePage", "SettingsSavedPasswordsPage")
 
         assertEquals("direct-main-menu", path?.edges?.single()?.variant)
     }
 
     @Test
     fun samePageNavigationUsesTheRegisteredSelfLoop() {
-        on
-
         assertEquals(
             listOf("BrowserPage->BrowserPage"),
-            NavigationRegistry.findPath("BrowserPage", "BrowserPage")?.edges?.map { it.id },
+            on.navigationGraph.findPath("BrowserPage", "BrowserPage")?.edges?.map { it.id },
         )
     }
 
     @Test
     fun navigationSelectsTheLeastDestructiveEquallyDirectPath() {
-        on
-        val path = NavigationRegistry.findPath("BrowserPage", "HistoryPage")
+        val path = on.navigationGraph.findPath("BrowserPage", "HistoryPage")
 
         assertEquals(
             listOf("BrowserPage->MainMenuPage", "MainMenuPage->HistoryPage"),
@@ -134,36 +186,40 @@ class NavigationGraphContractTest : BaseTest() {
 
     @Test
     fun browserPageIsOnlyUsedAsTransitWhenNoBrowserFreePathExists() {
-        on
-        NavigationRegistry.register("TransitSource", "BrowserPage", emptyList())
-        NavigationRegistry.register("BrowserPage", "TransitTarget", emptyList())
-        NavigationRegistry.register("TransitSource", "SafeMiddle", emptyList())
-        NavigationRegistry.register("SafeMiddle", "TransitTarget", emptyList())
-        NavigationRegistry.register("BrowserPage", "BrowserOnlyTarget", emptyList())
+        val graph = syntheticGraph {
+            register("TransitSource", "BrowserPage", emptyList())
+            register("BrowserPage", "TransitTarget", emptyList())
+            register("TransitSource", "SafeMiddle", emptyList())
+            register("SafeMiddle", "TransitTarget", emptyList())
+            register("BrowserPage", "BrowserOnlyTarget", emptyList())
+        }
 
         assertEquals(
             listOf("TransitSource", "SafeMiddle", "TransitTarget"),
-            NavigationRegistry.findPath("TransitSource", "TransitTarget")?.pages,
+            graph.findPath("TransitSource", "TransitTarget")?.pages,
         )
         assertEquals(
             listOf("TransitSource", "BrowserPage"),
-            NavigationRegistry.findPath("TransitSource", "BrowserPage")?.pages,
+            graph.findPath("TransitSource", "BrowserPage")?.pages,
         )
         assertEquals(
             listOf("TransitSource", "BrowserPage", "BrowserOnlyTarget"),
-            NavigationRegistry.findPath("TransitSource", "BrowserOnlyTarget")?.pages,
+            graph.findPath("TransitSource", "BrowserOnlyTarget")?.pages,
         )
     }
 
     @Test
     fun navigationOptionsConstrainPagesAndRoutes() {
-        NavigationRegistry.register("ConstraintSource", "ConstraintTarget", emptyList())
-        NavigationRegistry.register("ConstraintSource", "ConstraintWaypoint", emptyList())
-        NavigationRegistry.register("ConstraintWaypoint", "ConstraintTarget", emptyList())
+        val graph = syntheticGraph {
+            register("ConstraintSource", "ConstraintTarget", emptyList())
+            register("ConstraintSource", "ConstraintWaypoint", emptyList())
+            register("ConstraintWaypoint", "ConstraintTarget", emptyList())
+        }
 
         assertEquals(
             listOf("ConstraintSource", "ConstraintWaypoint", "ConstraintTarget"),
-            NavigationRegistry.findPath(
+            graph
+                .findPath(
                     from = "ConstraintSource",
                     to = "ConstraintTarget",
                     options = NavigationOptions(via = listOf("ConstraintWaypoint")),
@@ -172,7 +228,8 @@ class NavigationGraphContractTest : BaseTest() {
         )
         assertEquals(
             listOf("ConstraintSource", "ConstraintWaypoint", "ConstraintTarget"),
-            NavigationRegistry.findPath(
+            graph
+                .findPath(
                     from = "ConstraintSource",
                     to = "ConstraintTarget",
                     options = NavigationOptions(excludedRoutes = setOf("ConstraintSource->ConstraintTarget")),
@@ -181,7 +238,8 @@ class NavigationGraphContractTest : BaseTest() {
         )
         assertEquals(
             listOf("ConstraintSource", "ConstraintTarget"),
-            NavigationRegistry.findPath(
+            graph
+                .findPath(
                     from = "ConstraintSource",
                     to = "ConstraintTarget",
                     options = NavigationOptions(excludedPages = setOf("ConstraintWaypoint")),
@@ -190,7 +248,8 @@ class NavigationGraphContractTest : BaseTest() {
         )
         assertEquals(
             setOf(1),
-            NavigationRegistry.findPath(
+            graph
+                .findPath(
                     from = "ConstraintSource",
                     to = "ConstraintTarget",
                     options = NavigationOptions(via = listOf("ConstraintWaypoint")),
@@ -202,19 +261,22 @@ class NavigationGraphContractTest : BaseTest() {
     @Test
     fun navigationOptionsCanRequireRoutesAndAvoidTraits() {
         val disruptive = NavigationRouteTrait("DISRUPTIVE")
-        NavigationRegistry.register(
-            from = "PolicySource",
-            to = "PolicyRisky",
-            steps = emptyList(),
-            traits = setOf(disruptive),
-        )
-        NavigationRegistry.register("PolicyRisky", "PolicyTarget", emptyList())
-        NavigationRegistry.register("PolicySource", "PolicySafe", emptyList())
-        NavigationRegistry.register("PolicySafe", "PolicyTarget", emptyList())
+        val graph = syntheticGraph {
+            register(
+                from = "PolicySource",
+                to = "PolicyRisky",
+                steps = emptyList(),
+                traits = setOf(disruptive),
+            )
+            register("PolicyRisky", "PolicyTarget", emptyList())
+            register("PolicySource", "PolicySafe", emptyList())
+            register("PolicySafe", "PolicyTarget", emptyList())
+        }
 
         assertEquals(
             listOf("PolicySource", "PolicySafe", "PolicyTarget"),
-            NavigationRegistry.findPath(
+            graph
+                .findPath(
                     from = "PolicySource",
                     to = "PolicyTarget",
                     options = NavigationOptions(avoidTraits = setOf(disruptive)),
@@ -223,7 +285,8 @@ class NavigationGraphContractTest : BaseTest() {
         )
         assertEquals(
             listOf("PolicySource", "PolicyRisky", "PolicyTarget"),
-            NavigationRegistry.findPath(
+            graph
+                .findPath(
                     from = "PolicySource",
                     to = "PolicyTarget",
                     options = NavigationOptions(requiredRoutes = setOf("PolicySource->PolicyRisky")),
@@ -234,9 +297,12 @@ class NavigationGraphContractTest : BaseTest() {
 
     @Test
     fun readinessPlanChecksEveryVisitedPage() {
-        val states = listOf("Start", "Intermediate", "Waypoint", "Destination").map(::NavigationState)
+        val states =
+            listOf("Start", "Intermediate", "Waypoint", "Destination").map {
+                NavigationState(NavigationNodeId(it))
+            }
         val edges = states.zipWithNext { from, to ->
-            NavigationEdge(from = from.page, to = to.page, steps = emptyList())
+            NavigationEdge(source = from.node, target = to.node, steps = emptyList())
         }
         val path =
             NavigationPath(
@@ -271,38 +337,46 @@ class NavigationGraphContractTest : BaseTest() {
     fun checkpointVerifierReceivesThePlannedStateAndProfile() {
         val expected =
             NavigationCheckpoint(
-                NavigationState("CheckpointPage", setOf(NavigationFact("READY"))),
+                NavigationState(NavigationNodeId("CheckpointPage"), setOf(NavigationFact("READY"))),
                 PageReadinessProfile.NAVIGATION_READY,
             )
         var received: NavigationCheckpoint? = null
-        NavigationRegistry.registerCheckpointVerifier("CheckpointPage") {
-            received = it
-            true
-        }
+        val graph =
+            NavigationGraph.Builder()
+                .apply {
+                    register("CheckpointPage", "CheckpointTarget", emptyList())
+                    registerCheckpointVerifier("CheckpointPage") {
+                        received = it
+                        true
+                    }
+                }
+                .build()
 
-        assertTrue(NavigationRegistry.verifyCheckpoint(expected))
+        assertTrue(graph.verifyCheckpoint(expected))
         assertEquals(expected, received)
     }
 
     @Test
     fun searchDistinguishesTheSamePageWithDifferentFacts() {
         val unlocked = NavigationFact("UNLOCKED")
-        NavigationRegistry.register("StateSource", "StateJoin", emptyList())
-        NavigationRegistry.register(
-            from = "StateSource",
-            to = "StateProvider",
-            steps = emptyList(),
-            provides = setOf(unlocked),
-        )
-        NavigationRegistry.register("StateProvider", "StateJoin", emptyList())
-        NavigationRegistry.register(
-            from = "StateJoin",
-            to = "StateTarget",
-            steps = emptyList(),
-            requires = setOf(unlocked),
-        )
+        val graph = syntheticGraph {
+            register("StateSource", "StateJoin", emptyList())
+            register(
+                from = "StateSource",
+                to = "StateProvider",
+                steps = emptyList(),
+                provides = setOf(unlocked),
+            )
+            register("StateProvider", "StateJoin", emptyList())
+            register(
+                from = "StateJoin",
+                to = "StateTarget",
+                steps = emptyList(),
+                requires = setOf(unlocked),
+            )
+        }
 
-        val path = NavigationRegistry.findPath("StateSource", "StateTarget")
+        val path = graph.findPath("StateSource", "StateTarget")
 
         assertEquals(listOf("StateSource", "StateProvider", "StateJoin", "StateTarget"), path?.pages)
         assertEquals(setOf(unlocked), path?.states?.last()?.facts)
@@ -311,57 +385,59 @@ class NavigationGraphContractTest : BaseTest() {
     @Test
     fun navigationFactsSupportGoalRequirementsAndRouteGuards() {
         val authorized = NavigationFact("AUTHORIZED")
-        NavigationRegistry.register("FactSource", "FactTarget", emptyList())
-        NavigationRegistry.register(
-            from = "FactSource",
-            to = "FactProvider",
-            steps = emptyList(),
-            provides = setOf(authorized),
-        )
-        NavigationRegistry.register("FactProvider", "FactTarget", emptyList())
-        NavigationRegistry.register(
-            from = "FactProvider",
-            to = "ForbiddenTarget",
-            steps = emptyList(),
-            forbids = setOf(authorized),
-        )
-        NavigationRegistry.register(
-            from = "FactProvider",
-            to = "FactRevoker",
-            steps = emptyList(),
-            invalidates = setOf(authorized),
-        )
-        NavigationRegistry.register(
-            from = "FactRevoker",
-            to = "GuardedTarget",
-            steps = emptyList(),
-            requires = setOf(authorized),
-        )
+        val graph = syntheticGraph {
+            register("FactSource", "FactTarget", emptyList())
+            register(
+                from = "FactSource",
+                to = "FactProvider",
+                steps = emptyList(),
+                provides = setOf(authorized),
+            )
+            register("FactProvider", "FactTarget", emptyList())
+            register(
+                from = "FactProvider",
+                to = "ForbiddenTarget",
+                steps = emptyList(),
+                forbids = setOf(authorized),
+            )
+            register(
+                from = "FactProvider",
+                to = "FactRevoker",
+                steps = emptyList(),
+                invalidates = setOf(authorized),
+            )
+            register(
+                from = "FactRevoker",
+                to = "GuardedTarget",
+                steps = emptyList(),
+                requires = setOf(authorized),
+            )
+        }
 
         assertEquals(
             listOf("FactSource", "FactProvider", "FactTarget"),
-            NavigationRegistry.findPath(
+            graph
+                .findPath(
                     from = "FactSource",
                     to = "FactTarget",
                     options = NavigationOptions(requiredFacts = setOf(authorized)),
                 )
                 ?.pages,
         )
-        assertNull(NavigationRegistry.findPath("FactSource", "ForbiddenTarget"))
-        assertNull(NavigationRegistry.findPath("FactSource", "GuardedTarget"))
+        assertNull(graph.findPath("FactSource", "ForbiddenTarget"))
+        assertNull(graph.findPath("FactSource", "GuardedTarget"))
     }
 
     @Test
     fun settingsReturnToTheSurfaceThatOpenedThem() {
-        on
-
         assertEquals(
             listOf(
                 "SettingsCustomizePage->SettingsPage",
                 "SettingsPage->HomePage",
                 "HomePage->BrowserPage",
             ),
-            NavigationRegistry.findPath(
+            on.navigationGraph
+                .findPath(
                     from = "SettingsCustomizePage",
                     to = "BrowserPage",
                     initialFacts = setOf(NavigationFacts.RETURN_SURFACE_HOME),
@@ -374,7 +450,8 @@ class NavigationGraphContractTest : BaseTest() {
                 "SettingsCustomizePage->SettingsPage",
                 "SettingsPage->BrowserPage",
             ),
-            NavigationRegistry.findPath(
+            on.navigationGraph
+                .findPath(
                     from = "SettingsCustomizePage",
                     to = "BrowserPage",
                     initialFacts = setOf(NavigationFacts.RETURN_SURFACE_BROWSER),
@@ -383,4 +460,7 @@ class NavigationGraphContractTest : BaseTest() {
                 ?.map { it.id },
         )
     }
+
+    private fun syntheticGraph(configure: NavigationGraph.Builder.() -> Unit): NavigationGraph =
+        NavigationGraph.Builder().apply(configure).build()
 }

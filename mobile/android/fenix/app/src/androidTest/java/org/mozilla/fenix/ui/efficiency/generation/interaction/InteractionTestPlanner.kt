@@ -5,12 +5,12 @@
 package org.mozilla.fenix.ui.efficiency.generation.interaction
 
 import kotlin.text.contains
+import org.mozilla.fenix.ui.efficiency.generation.NavigationGraphBootstrap
 import org.mozilla.fenix.ui.efficiency.generation.NavigationTestPlanner
 import org.mozilla.fenix.ui.efficiency.generation.toDisplayLabel
 import org.mozilla.fenix.ui.efficiency.helpers.BasePage
 import org.mozilla.fenix.ui.efficiency.helpers.PageContext
 import org.mozilla.fenix.ui.efficiency.helpers.SelectorId
-import org.mozilla.fenix.ui.efficiency.navigation.NavigationRegistry
 
 object InteractionTestPlanner {
 
@@ -27,11 +27,12 @@ object InteractionTestPlanner {
     )
 
     fun buildInteractionCases(): List<InteractionCasePlan> {
-        return NavigationTestPlanner.buildReachabilityCases()
+        val graph = NavigationGraphBootstrap.buildGraph()
+        return NavigationTestPlanner.buildReachabilityCases(graph)
             .filter { it.propertyName.contains("bookmark", ignoreCase = true) }
             .flatMap { pageCase ->
                 val pageName = pageCase.propertyName.toDisplayLabel()
-                val pathCount = NavigationRegistry.findAllPaths("AppEntry", pageName).size
+                val pathCount = graph.findAllPaths("AppEntry", pageName).size
                 val selectorRefs = SelectorCatalog.discoverSelectorsForPage(pageCase.propertyName)
 
                 selectorRefs

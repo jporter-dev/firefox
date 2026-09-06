@@ -31,7 +31,6 @@ import org.mozilla.fenix.ui.efficiency.logging.TestLogging
 import org.mozilla.fenix.ui.efficiency.logging.TestStatus
 import org.mozilla.fenix.ui.efficiency.logging.TimedReporter
 import org.mozilla.fenix.ui.efficiency.navigation.LaunchConfig
-import org.mozilla.fenix.ui.efficiency.navigation.NavigationRegistry
 import org.mozilla.fenix.ui.efficiency.navigation.PageCatalog
 
 /**
@@ -205,7 +204,6 @@ abstract class BaseTest(
                 try {
                     val cfg = currentExecutionContext.launchConfig
                     _pageContext = null
-                    NavigationRegistry.reset()
                     requireAppDataCleanup("before", description.displayName)
                     RuntimeStateCleaner.restore("before", description.displayName)
                     StateProbe.assertIsolated("afterSetup", description.displayName)
@@ -498,7 +496,7 @@ abstract class BaseTest(
 
         if (flagArg("logNavigationSummary")) {
             on
-            NavigationRegistry.logPathSummary()
+            on.navigationGraph.logPathSummary()
         }
         if (flagArg("logPageCatalog")) {
             val pages = PageCatalog.discoverPages()

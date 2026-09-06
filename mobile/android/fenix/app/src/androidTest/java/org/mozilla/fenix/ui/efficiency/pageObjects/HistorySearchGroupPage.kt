@@ -14,9 +14,9 @@ import org.mozilla.fenix.ui.efficiency.selectors.HistorySearchGroupSelectors
  * The history search-group screen, reached by tapping a group in the homepage's "Recently visited" section.
  *
  * No navigation edge is registered and this page is deliberately absent from PageContext: it is entered by clicking a
- * *dynamic* label — the search term — which NavigationRegistry cannot express, and its toolbar title is that same term
- * rather than "History", so HistoryPage's arrival check cannot stand in for it. Tests instantiate this page directly,
- * as they do for [ReaderViewPage].
+ * *dynamic* label — the search term — which the navigation graph cannot express, and its toolbar title is that same
+ * term rather than "History", so HistoryPage's arrival check cannot stand in for it. Tests instantiate this page
+ * directly, as they do for [ReaderViewPage].
  */
 class HistorySearchGroupPage(composeRule: AndroidComposeTestRule<HomeActivityIntentTestRule, *>) :
     BasePage(composeRule) {

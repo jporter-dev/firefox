@@ -18,6 +18,7 @@ import org.mozilla.fenix.ui.efficiency.helpers.Selector
 import org.mozilla.fenix.ui.efficiency.helpers.SelectorStrategy
 import org.mozilla.fenix.ui.efficiency.navigation.NavigationEdge
 import org.mozilla.fenix.ui.efficiency.navigation.NavigationFact
+import org.mozilla.fenix.ui.efficiency.navigation.NavigationNodeId
 import org.mozilla.fenix.ui.efficiency.navigation.NavigationState
 
 class PageReadinessContractTest {
@@ -114,7 +115,12 @@ class PageReadinessContractTest {
     fun conditionalRulesUseThePlannedOutgoingEdge() {
         val directTarget = selector("direct target")
         val base = selector("base", setOf(PageReadinessProfile.NAVIGATION_READY))
-        val edge = NavigationEdge("TestPage", "TargetPage", emptyList())
+        val edge =
+            NavigationEdge(
+                NavigationNodeId("TestPage"),
+                NavigationNodeId("TargetPage"),
+                emptyList(),
+            )
         val contract =
             PageReadinessContract.fromSelectors(listOf(base))
                 .withRule(
@@ -165,5 +171,11 @@ class PageReadinessContractTest {
         profile: PageReadinessProfile = PageReadinessProfile.NAVIGATION_READY,
         facts: Set<NavigationFact> = emptySet(),
         outgoingEdge: NavigationEdge? = null,
-    ) = PageReadinessContext("TestPage", profile, NavigationState("TestPage", facts), outgoingEdge = outgoingEdge)
+    ) =
+        PageReadinessContext(
+            "TestPage",
+            profile,
+            NavigationState(NavigationNodeId("TestPage"), facts),
+            outgoingEdge = outgoingEdge,
+        )
 }

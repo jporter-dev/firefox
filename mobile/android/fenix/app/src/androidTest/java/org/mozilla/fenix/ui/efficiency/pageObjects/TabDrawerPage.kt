@@ -17,8 +17,8 @@ import org.mozilla.fenix.tabstray.TabsTrayTestTag
 import org.mozilla.fenix.ui.efficiency.helpers.BasePage
 import org.mozilla.fenix.ui.efficiency.helpers.SwipeDirection
 import org.mozilla.fenix.ui.efficiency.navigation.NavigationFacts
+import org.mozilla.fenix.ui.efficiency.navigation.NavigationGraph
 import org.mozilla.fenix.ui.efficiency.navigation.NavigationOptions
-import org.mozilla.fenix.ui.efficiency.navigation.NavigationRegistry
 import org.mozilla.fenix.ui.efficiency.navigation.NavigationStep
 import org.mozilla.fenix.ui.efficiency.selectors.TabDrawerSelectors
 import org.mozilla.fenix.ui.efficiency.selectors.ToolbarSelectors
@@ -26,8 +26,8 @@ import org.mozilla.fenix.ui.efficiency.selectors.ToolbarSelectors
 class TabDrawerPage(composeRule: AndroidComposeTestRule<HomeActivityIntentTestRule, *>) : BasePage(composeRule) {
     override val pageName = "TabDrawerPage"
 
-    init {
-        NavigationRegistry.register(
+    internal override fun registerNavigation(builder: NavigationGraph.Builder) {
+        builder.register(
             from = "HomePage",
             to = pageName,
             steps = listOf(NavigationStep.Click(ToolbarSelectors.TAB_COUNTER)),
@@ -37,20 +37,20 @@ class TabDrawerPage(composeRule: AndroidComposeTestRule<HomeActivityIntentTestRu
         // the content-description variant: UIAutomator (not Compose, which can hang while GeckoView is
         // active) AND not the testTag, because with shouldUseExpandedToolbar the counter moves to the bottom
         // navigation bar and carries no tag there.
-        NavigationRegistry.register(
+        builder.register(
             from = "BrowserPage",
             to = pageName,
             steps = listOf(NavigationStep.Click(ToolbarSelectors.TAB_COUNTER_ANY_LAYOUT)),
         )
 
-        NavigationRegistry.register(
+        builder.register(
             from = pageName,
             to = "HomePage",
             steps = listOf(NavigationStep.PressBack),
             requires = setOf(NavigationFacts.RETURN_SURFACE_HOME),
         )
 
-        NavigationRegistry.register(
+        builder.register(
             from = pageName,
             to = "BrowserPage",
             steps = listOf(NavigationStep.PressBack),

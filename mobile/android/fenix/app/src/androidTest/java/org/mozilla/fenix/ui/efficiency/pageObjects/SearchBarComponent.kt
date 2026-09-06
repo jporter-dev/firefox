@@ -19,8 +19,8 @@ import org.mozilla.fenix.helpers.TestHelper.packageName
 import org.mozilla.fenix.ui.efficiency.helpers.BasePage
 import org.mozilla.fenix.ui.efficiency.helpers.Selector
 import org.mozilla.fenix.ui.efficiency.helpers.SelectorStrategy
+import org.mozilla.fenix.ui.efficiency.navigation.NavigationGraph
 import org.mozilla.fenix.ui.efficiency.navigation.NavigationOptions
-import org.mozilla.fenix.ui.efficiency.navigation.NavigationRegistry
 import org.mozilla.fenix.ui.efficiency.navigation.NavigationStep
 import org.mozilla.fenix.ui.efficiency.selectors.BrowserPageSelectors
 import org.mozilla.fenix.ui.efficiency.selectors.SearchBarSelectors
@@ -29,9 +29,9 @@ import org.mozilla.fenix.ui.efficiency.selectors.ToolbarSelectors
 class SearchBarComponent(composeRule: AndroidComposeTestRule<HomeActivityIntentTestRule, *>) : BasePage(composeRule) {
     override val pageName = "SearchBarComponent"
 
-    init {
+    internal override fun registerNavigation(builder: NavigationGraph.Builder) {
         // Click empty Search bar to enter a URL
-        NavigationRegistry.register(
+        builder.register(
             from = "HomePage",
             to = pageName,
             steps = listOf(NavigationStep.Click(ToolbarSelectors.TOOLBAR_URL_BOX)),
@@ -39,7 +39,7 @@ class SearchBarComponent(composeRule: AndroidComposeTestRule<HomeActivityIntentT
 
         // Click search bar to edit or replace a URL
         // Use UIAutomator selector to avoid Compose sync hanging when GeckoView is active.
-        NavigationRegistry.register(
+        builder.register(
             from = "BrowserPage",
             to = pageName,
             steps = listOf(NavigationStep.Click(ToolbarSelectors.TOOLBAR_URL_BOX_UIAUTOMATOR2)),
@@ -47,7 +47,7 @@ class SearchBarComponent(composeRule: AndroidComposeTestRule<HomeActivityIntentT
 
         // Dismiss the search bar (edit mode) back to Home. Without an outbound edge the graph can enter
         // the search bar but never route out of it.
-        NavigationRegistry.register(
+        builder.register(
             from = pageName,
             to = "HomePage",
             steps = listOf(NavigationStep.PressBack),
