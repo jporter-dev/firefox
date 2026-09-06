@@ -40,7 +40,5 @@ class SettingsCustomizePage(composeRule: AndroidComposeTestRule<HomeActivityInte
         return this
     }
 
-    override fun mozGetSelectorsByGroup(group: String): List<Selector> {
-        return SettingsCustomizeSelectors.all.filter { it.groups.contains(group) }
-    }
+    override val selectorCatalog = SettingsCustomizeSelectors
 }

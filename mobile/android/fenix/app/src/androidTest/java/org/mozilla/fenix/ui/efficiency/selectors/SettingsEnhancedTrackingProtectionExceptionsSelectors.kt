@@ -4,18 +4,18 @@
 
 package org.mozilla.fenix.ui.efficiency.selectors
 
+import org.mozilla.fenix.ui.efficiency.helpers.PageReadinessProfiles
 import org.mozilla.fenix.ui.efficiency.helpers.Selector
+import org.mozilla.fenix.ui.efficiency.helpers.SelectorContainer
 import org.mozilla.fenix.ui.efficiency.helpers.SelectorStrategy
 
-object SettingsEnhancedTrackingProtectionExceptionsSelectors {
+object SettingsEnhancedTrackingProtectionExceptionsSelectors : SelectorContainer {
 
     val LEARN_MORE_LINK =
         Selector(
             strategy = SelectorStrategy.ESPRESSO_BY_TEXT,
             value = "Learn more",
             description = "Learn more link",
-            groups = listOf("requiredForPage"),
+            readiness = PageReadinessProfiles.IDENTITY_ANCHOR,
         )
-
-    val all = listOf(LEARN_MORE_LINK)
 }

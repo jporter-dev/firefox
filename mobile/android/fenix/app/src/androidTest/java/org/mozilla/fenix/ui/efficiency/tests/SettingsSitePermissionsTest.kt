@@ -47,7 +47,7 @@ class SettingsSitePermissionsTest : BaseTest() {
 
         on.settingsSiteSettingsAutoplay.navigateToPage()
         on.settingsSiteSettingsAutoplay
-            .mozVerifyElementsByGroup("autoplayOptions")
+            .mozVerifyElementsByGroup(SettingsSiteSettingsAutoplaySelectors.Group.AUTOPLAY_OPTIONS)
             .mozVerifyElementIsNotChecked(SettingsSiteSettingsAutoplaySelectors.ALLOW_AUDIO_AND_VIDEO_RADIO)
             .mozVerifyElementIsNotChecked(SettingsSiteSettingsAutoplaySelectors.BLOCK_AUDIO_AND_VIDEO_ON_CELLULAR_RADIO)
             .mozVerifyElementIsChecked(SettingsSiteSettingsAutoplaySelectors.BLOCK_AUDIO_ONLY_RADIO)

@@ -23,7 +23,6 @@ import org.mozilla.fenix.helpers.AppAndSystemHelper.forceCloseApp
 import org.mozilla.fenix.helpers.HomeActivityIntentTestRule
 import org.mozilla.fenix.helpers.TestHelper.mDevice
 import org.mozilla.fenix.ui.efficiency.helpers.BasePage
-import org.mozilla.fenix.ui.efficiency.helpers.Selector
 import org.mozilla.fenix.ui.efficiency.navigation.NavigationOptions
 import org.mozilla.fenix.ui.efficiency.navigation.NavigationRegistry
 import org.mozilla.fenix.ui.efficiency.navigation.NavigationStep
@@ -66,9 +65,7 @@ class ShareOverlayPage(composeRule: AndroidComposeTestRule<HomeActivityIntentTes
         return this
     }
 
-    override fun mozGetSelectorsByGroup(group: String): List<Selector> {
-        return ShareOverlaySelectors.all.filter { it.groups.contains(group) }
-    }
+    override val selectorCatalog = ShareOverlaySelectors
 
     // Espresso rather than a moz* verb: the share sheet is a plain View fragment (no GeckoView), and the
     // per-row favicon/url sibling relationship cannot be expressed by a single Selector. Mirrors the

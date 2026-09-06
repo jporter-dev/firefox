@@ -55,9 +55,7 @@ class SettingsDeleteBrowsingDataPage(composeRule: AndroidComposeTestRule<HomeAct
         )
     }
 
-    override fun mozGetSelectorsByGroup(group: String): List<Selector> {
-        return SettingsDeleteBrowsingDataSelectors.all.filter { it.groups.contains(group) }
-    }
+    override val selectorCatalog = SettingsDeleteBrowsingDataSelectors
 
     override fun navigateToPage(
         url: String,

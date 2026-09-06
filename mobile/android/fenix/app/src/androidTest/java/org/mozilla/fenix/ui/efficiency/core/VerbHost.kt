@@ -71,6 +71,9 @@ object Failure {
     /** A selector or page-identity group declared no observable elements. */
     const val EMPTY_SELECTOR_GROUP = "empty_selector_group"
 
+    /** No readiness rule applies to the requested page and profile. */
+    const val EMPTY_READINESS_CONTRACT = "empty_readiness_contract"
+
     /** The selector resolver threw instead of answering found or absent. */
     const val RESOLUTION_ERROR = "resolution_error"
 

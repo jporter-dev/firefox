@@ -8,7 +8,6 @@ import androidx.compose.ui.test.junit4.AndroidComposeTestRule
 import org.mozilla.fenix.helpers.HomeActivityIntentTestRule
 import org.mozilla.fenix.helpers.MockBrowserDataHelper.createBookmarkItem
 import org.mozilla.fenix.ui.efficiency.helpers.BasePage
-import org.mozilla.fenix.ui.efficiency.helpers.Selector
 import org.mozilla.fenix.ui.efficiency.navigation.NavigationOptions
 import org.mozilla.fenix.ui.efficiency.navigation.NavigationRegistry
 import org.mozilla.fenix.ui.efficiency.navigation.NavigationStep
@@ -59,9 +58,7 @@ class BookmarksPage(composeRule: AndroidComposeTestRule<HomeActivityIntentTestRu
         return this
     }
 
-    override fun mozGetSelectorsByGroup(group: String): List<Selector> {
-        return BookmarksSelectors.all.filter { it.groups.contains(group) }
-    }
+    override val selectorCatalog = BookmarksSelectors
 
     fun createFolder(name: String): BookmarksPage {
         mozClick(BookmarksSelectors.ADD_FOLDER_BUTTON)

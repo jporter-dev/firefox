@@ -36,9 +36,7 @@ class SettingsLanguagePage(composeRule: AndroidComposeTestRule<HomeActivityInten
         )
     }
 
-    override fun mozGetSelectorsByGroup(group: String): List<Selector> {
-        return SettingsLanguageSelectors.all.filter { it.groups.contains(group) }
-    }
+    override val selectorCatalog = SettingsLanguageSelectors
 
     fun selectLanguage(language: String): SettingsLanguagePage {
         languagesList().getChildByText(UiSelector().text(language), language).click()
@@ -52,7 +50,6 @@ class SettingsLanguagePage(composeRule: AndroidComposeTestRule<HomeActivityInten
                 strategy = SelectorStrategy.UIAUTOMATOR_WITH_TEXT_CONTAINS,
                 value = translatedLanguage,
                 description = "Translated language setting header",
-                groups = listOf(),
             )
         )
         return this

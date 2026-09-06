@@ -10,7 +10,6 @@ import org.mozilla.fenix.helpers.HomeActivityIntentTestRule
 import org.mozilla.fenix.helpers.TestHelper.mDevice
 import org.mozilla.fenix.helpers.TestHelper.packageName
 import org.mozilla.fenix.ui.efficiency.helpers.BasePage
-import org.mozilla.fenix.ui.efficiency.helpers.Selector
 import org.mozilla.fenix.ui.efficiency.navigation.NavigationOptions
 import org.mozilla.fenix.ui.efficiency.navigation.NavigationRegistry
 import org.mozilla.fenix.ui.efficiency.navigation.NavigationStep
@@ -36,9 +35,7 @@ class SettingsSearchAddSearchEnginePage(composeRule: AndroidComposeTestRule<Home
         )
     }
 
-    override fun mozGetSelectorsByGroup(group: String): List<Selector> {
-        return SettingsSearchAddSearchEngineSelectors.all.filter { it.groups.contains(group) }
-    }
+    override val selectorCatalog = SettingsSearchAddSearchEngineSelectors
 
     // Covariant override so the page's own helpers can be chained straight off navigateToPage().
     override fun navigateToPage(

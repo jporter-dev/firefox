@@ -2,8 +2,8 @@
 
 The navigation graph is what lets a test say `on.settings.navigateToPage()` and have the harness
 route there from wherever it is. Nodes are `pageName` strings; edges are registered steps between
-them. `navigateToPage()` does a BFS over the graph, replays the steps, then confirms arrival via the
-target's `requiredForPage` selectors.
+them. `navigateToPage()` finds a state-aware path, checks the starting page, executes one edge, verifies
+the page it reached, and only then records that arrival or executes the next edge.
 
 ## Registering an edge
 
@@ -49,9 +49,23 @@ After adding an edge, confirm the graph can actually route it before writing the
   generator/logger to see the computed path.
 - If BFS can't find a path, a middle edge is missing — add the intermediate page's edges too.
 
+## Readiness along the path
+
+Every visited page is a checkpoint. Intermediate pages use `NAVIGATION_READY`; the destination and explicit
+waypoints use `INTERACTIVE`. `IDENTIFIED` is reserved for the immediate probe that decides whether the target
+is already on screen. A request can select a different typed profile for a page with
+`NavigationOptions(readinessProfiles = mapOf("PageName" to PageReadinessProfile.INTERACTIVE))`.
+
+State- and route-dependent UI belongs in the page's readiness contract. A conditional rule includes its selectors only
+when its predicate matches the planned `NavigationState`, incoming or outgoing edge, checkpoint role, or runtime app
+setting. This is how the Settings page waits for the debug-only Sync Debug row before a direct row click without
+requiring that row in release builds or while backing out through a scrolled Settings page.
+All selector probes are live; readiness does not cache a hierarchy snapshot or element coordinates, and the
+following interaction resolves its target again.
+
 ## Gotchas
 
 - Edges are directed. `A -> B` does not give you `B -> A`; register both if both are used.
 - A wrong/rearranged step sequence is the most common cause of a nav that "can't find the page" —
   mirror the exact click order a user performs.
-- Keep `requiredForPage` honest on the target, or a _successful_ route will still fail verification.
+- Keep every profile honest across its runtime states, or a successful edge will correctly fail its checkpoint.

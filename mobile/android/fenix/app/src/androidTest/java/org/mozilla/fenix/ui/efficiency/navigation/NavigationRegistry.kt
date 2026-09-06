@@ -7,13 +7,14 @@ package org.mozilla.fenix.ui.efficiency.navigation
 import android.util.Log
 import java.io.File
 import java.util.PriorityQueue
+import org.mozilla.fenix.ui.efficiency.helpers.PageReadinessProfile
 
 object NavigationRegistry {
     private const val TAG = "NavigationRegistry"
 
     private val graph = mutableMapOf<String, MutableList<NavigationEdge>>()
     private val duplicateRegistrations = mutableListOf<NavigationEdge>()
-    private val checkpointVerifiers = mutableMapOf<String, () -> Boolean>()
+    private val checkpointVerifiers = mutableMapOf<String, (NavigationCheckpoint) -> Boolean>()
 
     fun reset() {
         graph.clear()
@@ -73,18 +74,18 @@ object NavigationRegistry {
         }
     }
 
-    fun registerCheckpointVerifier(page: String, verifier: () -> Boolean) {
+    fun registerCheckpointVerifier(page: String, verifier: (NavigationCheckpoint) -> Boolean) {
         check(checkpointVerifiers.putIfAbsent(page, verifier) == null) {
             "Duplicate navigation checkpoint verifier for '$page'"
         }
     }
 
-    fun verifyCheckpoint(page: String): Boolean {
+    fun verifyCheckpoint(checkpoint: NavigationCheckpoint): Boolean {
         val verifier =
-            requireNotNull(checkpointVerifiers[page]) {
-                "No navigation checkpoint verifier registered for '$page'"
+            requireNotNull(checkpointVerifiers[checkpoint.state.page]) {
+                "No navigation checkpoint verifier registered for '${checkpoint.state.page}'"
             }
-        return verifier()
+        return verifier(checkpoint)
     }
 
     /** The LaunchConfig declared on any edge leading INTO [page], if any. */
@@ -427,6 +428,26 @@ data class NavigationPath(
 
     val steps: List<NavigationStep>
         get() = edges.flatMap { it.steps }
+
+    internal fun readinessCheckpoints(options: NavigationOptions): List<NavigationCheckpoint> {
+        require(states.size == pages.size) { "Navigation path needs one state per page to plan readiness checks" }
+        return states.mapIndexed { index, state ->
+            val defaultProfile =
+                if (index == states.lastIndex || index in waypointPageIndices) {
+                    PageReadinessProfile.INTERACTIVE
+                } else {
+                    PageReadinessProfile.NAVIGATION_READY
+                }
+            NavigationCheckpoint(
+                state = state,
+                profile = options.readinessProfileFor(state.page, defaultProfile),
+                incomingEdge = edges.getOrNull(index - 1),
+                outgoingEdge = edges.getOrNull(index),
+                isWaypoint = index in waypointPageIndices,
+                isDestination = index == states.lastIndex,
+            )
+        }
+    }
 }
 
 data class NavigationGraphDiagnostics(

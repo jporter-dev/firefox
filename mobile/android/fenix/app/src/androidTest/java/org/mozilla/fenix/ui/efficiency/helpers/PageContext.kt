@@ -129,8 +129,11 @@ class PageContext(val composeRule: AndroidComposeTestRule<HomeActivityIntentTest
     val webCompatReporter = WebCompatReporterPage(composeRule)
 
     init {
-        PageCatalog.discoverPages().forEach { pageRef ->
+        PageCatalog.discoverNavigablePages().forEach { pageRef ->
             val page = pageRef.getter(this)
+            check(page.declaredReadinessProfiles() == PageReadinessProfile.entries.toSet()) {
+                "${page.pageName} must declare every page readiness profile"
+            }
             NavigationRegistry.registerCheckpointVerifier(page.pageName, page::waitForNavigationCheckpoint)
         }
     }

@@ -48,6 +48,7 @@ import org.mozilla.fenix.ui.efficiency.core.WaitPolicy
 import org.mozilla.fenix.ui.efficiency.core.driveUntil
 import org.mozilla.fenix.ui.efficiency.core.facts
 import org.mozilla.fenix.ui.efficiency.core.groupPresent
+import org.mozilla.fenix.ui.efficiency.core.pageReady
 import org.mozilla.fenix.ui.efficiency.core.reportAround
 import org.mozilla.fenix.ui.efficiency.core.require
 import org.mozilla.fenix.ui.efficiency.core.requireAbsent
@@ -55,10 +56,12 @@ import org.mozilla.fenix.ui.efficiency.core.requireAll
 import org.mozilla.fenix.ui.efficiency.core.requireState
 import org.mozilla.fenix.ui.efficiency.logging.TestLogging
 import org.mozilla.fenix.ui.efficiency.logging.TimedReporter
+import org.mozilla.fenix.ui.efficiency.navigation.NavigationCheckpoint
 import org.mozilla.fenix.ui.efficiency.navigation.NavigationEdge
 import org.mozilla.fenix.ui.efficiency.navigation.NavigationOptions
 import org.mozilla.fenix.ui.efficiency.navigation.NavigationPath
 import org.mozilla.fenix.ui.efficiency.navigation.NavigationRegistry
+import org.mozilla.fenix.ui.efficiency.navigation.NavigationState
 import org.mozilla.fenix.ui.efficiency.navigation.NavigationStep
 
 /**
@@ -111,11 +114,17 @@ abstract class BasePage(protected val composeRule: AndroidComposeTestRule<HomeAc
 
     abstract val pageName: String
 
-    abstract fun mozGetSelectorsByGroup(group: String = "requiredForPage"): List<Selector>
+    protected abstract val selectorCatalog: SelectorContainer
+
+    protected open fun readinessContract(): PageReadinessContract =
+        PageReadinessContract.fromSelectors(selectorCatalog.all)
+
+    internal fun declaredReadinessProfiles(): Set<PageReadinessProfile> = readinessContract().declaredProfiles
 
     companion object {
         // Mirrors the minimum displayed-area Espresso's click() action requires before it will tap.
         private const val CLICKABLE_VISIBILITY_PERCENT = 90
+        private val navigationActionWait = WaitPolicy.Poll(timeout = 5_000, interval = 100)
     }
 
     // --- Reporting internals -----------------------------------------------------
@@ -139,6 +148,7 @@ abstract class BasePage(protected val composeRule: AndroidComposeTestRule<HomeAc
         var path: NavigationPath? = null
         var activeEdge: NavigationEdge? = null
         var activeStepIndex: Int? = null
+        var activeReadinessProfile: PageReadinessProfile? = null
 
         try {
             if (!forceNavigation && mozIsOnPageNow()) {
@@ -189,25 +199,33 @@ abstract class BasePage(protected val composeRule: AndroidComposeTestRule<HomeAc
                     Log.i("PageNavigation", "      Step ${index + 1}: $navigationStep")
                 }
             }
+            val readinessCheckpoints = selectedPath.readinessCheckpoints(navigationOptions)
 
-            if (0 in selectedPath.waypointPageIndices && !NavigationRegistry.verifyCheckpoint(fromPage)) {
-                assertionFailure("Failed to verify navigation waypoint $fromPage")
+            if (selectedPath.edges.isNotEmpty() && fromPage != PageStateTracker.ENTRY) {
+                val checkpoint = readinessCheckpoints.first()
+                activeReadinessProfile = checkpoint.profile
+                if (!NavigationRegistry.verifyCheckpoint(checkpoint)) {
+                    assertionFailure("Failed to verify $activeReadinessProfile readiness for $fromPage")
+                }
+                activeReadinessProfile = null
             }
 
             selectedPath.edges.forEachIndexed { edgeIndex, edge ->
                 activeEdge = edge
+                activeReadinessProfile = null
                 edge.steps.forEachIndexed { index, navigationStep ->
                     activeStepIndex = index
                     when (navigationStep) {
-                        is NavigationStep.Click -> mozClick(navigationStep.selector)
-                        is NavigationStep.LongClick -> mozLongClick(navigationStep.selector)
+                        is NavigationStep.Click -> mozClick(navigationStep.selector, navigationActionWait)
+                        is NavigationStep.LongClick -> mozLongClick(navigationStep.selector, navigationActionWait)
                         is NavigationStep.ClickIfPresent -> mozClickIfPresent(navigationStep.selector)
                         is NavigationStep.Swipe -> mozSwipeTo(navigationStep.selector, navigationStep.direction)
                         is NavigationStep.OpenNotificationsTray -> mozOpenNotificationsTray()
                         is NavigationStep.Action -> navigationStep.action()
-                        is NavigationStep.EnterText -> mozEnterText(url, navigationStep.selector)
-                        is NavigationStep.EnterTextValue -> mozEnterText(navigationStep.text, navigationStep.selector)
-                        is NavigationStep.PressEnter -> mozPressEnter(navigationStep.selector)
+                        is NavigationStep.EnterText -> mozEnterText(url, navigationStep.selector, navigationActionWait)
+                        is NavigationStep.EnterTextValue ->
+                            mozEnterText(navigationStep.text, navigationStep.selector, navigationActionWait)
+                        is NavigationStep.PressEnter -> mozPressEnter(navigationStep.selector, navigationActionWait)
                         is NavigationStep.PressBack -> {
                             mDevice.pressBack()
                             mDevice.waitForIdle()
@@ -218,29 +236,16 @@ abstract class BasePage(protected val composeRule: AndroidComposeTestRule<HomeAc
                     }
                 }
 
+                activeStepIndex = null
                 val pageIndex = edgeIndex + 1
-                val isDestination = pageIndex == selectedPath.pages.lastIndex
-                if (
-                    pageIndex in selectedPath.waypointPageIndices &&
-                        !isDestination &&
-                        !NavigationRegistry.verifyCheckpoint(edge.to)
-                ) {
-                    assertionFailure("Failed to verify navigation waypoint ${edge.to}")
+                val checkpoint = readinessCheckpoints[pageIndex]
+                activeReadinessProfile = checkpoint.profile
+                if (!NavigationRegistry.verifyCheckpoint(checkpoint)) {
+                    assertionFailure("Failed to verify $activeReadinessProfile readiness for ${edge.to}")
                 }
-                if (!isDestination) {
-                    PageStateTracker.arrive(selectedPath.states[pageIndex])
-                }
+                PageStateTracker.arrive(selectedPath.states[pageIndex])
+                activeReadinessProfile = null
             }
-
-            if (!mozWaitForPageToLoad()) {
-                step.fail(
-                    "'$pageName' did not load",
-                    facts = facts("navigate", failure = Failure.NOT_ARRIVED, extra = mapOf("page" to pageName)),
-                )
-                assertionFailure("Failed to navigate to $pageName")
-            }
-
-            PageStateTracker.arrive(selectedPath.states.last())
             step.ok(
                 "Navigation to '$pageName' completed",
                 facts(
@@ -270,6 +275,7 @@ abstract class BasePage(protected val composeRule: AndroidComposeTestRule<HomeAc
                                 "path" to path?.edges.orEmpty().map { it.id },
                                 "edge" to activeEdge?.id,
                                 "edgeStepIndex" to activeStepIndex,
+                                "readinessProfile" to activeReadinessProfile?.name,
                             ),
                     ),
             )
@@ -284,50 +290,65 @@ abstract class BasePage(protected val composeRule: AndroidComposeTestRule<HomeAc
      * confirming a page it has not tried to reach. Readiness is [mozWaitForPageToLoad]'s job, afterwards.
      */
     private fun mozIsOnPageNow(): Boolean =
-        groupPresent(
-            verb = "is_on",
-            label = pageName,
-            selectors = mozGetSelectorsByGroup("requiredForPage"),
-            whenPresent = "'$pageName' already visible",
-        )
+        pageReady(
+                contract = readinessContract(),
+                context =
+                    PageReadinessContext(
+                        page = pageName,
+                        profile = PageReadinessProfile.IDENTIFIED,
+                        navigationState = NavigationState(pageName, PageStateTracker.currentFacts).normalized(),
+                    ),
+                policy = WaitPolicy.Immediate,
+            )
+            .satisfied
 
-    private fun mozWaitForPageToLoad(timeout: Long = 10_000, interval: Long = 100): Boolean {
-        val selectors = mozGetSelectorsByGroup("requiredForPage")
-        if (
-            groupPresent(
-                verb = "wait",
-                label = pageName,
-                selectors = selectors,
+    private fun mozWaitForPageToLoad(
+        context: PageReadinessContext,
+        timeout: Long = 10_000,
+        interval: Long = 100,
+    ): Boolean =
+        pageReady(
+                contract = readinessContract(),
+                context = context,
                 policy = WaitPolicy.Poll(timeout, interval),
             )
-        ) {
-            return true
-        }
-        if (!dismissKnownOverlaysIfPresent()) return false
-        return groupPresent(
-            verb = "wait",
-            label = pageName,
-            selectors = selectors,
-            policy = WaitPolicy.Poll(timeout, interval),
+            .satisfied
+
+    internal fun waitForNavigationCheckpoint(checkpoint: NavigationCheckpoint): Boolean =
+        mozWaitForPageToLoad(
+            PageReadinessContext(
+                page = pageName,
+                profile = checkpoint.profile,
+                navigationState = checkpoint.state,
+                incomingEdge = checkpoint.incomingEdge,
+                outgoingEdge = checkpoint.outgoingEdge,
+                isWaypoint = checkpoint.isWaypoint,
+                isDestination = checkpoint.isDestination,
+            )
         )
+
+    fun mozVerifyReadiness(profile: PageReadinessProfile = PageReadinessProfile.INTERACTIVE): BasePage {
+        val state = NavigationState(pageName, PageStateTracker.currentFacts).normalized()
+        if (!mozWaitForPageToLoad(PageReadinessContext(pageName, profile, state))) {
+            dumpFailure("mozVerifyReadiness failed: $pageName profile '$profile'")
+            assertionFailure("Page '$pageName' did not satisfy readiness profile '$profile'")
+        }
+        return this
     }
 
-    internal fun waitForNavigationCheckpoint(): Boolean = mozWaitForPageToLoad()
-
-    fun mozVerifyElementsByGroup(group: String = "requiredForPage"): BasePage {
+    fun mozVerifyElementsByGroup(group: SelectorGroup): BasePage {
+        val groupLabel = group.toString()
         val present =
             groupPresent(
                 verb = "verify_group",
-                label = "${pageName}_$group",
-                selectors = mozGetSelectorsByGroup(group),
+                label = "${pageName}_$groupLabel",
+                selectors = selectorCatalog.selectorsIn(group),
                 policy = WaitPolicy.Poll(),
                 applyPreconditions = true,
             )
         if (!present) {
-            // The `all {}` stops at the first miss, so the log alone cannot tell you whether the
-            // element is absent, renamed, or merely off-screen.
-            dumpFailure("mozVerifyElementsByGroup failed: $pageName group '$group'")
-            assertionFailure("Not all elements in group '$group' are present")
+            dumpFailure("mozVerifyElementsByGroup failed: $pageName group '$groupLabel'")
+            assertionFailure("Not all elements in group '$groupLabel' are present")
         }
         return this
     }
@@ -349,7 +370,7 @@ abstract class BasePage(protected val composeRule: AndroidComposeTestRule<HomeAc
             return ElementResolution.Unsupported("no locator for ${selector.strategy}")
         }
         return try {
-            if (applyPreconditions && requiresScroll(selector.groups)) {
+            if (applyPreconditions && selector.scrollDirection != null) {
                 ensureReachable(selector)
             }
             val raw =
@@ -383,24 +404,8 @@ abstract class BasePage(protected val composeRule: AndroidComposeTestRule<HomeAc
 
     // --- Preconditions and interference ------------------------------------------
 
-    private fun requiresScroll(groups: List<String>): Boolean {
-        return groups.any {
-            it.equals("requiresScroll", ignoreCase = true) || it.equals("needsSwipeNavStep", ignoreCase = true)
-        }
-    }
-
-    private fun desiredSwipeDirection(groups: List<String>): SwipeDirection {
-        return when {
-            groups.any { it.equals("swipeDown", true) } -> SwipeDirection.DOWN
-            groups.any { it.equals("swipeLeft", true) } -> SwipeDirection.LEFT
-            groups.any { it.equals("swipeRight", true) } -> SwipeDirection.RIGHT
-            else -> SwipeDirection.UP
-        }
-    }
-
     private fun ensureReachable(selector: Selector) {
-        if (!requiresScroll(selector.groups)) return
-        val dir = desiredSwipeDirection(selector.groups)
+        val dir = selector.scrollDirection ?: return
         Log.i("Preconditions", "'${selector.description}' requires scroll. Swiping $dir to bring into view.")
         reportAround(
             "precondition_scroll",
@@ -618,11 +623,12 @@ abstract class BasePage(protected val composeRule: AndroidComposeTestRule<HomeAc
 
     // --- Verbs: touch it ---------------------------------------------------------
 
-    fun mozClick(selector: Selector) =
+    fun mozClick(selector: Selector, policy: WaitPolicy = WaitPolicy.Immediate) =
         require(
             verb = "click",
             selector = selector,
             expectation = "clickable",
+            policy = policy,
             via = { sel, pre ->
                 composeRule.waitForIdle()
                 locate(sel, pre)
@@ -660,11 +666,12 @@ abstract class BasePage(protected val composeRule: AndroidComposeTestRule<HomeAc
             action = UiActions::click,
         )
 
-    fun mozLongClick(selector: Selector) =
+    fun mozLongClick(selector: Selector, policy: WaitPolicy = WaitPolicy.Immediate) =
         require(
             verb = "long_click",
             selector = selector,
             expectation = "long-clickable",
+            policy = policy,
             dumpOnFailure = false,
             action = { element ->
                 // TEXT_MERGED re-fetches by text instead of using the located node: the merged node can
@@ -692,11 +699,16 @@ abstract class BasePage(protected val composeRule: AndroidComposeTestRule<HomeAc
 
     // --- Verbs: type into it -----------------------------------------------------
 
-    fun mozEnterText(text: String, selector: Selector) =
+    fun mozEnterText(
+        text: String,
+        selector: Selector,
+        policy: WaitPolicy = WaitPolicy.Immediate,
+    ) =
         require(
             verb = "enter_text",
             selector = selector,
             expectation = "editable",
+            policy = policy,
             dumpOnFailure = false,
             action = { UiActions.enterText(it, text) },
         )
@@ -715,10 +727,11 @@ abstract class BasePage(protected val composeRule: AndroidComposeTestRule<HomeAc
         return mozEnterText(text, selector)
     }
 
-    fun mozPressEnter(selector: Selector) =
+    fun mozPressEnter(selector: Selector, policy: WaitPolicy = WaitPolicy.Immediate) =
         require(
             verb = "press_enter",
             selector = selector,
+            policy = policy,
             dumpOnFailure = false,
             action = UiActions::pressEnter,
         )

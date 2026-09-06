@@ -14,7 +14,6 @@ import org.mozilla.fenix.helpers.HomeActivityIntentTestRule
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTime
 import org.mozilla.fenix.ui.efficiency.helpers.BasePage
 import org.mozilla.fenix.ui.efficiency.helpers.PageStateTracker
-import org.mozilla.fenix.ui.efficiency.helpers.Selector
 import org.mozilla.fenix.ui.efficiency.navigation.NavigationRegistry
 import org.mozilla.fenix.ui.efficiency.selectors.BrowserPageSelectors
 import org.mozilla.fenix.ui.efficiency.selectors.CustomTabsSelectors
@@ -94,7 +93,5 @@ class CustomTabsPage(composeRule: AndroidComposeTestRule<HomeActivityIntentTestR
         return this
     }
 
-    override fun mozGetSelectorsByGroup(group: String): List<Selector> {
-        return CustomTabsSelectors.all.filter { it.groups.contains(group) }
-    }
+    override val selectorCatalog = CustomTabsSelectors
 }

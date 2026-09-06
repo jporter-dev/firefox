@@ -37,7 +37,7 @@ missing, add the smallest general primitive/helper. → `guides/extending-basepa
 
 ## 4. Assertion gate — are the verifications expressible?
 
-Can you express each assertion with the `mozVerify*` family (often `mozVerifyElementsByGroup("...")`)? If not,
+Can you express each assertion with the `mozVerify*` family (often `mozVerifyElementsByGroup(SomeSelectors.Group.X)`)? If not,
 add a verify primitive. → `guides/extending-basepage.md`.
 
 ## 5. Static pre-flight (before you burn a device build)

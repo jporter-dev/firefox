@@ -60,7 +60,5 @@ class SettingsAppIconPage(composeRule: AndroidComposeTestRule<HomeActivityIntent
         return this
     }
 
-    override fun mozGetSelectorsByGroup(group: String): List<Selector> {
-        return SettingsAppIconSelectors.all.filter { it.groups.contains(group) }
-    }
+    override val selectorCatalog = SettingsAppIconSelectors
 }

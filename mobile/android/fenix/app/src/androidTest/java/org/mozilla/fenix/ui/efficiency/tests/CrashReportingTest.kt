@@ -8,6 +8,7 @@ import org.junit.Test
 import org.mozilla.fenix.customannotations.SmokeTest
 import org.mozilla.fenix.helpers.TestAssetHelper.getGenericAsset
 import org.mozilla.fenix.ui.efficiency.helpers.BaseTest
+import org.mozilla.fenix.ui.efficiency.selectors.BrowserPageSelectors
 import org.mozilla.fenix.ui.efficiency.selectors.MainMenuSelectors
 import org.mozilla.fenix.ui.efficiency.selectors.SearchBarSelectors
 import org.mozilla.fenix.ui.efficiency.selectors.TabDrawerSelectors
@@ -32,7 +33,7 @@ class CrashReportingTest : BaseTest() {
         on.browserPage.navigateToPage().verifyUrl(secondWebPage.url.toString())
         on.browserPage
             .navigateToPage("about:crashcontent", forceNavigation = true)
-            .mozVerifyElementsByGroup("tabCrashReporter")
+            .mozVerifyElementsByGroup(BrowserPageSelectors.Group.TAB_CRASH_REPORTER)
         on.tabDrawer
             .navigateToPage()
             .mozVerify(TabDrawerSelectors.TAB_ITEM_WITH_TITLE(firstWebPage.title))

@@ -4,12 +4,10 @@
 
 package org.mozilla.fenix.ui.efficiency.pageObjects
 
-import androidx.compose.ui.test.filter
 import androidx.compose.ui.test.junit4.AndroidComposeTestRule
 import org.mozilla.fenix.helpers.HomeActivityIntentTestRule
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTimeShort
 import org.mozilla.fenix.ui.efficiency.helpers.BasePage
-import org.mozilla.fenix.ui.efficiency.helpers.Selector
 import org.mozilla.fenix.ui.efficiency.navigation.NavigationRegistry
 import org.mozilla.fenix.ui.efficiency.selectors.HomeSelectors
 
@@ -25,9 +23,7 @@ class HomePage(composeRule: AndroidComposeTestRule<HomeActivityIntentTestRule, *
         )
     }
 
-    override fun mozGetSelectorsByGroup(group: String): List<Selector> {
-        return HomeSelectors.all.filter { it.groups.contains(group) }
-    }
+    override val selectorCatalog = HomeSelectors
 
     /*
      * Temporary stub for the Test Factory demo.

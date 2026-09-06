@@ -12,6 +12,7 @@ import org.mozilla.fenix.helpers.TestAssetHelper.storageCheckPageAsset
 import org.mozilla.fenix.helpers.TestAssetHelper.storageWritePageAsset
 import org.mozilla.fenix.ui.efficiency.helpers.BaseTest
 import org.mozilla.fenix.ui.efficiency.selectors.BrowserPageSelectors
+import org.mozilla.fenix.ui.efficiency.selectors.HistorySelectors
 
 class SettingsDeleteBrowsingDataTest : BaseTest() {
 
@@ -71,7 +72,7 @@ class SettingsDeleteBrowsingDataTest : BaseTest() {
             .confirmDeletionAndAssertSnackbar()
             .verifyBrowsingHistoryDetails("0")
 
-        on.history.navigateToPage().mozVerifyElementsByGroup("emptyHistoryMenuView")
+        on.history.navigateToPage().mozVerifyElementsByGroup(HistorySelectors.Group.EMPTY_HISTORY_MENU_VIEW)
     }
 
     // TestRail link: https://mozilla.testrail.io/index.php?/cases/view/416041

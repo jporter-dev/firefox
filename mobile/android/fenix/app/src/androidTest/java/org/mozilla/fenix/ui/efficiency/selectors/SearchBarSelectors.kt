@@ -11,10 +11,12 @@ import mozilla.components.compose.browser.toolbar.concept.BrowserToolbarTestTags
 import mozilla.components.feature.qr.R as qrR
 import org.mozilla.fenix.R
 import org.mozilla.fenix.helpers.DataGenerationHelper.getStringResource
+import org.mozilla.fenix.ui.efficiency.helpers.PageReadinessProfiles
 import org.mozilla.fenix.ui.efficiency.helpers.Selector
+import org.mozilla.fenix.ui.efficiency.helpers.SelectorContainer
 import org.mozilla.fenix.ui.efficiency.helpers.SelectorStrategy
 
-object SearchBarSelectors {
+object SearchBarSelectors : SelectorContainer {
     // Page-identity anchor for the edit-mode search bar. Must be an EDIT-mode-only handle: the redesigned Home/browser
     // display toolbar shows the SEARCH_SELECTOR chip too, so anchoring on that alone makes mozIsOnPageNow() (and thus
     // navigateToPage) falsely believe edit mode is already open and skip the tap that opens it. ADDRESSBAR_SEARCH_BOX
@@ -24,7 +26,7 @@ object SearchBarSelectors {
             strategy = SelectorStrategy.COMPOSE_BY_TAG,
             value = ADDRESSBAR_SEARCH_BOX,
             description = "Toolbar in edit mode",
-            groups = listOf("requiredForPage"),
+            readiness = PageReadinessProfiles.IDENTITY_ANCHOR,
         )
 
     val URL_TEXT =
@@ -32,7 +34,6 @@ object SearchBarSelectors {
             strategy = SelectorStrategy.UIAUTOMATOR_WITH_RES_ID,
             value = "mozac_browser_toolbar_url_view",
             description = "Page URL",
-            groups = listOf("requiredForBrowserPage"),
         )
 
     val SEARCH_ENGINE_SELECTOR =
@@ -40,7 +41,7 @@ object SearchBarSelectors {
             strategy = SelectorStrategy.COMPOSE_BY_TAG,
             value = SEARCH_SELECTOR,
             description = "Search engine selector button",
-            groups = listOf("requiredForPage"),
+            readiness = PageReadinessProfiles.READY_CONTENT,
         )
 
     // An engine row inside the search-selector popup menu. Each row exposes the plain engine name as
@@ -52,7 +53,6 @@ object SearchBarSelectors {
             strategy = SelectorStrategy.COMPOSE_BY_CONTENT_DESCRIPTION,
             value = engineName,
             description = "Search selector menu engine: $engineName",
-            groups = listOf(),
         )
 
     // A single awesomebar suggestion row. The tag is on each suggestion item (the container uses the
@@ -63,7 +63,6 @@ object SearchBarSelectors {
             strategy = SelectorStrategy.COMPOSE_BY_TAG,
             value = AwesomeBarTestTags.SUGGESTION,
             description = "Awesomebar search suggestion",
-            groups = listOf(),
         )
 
     // Text, not content-description, and deliberately so despite text being the last-resort handle: in edit
@@ -76,7 +75,6 @@ object SearchBarSelectors {
             strategy = SelectorStrategy.COMPOSE_BY_TEXT,
             value = getStringResource(R.string.search_hint),
             description = "Search bar placeholder",
-            groups = listOf(),
         )
 
     // A row in the search selector menu, keyed by engine/shortcut name ("Tabs", "Bookmarks", "History").
@@ -87,7 +85,6 @@ object SearchBarSelectors {
             strategy = SelectorStrategy.COMPOSE_BY_CONTENT_DESCRIPTION,
             value = searchShortcutName,
             description = "'$searchShortcutName' search shortcut",
-            groups = listOf(),
         )
 
     // A group header in the awesomebar, keyed by its text ("TestSearchEngine search", "Firefox Suggest").
@@ -98,7 +95,6 @@ object SearchBarSelectors {
             strategy = SelectorStrategy.COMPOSE_BY_TEXT,
             value = headerText,
             description = "'$headerText' suggestions header",
-            groups = listOf(),
         )
 
     val FIREFOX_SUGGEST_HEADER =
@@ -106,7 +102,6 @@ object SearchBarSelectors {
             strategy = SelectorStrategy.COMPOSE_BY_TEXT,
             value = getStringResource(R.string.firefox_suggest_header),
             description = "Firefox Suggest suggestions header",
-            groups = listOf(),
         )
 
     // One awesomebar suggestion row. The tag is an android-components literal with no exported constant,
@@ -117,7 +112,6 @@ object SearchBarSelectors {
             strategy = SelectorStrategy.COMPOSE_BY_TAG,
             value = "mozac.awesomebar.suggestion",
             description = "Search suggestion",
-            groups = listOf(),
         )
 
     // The same suggestion rows, but addressable individually so one can be clicked. Tag AND text: the
@@ -131,7 +125,6 @@ object SearchBarSelectors {
             value = "mozac.awesomebar.suggestion",
             secondaryValue = suggestionText,
             description = "Search suggestion '$suggestionText'",
-            groups = listOf(),
         )
 
     val SCAN_BUTTON =
@@ -139,7 +132,6 @@ object SearchBarSelectors {
             strategy = SelectorStrategy.COMPOSE_BY_CONTENT_DESCRIPTION,
             value = getStringResource(qrR.string.mozac_feature_qr_scanner),
             description = "QR scan button",
-            groups = listOf(),
         )
 
     // Clear (X) button in the edit-mode toolbar. Content-description "Clear", keyed off the string
@@ -152,7 +144,6 @@ object SearchBarSelectors {
             strategy = SelectorStrategy.UIAUTOMATOR2_BY_DESCRIPTION_CONTAINS,
             value = getStringResource(toolbarR.string.mozac_clear_button_description),
             description = "Search bar clear button",
-            groups = listOf(),
         )
 
     // End-of-address-bar button in edit mode. The slot is mutually exclusive: the Google Lens button shows only when
@@ -166,24 +157,5 @@ object SearchBarSelectors {
             strategy = SelectorStrategy.COMPOSE_BY_CONTENT_DESCRIPTION,
             value = getStringResource(R.string.lens_search_content_description),
             description = "Google Lens button (search with image)",
-            groups = listOf(),
-        )
-
-    val all =
-        listOf(
-            TOOLBAR_IN_EDIT_MODE,
-            URL_TEXT,
-            SEARCH_ENGINE_SELECTOR,
-            SEARCH_SELECTOR_MENU_ENGINE(),
-            AWESOMEBAR_SUGGESTION,
-            SEARCH_BAR_PLACEHOLDER,
-            SEARCH_SHORTCUT(),
-            SUGGESTIONS_HEADER(),
-            FIREFOX_SUGGEST_HEADER,
-            SEARCH_SUGGESTION,
-            SEARCH_SUGGESTION_WITH_TEXT(),
-            SCAN_BUTTON,
-            CLEAR_BUTTON,
-            GOOGLE_LENS_BUTTON,
         )
 }

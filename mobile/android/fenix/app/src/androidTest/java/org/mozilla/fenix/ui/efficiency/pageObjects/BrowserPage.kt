@@ -117,9 +117,7 @@ class BrowserPage(composeRule: AndroidComposeTestRule<HomeActivityIntentTestRule
         return this
     }
 
-    override fun mozGetSelectorsByGroup(group: String): List<Selector> {
-        return BrowserPageSelectors.all.filter { it.groups.contains(group) }
-    }
+    override val selectorCatalog = BrowserPageSelectors
 
     /**
      * Taps the Play control on a web media page (video or audio). The tap is confirmed by [verifyMediaPlaybackState],
@@ -184,7 +182,7 @@ class BrowserPage(composeRule: AndroidComposeTestRule<HomeActivityIntentTestRule
         // is a single-shot check, so firing it the instant the sheet animates in can miss the
         // dropdowns and fail spuriously. Gate on the last-rendered dropdown before the group check.
         mozVerify(BrowserPageSelectors.TRANSLATION_SHEET_TRANSLATE_TO, timeout = waitingTimeLong)
-        mozVerifyElementsByGroup("notTranslatedPageTranslationSheet")
+        mozVerifyElementsByGroup(BrowserPageSelectors.Group.NOT_TRANSLATED_PAGE_TRANSLATION_SHEET)
         return this
     }
 

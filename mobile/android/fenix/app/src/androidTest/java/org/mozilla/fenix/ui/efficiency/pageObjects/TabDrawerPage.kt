@@ -15,7 +15,6 @@ import androidx.compose.ui.test.performClick
 import org.mozilla.fenix.helpers.HomeActivityIntentTestRule
 import org.mozilla.fenix.tabstray.TabsTrayTestTag
 import org.mozilla.fenix.ui.efficiency.helpers.BasePage
-import org.mozilla.fenix.ui.efficiency.helpers.Selector
 import org.mozilla.fenix.ui.efficiency.helpers.SwipeDirection
 import org.mozilla.fenix.ui.efficiency.navigation.NavigationFacts
 import org.mozilla.fenix.ui.efficiency.navigation.NavigationOptions
@@ -59,9 +58,7 @@ class TabDrawerPage(composeRule: AndroidComposeTestRule<HomeActivityIntentTestRu
         )
     }
 
-    override fun mozGetSelectorsByGroup(group: String): List<Selector> {
-        return TabDrawerSelectors.all.filter { it.groups.contains(group) }
-    }
+    override val selectorCatalog = TabDrawerSelectors
 
     override fun navigateToPage(
         url: String,
@@ -78,7 +75,7 @@ class TabDrawerPage(composeRule: AndroidComposeTestRule<HomeActivityIntentTestRu
     }
 
     fun verifyNoOpenTabsInNormalBrowsing(): TabDrawerPage {
-        mozVerifyElementsByGroup("emptyNormalBrowsingTabDrawerView")
+        mozVerifyElementsByGroup(TabDrawerSelectors.Group.EMPTY_NORMAL_BROWSING_TAB_DRAWER_VIEW)
         return this
     }
 

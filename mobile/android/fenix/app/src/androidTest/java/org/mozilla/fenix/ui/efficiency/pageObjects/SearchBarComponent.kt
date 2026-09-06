@@ -54,9 +54,7 @@ class SearchBarComponent(composeRule: AndroidComposeTestRule<HomeActivityIntentT
         )
     }
 
-    override fun mozGetSelectorsByGroup(group: String): List<Selector> {
-        return SearchBarSelectors.all.filter { it.groups.contains(group) }
-    }
+    override val selectorCatalog = SearchBarSelectors
 
     override fun navigateToPage(
         url: String,
@@ -73,7 +71,6 @@ class SearchBarComponent(composeRule: AndroidComposeTestRule<HomeActivityIntentT
                 strategy = SelectorStrategy.UIAUTOMATOR_WITH_TEXT_CONTAINS,
                 value = url,
                 description = "URL bar contains '$url'",
-                groups = listOf(),
             )
         )
         return this

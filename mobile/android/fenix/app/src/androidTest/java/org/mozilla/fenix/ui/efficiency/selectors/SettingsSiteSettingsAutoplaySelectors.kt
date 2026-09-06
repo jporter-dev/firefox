@@ -4,7 +4,10 @@
 
 package org.mozilla.fenix.ui.efficiency.selectors
 
+import org.mozilla.fenix.ui.efficiency.helpers.PageReadinessProfiles
 import org.mozilla.fenix.ui.efficiency.helpers.Selector
+import org.mozilla.fenix.ui.efficiency.helpers.SelectorContainer
+import org.mozilla.fenix.ui.efficiency.helpers.SelectorGroup
 import org.mozilla.fenix.ui.efficiency.helpers.SelectorStrategy
 
 /**
@@ -18,14 +21,17 @@ import org.mozilla.fenix.ui.efficiency.helpers.SelectorStrategy
  * accessibility tree, which contains only displayed nodes, so presence here carries the visibility guarantee that the
  * legacy withEffectiveVisibility(VISIBLE) checks did.
  */
-object SettingsSiteSettingsAutoplaySelectors {
+object SettingsSiteSettingsAutoplaySelectors : SelectorContainer {
+    enum class Group : SelectorGroup {
+        AUTOPLAY_OPTIONS
+    }
 
     val AUTOPLAY_CELLULAR_DATA_LABEL =
         Selector(
             strategy = SelectorStrategy.UIAUTOMATOR_WITH_TEXT_CONTAINS,
             value = "cellular data only",
             description = "the Block audio and video on cellular data only label",
-            groups = listOf("requiredForPage"),
+            readiness = PageReadinessProfiles.IDENTITY_ANCHOR,
         )
 
     val ALLOW_AUDIO_AND_VIDEO_RADIO =
@@ -33,7 +39,6 @@ object SettingsSiteSettingsAutoplaySelectors {
             strategy = SelectorStrategy.UIAUTOMATOR_WITH_RES_ID,
             value = "ask_to_allow_radio",
             description = "the Allow audio and video radio button",
-            groups = listOf(),
         )
 
     val BLOCK_AUDIO_AND_VIDEO_ON_CELLULAR_RADIO =
@@ -41,7 +46,7 @@ object SettingsSiteSettingsAutoplaySelectors {
             strategy = SelectorStrategy.UIAUTOMATOR_WITH_RES_ID,
             value = "block_radio",
             description = "the Block audio and video on cellular data only radio button",
-            groups = listOf("autoplayOptions"),
+            groups = setOf(Group.AUTOPLAY_OPTIONS),
         )
 
     val BLOCK_AUDIO_ONLY_RADIO =
@@ -49,7 +54,7 @@ object SettingsSiteSettingsAutoplaySelectors {
             strategy = SelectorStrategy.UIAUTOMATOR_WITH_RES_ID,
             value = "third_radio",
             description = "the Block audio only radio button",
-            groups = listOf("autoplayOptions"),
+            groups = setOf(Group.AUTOPLAY_OPTIONS),
         )
 
     val BLOCK_AUDIO_AND_VIDEO_RADIO =
@@ -57,15 +62,6 @@ object SettingsSiteSettingsAutoplaySelectors {
             strategy = SelectorStrategy.UIAUTOMATOR_WITH_RES_ID,
             value = "fourth_radio",
             description = "the Block audio and video radio button",
-            groups = listOf("autoplayOptions"),
-        )
-
-    val all =
-        listOf(
-            AUTOPLAY_CELLULAR_DATA_LABEL,
-            ALLOW_AUDIO_AND_VIDEO_RADIO,
-            BLOCK_AUDIO_AND_VIDEO_ON_CELLULAR_RADIO,
-            BLOCK_AUDIO_ONLY_RADIO,
-            BLOCK_AUDIO_AND_VIDEO_RADIO,
+            groups = setOf(Group.AUTOPLAY_OPTIONS),
         )
 }

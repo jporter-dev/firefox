@@ -4,6 +4,8 @@
 
 package org.mozilla.fenix.ui.efficiency.navigation
 
+import org.mozilla.fenix.ui.efficiency.helpers.PageReadinessProfile
+
 data class NavigationFact(val name: String) {
     init {
         require(namePattern.matches(name)) {
@@ -60,6 +62,7 @@ data class NavigationOptions(
     val requiredFacts: Set<NavigationFact> = emptySet(),
     val avoidPages: Set<String> = setOf("BrowserPage"),
     val avoidTraits: Set<NavigationRouteTrait> = emptySet(),
+    val readinessProfiles: Map<String, PageReadinessProfile> = emptyMap(),
 ) {
     init {
         require(via.none { it.isBlank() }) { "Navigation waypoints cannot be blank" }
@@ -72,6 +75,7 @@ data class NavigationOptions(
         require((via.toSet() intersect excludedPages).isEmpty()) {
             "A navigation waypoint cannot also be excluded"
         }
+        require(readinessProfiles.keys.none { it.isBlank() }) { "Readiness override pages cannot be blank" }
     }
 
     internal fun validateDestination(destination: String) {
@@ -81,6 +85,9 @@ data class NavigationOptions(
     }
 
     internal fun advanceWaypoint(index: Int, page: String): Int = if (via.getOrNull(index) == page) index + 1 else index
+
+    internal fun readinessProfileFor(page: String, default: PageReadinessProfile): PageReadinessProfile =
+        readinessProfiles[page] ?: default
 
     internal fun goalSatisfied(
         state: NavigationState,
@@ -93,3 +100,12 @@ data class NavigationOptions(
             requiredRoutes.all { it in traversedRequiredRoutes } &&
             requiredFacts.all { it in state.facts }
 }
+
+data class NavigationCheckpoint(
+    val state: NavigationState,
+    val profile: PageReadinessProfile,
+    val incomingEdge: NavigationEdge? = null,
+    val outgoingEdge: NavigationEdge? = null,
+    val isWaypoint: Boolean = false,
+    val isDestination: Boolean = false,
+)

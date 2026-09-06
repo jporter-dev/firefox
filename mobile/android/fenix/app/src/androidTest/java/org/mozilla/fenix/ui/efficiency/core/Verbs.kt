@@ -6,6 +6,9 @@ package org.mozilla.fenix.ui.efficiency.core
 
 import android.os.SystemClock
 import androidx.compose.ui.test.SemanticsNodeInteractionCollection
+import org.mozilla.fenix.ui.efficiency.helpers.PageReadinessContext
+import org.mozilla.fenix.ui.efficiency.helpers.PageReadinessContract
+import org.mozilla.fenix.ui.efficiency.helpers.PageReadinessEvaluation
 import org.mozilla.fenix.ui.efficiency.helpers.Selector
 import org.mozilla.fenix.ui.efficiency.logging.TimedReporter
 
@@ -379,7 +382,8 @@ fun VerbHost.groupPresent(
     var lastRetryableProblem: Pair<Selector, LookupProblem>? = null
     fun allPresent(): Boolean {
         lastRetryableProblem = null
-        return selectors.all { sel ->
+        var allPresent = true
+        selectors.forEach { sel ->
             val observation =
                 observe(
                     sel,
@@ -393,8 +397,9 @@ fun VerbHost.groupPresent(
                 }
                 lastRetryableProblem = sel to problem
             }
-            observation.matched != null
+            if (observation.matched == null) allPresent = false
         }
+        return allPresent
     }
 
     val timeout = (policy as? WaitPolicy.Poll)?.timeout ?: 0
@@ -426,6 +431,90 @@ fun VerbHost.groupPresent(
         facts(verb, failure = if (here) null else Failure.NOT_ARRIVED, extra = mapOf("page" to label)),
     )
     return here
+}
+
+fun VerbHost.pageReady(
+    contract: PageReadinessContract,
+    context: PageReadinessContext,
+    policy: WaitPolicy,
+): PageReadinessEvaluation {
+    val profile = context.profile.name.lowercase()
+    val label = "${context.page}_$profile"
+    val cmd = cmd("page_readiness", label, "Checking '$label'...")
+    var lastRetryableProblem: Pair<Selector, LookupProblem>? = null
+
+    fun evaluate(): PageReadinessEvaluation {
+        lastRetryableProblem = null
+        return contract.evaluate(context) { selector ->
+            val observation =
+                observe(
+                    selector,
+                    applyPreconditions = false,
+                    suffix = "_in_$label",
+                    predicate = { ElementState.probe(it, ElementState.Trait.DISPLAYED) },
+                )
+            observation.problem(selector)?.let { problem ->
+                if (!problem.retryable) {
+                    failLookup(cmd, "page_readiness", selector, "present", dumpOnFailure = false, problem)
+                }
+                lastRetryableProblem = selector to problem
+            }
+            observation.matched != null
+        }
+    }
+
+    val timeout = (policy as? WaitPolicy.Poll)?.timeout ?: 0
+    val deadline = SystemClock.uptimeMillis() + timeout
+    var wait = policy.firstGap()
+    var evaluation = evaluate()
+    if (!evaluation.satisfied && lastRetryableProblem != null && dismissOverlays()) {
+        evaluation = evaluate()
+    }
+    while (!evaluation.satisfied && evaluation.hasContract && SystemClock.uptimeMillis() < deadline) {
+        SystemClock.sleep(wait)
+        wait = (policy as WaitPolicy.Poll).next(wait)
+        evaluation = evaluate()
+    }
+
+    if (!evaluation.satisfied && lastRetryableProblem != null && dismissOverlays()) {
+        evaluation = evaluate()
+    }
+
+    if (!evaluation.satisfied && policy is WaitPolicy.Poll) {
+        lastRetryableProblem?.let { (selector, problem) ->
+            failLookup(cmd, "page_readiness", selector, "present", dumpOnFailure = false, problem)
+        }
+    }
+
+    val failure =
+        when {
+            evaluation.satisfied -> null
+            !evaluation.hasContract -> Failure.EMPTY_READINESS_CONTRACT
+            else -> Failure.NOT_ARRIVED
+        }
+    cmd.done(
+        evaluation.satisfied,
+        if (evaluation.satisfied) "'$label' ready" else "'$label' not ready",
+        facts(
+            verb = "page_readiness",
+            failure = failure,
+            extra =
+                mapOf(
+                    "page" to context.page,
+                    "readinessProfile" to context.profile.name,
+                    "navigationFacts" to context.navigationState.facts.map { it.name }.sorted(),
+                    "incomingRoute" to context.incomingEdge?.id,
+                    "outgoingRoute" to context.outgoingEdge?.id,
+                    "isWaypoint" to context.isWaypoint,
+                    "isDestination" to context.isDestination,
+                    "appliedRules" to evaluation.appliedRules,
+                    "skippedRules" to evaluation.skippedRules,
+                    "missingSelectors" to evaluation.missingSelectors,
+                    "predicateFailures" to evaluation.predicateFailures,
+                ),
+        ),
+    )
+    return evaluation
 }
 
 /**

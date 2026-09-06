@@ -17,7 +17,6 @@ import org.mozilla.fenix.R
 import org.mozilla.fenix.helpers.HomeActivityIntentTestRule
 import org.mozilla.fenix.helpers.TestHelper.hasCousin
 import org.mozilla.fenix.ui.efficiency.helpers.BasePage
-import org.mozilla.fenix.ui.efficiency.helpers.Selector
 import org.mozilla.fenix.ui.efficiency.navigation.NavigationOptions
 import org.mozilla.fenix.ui.efficiency.navigation.NavigationRegistry
 import org.mozilla.fenix.ui.efficiency.navigation.NavigationStep
@@ -36,9 +35,7 @@ class SettingsAccessibilityPage(composeRule: AndroidComposeTestRule<HomeActivity
         )
     }
 
-    override fun mozGetSelectorsByGroup(group: String): List<Selector> {
-        return SettingsAccessibilitySelectors.all.filter { it.groups.contains(group) }
-    }
+    override val selectorCatalog = SettingsAccessibilitySelectors
 
     override fun navigateToPage(
         url: String,

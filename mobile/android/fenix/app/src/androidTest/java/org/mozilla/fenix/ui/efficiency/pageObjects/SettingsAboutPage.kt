@@ -7,7 +7,6 @@ package org.mozilla.fenix.ui.efficiency.pageObjects
 import androidx.compose.ui.test.junit4.AndroidComposeTestRule
 import org.mozilla.fenix.helpers.HomeActivityIntentTestRule
 import org.mozilla.fenix.ui.efficiency.helpers.BasePage
-import org.mozilla.fenix.ui.efficiency.helpers.Selector
 import org.mozilla.fenix.ui.efficiency.selectors.SettingsAboutSelectors
 
 class SettingsAboutPage(composeRule: AndroidComposeTestRule<HomeActivityIntentTestRule, *>) : BasePage(composeRule) {
@@ -26,7 +25,5 @@ class SettingsAboutPage(composeRule: AndroidComposeTestRule<HomeActivityIntentTe
         //        )
     }
 
-    override fun mozGetSelectorsByGroup(group: String): List<Selector> {
-        return SettingsAboutSelectors.all.filter { it.groups.contains(group) }
-    }
+    override val selectorCatalog = SettingsAboutSelectors
 }

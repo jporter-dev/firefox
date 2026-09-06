@@ -4,16 +4,23 @@
 
 package org.mozilla.fenix.ui.efficiency.selectors
 
+import org.mozilla.fenix.ui.efficiency.helpers.PageReadinessProfiles
 import org.mozilla.fenix.ui.efficiency.helpers.Selector
+import org.mozilla.fenix.ui.efficiency.helpers.SelectorContainer
+import org.mozilla.fenix.ui.efficiency.helpers.SelectorGroup
 import org.mozilla.fenix.ui.efficiency.helpers.SelectorStrategy
 
-object SettingsTabsSelectors {
+object SettingsTabsSelectors : SelectorContainer {
+    enum class Group : SelectorGroup {
+        TAB_SETTINGS
+    }
+
     val SETTINGS_TABS_TITLE =
         Selector(
             strategy = SelectorStrategy.UIAUTOMATOR_WITH_TEXT,
             value = "Tabs",
             description = "The Settings Tabs title",
-            groups = listOf("requiredForPage"),
+            readiness = PageReadinessProfiles.IDENTITY_ANCHOR,
         )
 
     val NEW_TAB_PAGE_TOGGLE =
@@ -21,12 +28,6 @@ object SettingsTabsSelectors {
             strategy = SelectorStrategy.ESPRESSO_BY_ID,
             value = "new_tab_page_toggle",
             description = "New Tab Page Toggle Switch",
-            groups = listOf("tabSettings"),
-        )
-
-    val all =
-        listOf(
-            SETTINGS_TABS_TITLE,
-            NEW_TAB_PAGE_TOGGLE,
+            groups = setOf(Group.TAB_SETTINGS),
         )
 }

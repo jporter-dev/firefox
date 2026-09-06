@@ -8,7 +8,6 @@ import androidx.compose.ui.test.junit4.AndroidComposeTestRule
 import org.mozilla.fenix.helpers.HomeActivityIntentTestRule
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTimeLong
 import org.mozilla.fenix.ui.efficiency.helpers.BasePage
-import org.mozilla.fenix.ui.efficiency.helpers.Selector
 import org.mozilla.fenix.ui.efficiency.navigation.NavigationOptions
 import org.mozilla.fenix.ui.efficiency.navigation.NavigationRegistry
 import org.mozilla.fenix.ui.efficiency.navigation.NavigationStep
@@ -48,9 +47,7 @@ class SettingsAddonsManagerPage(composeRule: AndroidComposeTestRule<HomeActivity
         return this
     }
 
-    override fun mozGetSelectorsByGroup(group: String): List<Selector> {
-        return SettingsAddonsManagerSelectors.all.filter { it.groups.contains(group) }
-    }
+    override val selectorCatalog = SettingsAddonsManagerSelectors
 
     /**
      * Installs [addonTitle] from the add-ons manager list, then closes the install-completed prompt. When

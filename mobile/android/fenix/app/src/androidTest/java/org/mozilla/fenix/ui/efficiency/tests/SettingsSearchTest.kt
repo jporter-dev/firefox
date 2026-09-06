@@ -36,7 +36,7 @@ class SettingsSearchTest : BaseTest() {
         on.settingsSearch.navigateToPage()
 
         // Then: all elements should load
-        // by default navigateToPage() asserts all 'requiredForPage' elements are present
+        // By default navigateToPage() asserts the page's interactive readiness profile.
     }
 
     // TestRail link: https://mozilla.testrail.io/index.php?/cases/view/2203308

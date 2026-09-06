@@ -78,7 +78,7 @@ class SearchTest : BaseTest(LaunchConfig(isPocketEnabled = false)) {
         on.searchBar.navigateToPage()
 
         // Then: the toolbar elements should load
-        on.searchBar.mozVerifyElementsByGroup("requiredForPage")
+        on.searchBar.mozVerifyReadiness()
     }
 
     // TestRail link:
@@ -94,7 +94,7 @@ class SearchTest : BaseTest(LaunchConfig(isPocketEnabled = false)) {
         on.searchBar.navigateToPage()
 
         // Then: the search bar elements should load
-        on.searchBar.mozVerifyElementsByGroup("requiredForPage")
+        on.searchBar.mozVerifyReadiness()
     }
 
     // TestRail link: https://mozilla.testrail.io/index.php?/cases/view/235397

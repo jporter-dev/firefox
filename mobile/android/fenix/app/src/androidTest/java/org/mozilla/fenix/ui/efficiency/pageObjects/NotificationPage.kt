@@ -209,9 +209,7 @@ class NotificationPage(composeRule: AndroidComposeTestRule<HomeActivityIntentTes
             .findObject(UiSelector().resourceId(NotificationSelectors.NOTIFICATION_STACK_SCROLLER_RES_ID))
             .exists() || mDevice.currentPackageName == SYSTEM_UI_PACKAGE
 
-    override fun mozGetSelectorsByGroup(group: String): List<Selector> {
-        return NotificationSelectors.all.filter { it.groups.contains(group) }
-    }
+    override val selectorCatalog = NotificationSelectors
 
     private companion object {
         const val SWIPE_STEPS = 10

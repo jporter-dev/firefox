@@ -4,17 +4,19 @@
 
 package org.mozilla.fenix.ui.efficiency.selectors
 
+import org.mozilla.fenix.ui.efficiency.helpers.PageReadinessProfiles
 import org.mozilla.fenix.ui.efficiency.helpers.Selector
+import org.mozilla.fenix.ui.efficiency.helpers.SelectorContainer
 import org.mozilla.fenix.ui.efficiency.helpers.SelectorStrategy
 
-object SettingsSavePasswordsSelectors {
+object SettingsSavePasswordsSelectors : SelectorContainer {
 
     val ASK_TO_SAVE_OPTION =
         Selector(
             strategy = SelectorStrategy.ESPRESSO_BY_TEXT,
             value = "Ask to save",
             description = "Ask to save option",
-            groups = listOf("requiredForPage"),
+            readiness = PageReadinessProfiles.IDENTITY_ANCHOR,
         )
 
     val NEVER_SAVE_OPTION =
@@ -22,12 +24,5 @@ object SettingsSavePasswordsSelectors {
             strategy = SelectorStrategy.ESPRESSO_BY_TEXT,
             value = "Never save",
             description = "Never save option",
-            groups = listOf(),
-        )
-
-    val all =
-        listOf(
-            ASK_TO_SAVE_OPTION,
-            NEVER_SAVE_OPTION,
         )
 }

@@ -23,6 +23,7 @@ import org.mozilla.fenix.ui.efficiency.selectors.BookmarksSelectors
 import org.mozilla.fenix.ui.efficiency.selectors.BrowserPageSelectors
 import org.mozilla.fenix.ui.efficiency.selectors.HomeSelectors
 import org.mozilla.fenix.ui.efficiency.selectors.MainMenuSelectors
+import org.mozilla.fenix.ui.efficiency.selectors.ShareOverlaySelectors
 import org.mozilla.fenix.ui.efficiency.selectors.TabDrawerSelectors
 
 class BookmarksTest : BaseTest() {
@@ -89,7 +90,7 @@ class BookmarksTest : BaseTest() {
 
         on.bookmarks.navigateToPage().mozVerify(BookmarksSelectors.BOOKMARK_ITEM(defaultWebPage.title))
         on.bookmarks.openItemMenu(defaultWebPage.title).mozClick(BookmarksSelectors.SHARE_BUTTON)
-        on.shareOverlay.mozVerifyElementsByGroup("shareTabLayout")
+        on.shareOverlay.mozVerifyElementsByGroup(ShareOverlaySelectors.Group.SHARE_TAB_LAYOUT)
         on.shareOverlay.verifySharingWithSelectedApp(
             appName = Constants.GMAIL_APP_NAME,
             appPackageName = Constants.PackageName.GMAIL_APP,
@@ -204,7 +205,7 @@ class BookmarksTest : BaseTest() {
     fun verifyEmptyBookmarksViewImportBookmarksTest() {
         on.bookmarks
             .navigateToPage()
-            .mozVerifyElementsByGroup("emptyBookmarksMenuView")
+            .mozVerifyElementsByGroup(BookmarksSelectors.Group.EMPTY_BOOKMARKS_MENU_VIEW)
             .mozClick(BookmarksSelectors.IMPORT_BOOKMARKS_BUTTON)
             .mozVerify(BookmarksSelectors.IMPORT_MENU_BUTTON)
     }
@@ -217,7 +218,7 @@ class BookmarksTest : BaseTest() {
         importedBookmarksFile = createBookmarksHtmlFile()
         stubFilePickerSelection(importedBookmarksFile!!)
 
-        on.bookmarks.navigateToPage().mozVerifyElementsByGroup("emptyBookmarksMenuView")
+        on.bookmarks.navigateToPage().mozVerifyElementsByGroup(BookmarksSelectors.Group.EMPTY_BOOKMARKS_MENU_VIEW)
         on.bookmarks.importBookmarksFromFile().mozVerify(BookmarksSelectors.BOOKMARK_ITEM(importedBookmarksFolder))
     }
 }

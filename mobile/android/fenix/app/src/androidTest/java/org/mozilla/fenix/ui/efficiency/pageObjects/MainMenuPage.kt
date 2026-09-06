@@ -9,7 +9,6 @@ import org.mozilla.fenix.helpers.DataGenerationHelper.getRecommendedExtensionTit
 import org.mozilla.fenix.helpers.HomeActivityIntentTestRule
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTimeLong
 import org.mozilla.fenix.ui.efficiency.helpers.BasePage
-import org.mozilla.fenix.ui.efficiency.helpers.Selector
 import org.mozilla.fenix.ui.efficiency.navigation.NavigationFacts
 import org.mozilla.fenix.ui.efficiency.navigation.NavigationRegistry
 import org.mozilla.fenix.ui.efficiency.navigation.NavigationStep
@@ -76,9 +75,7 @@ class MainMenuPage(composeRule: AndroidComposeTestRule<HomeActivityIntentTestRul
         )
     }
 
-    override fun mozGetSelectorsByGroup(group: String): List<Selector> {
-        return MainMenuSelectors.all.filter { it.groups.contains(group) }
-    }
+    override val selectorCatalog = MainMenuSelectors
 
     /**
      * Installs the first recommended extension shown in the expanded Extensions submenu and returns its name. The

@@ -13,7 +13,6 @@ import org.mozilla.fenix.helpers.TestAssetHelper
 import org.mozilla.fenix.helpers.TestHelper.mDevice
 import org.mozilla.fenix.helpers.TestHelper.packageName
 import org.mozilla.fenix.ui.efficiency.helpers.BasePage
-import org.mozilla.fenix.ui.efficiency.helpers.Selector
 import org.mozilla.fenix.ui.efficiency.navigation.NavigationRegistry
 import org.mozilla.fenix.ui.efficiency.selectors.ToolbarSelectors
 
@@ -34,9 +33,7 @@ class ToolbarComponent(composeRule: AndroidComposeTestRule<HomeActivityIntentTes
         )
     }
 
-    override fun mozGetSelectorsByGroup(group: String): List<Selector> {
-        return ToolbarSelectors.all.filter { it.groups.contains(group) }
-    }
+    override val selectorCatalog = ToolbarSelectors
 
     /**
      * Assert the address-bar toolbar sits in the top half of the screen. With shouldUseExpandedToolbar the toolbar is

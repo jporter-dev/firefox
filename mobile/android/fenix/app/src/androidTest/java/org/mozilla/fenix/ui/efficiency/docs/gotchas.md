@@ -62,9 +62,9 @@ Last updated: 2026-07-22.
   expect the harness to absorb it. The legacy suite's shared `RetryTestRule(3)` still retries and still has
   the masking problem.
 
-### A6. Page-arrival timeouts are the most common failure shape
+### A6. Page-readiness timeouts are the most common failure shape
 
-- **Symptom:** `navigateToPage` → `mozWaitForPageToLoad` can't find a page's `requiredForPage` anchor
+- **Symptom:** `navigateToPage` cannot satisfy a page's `IDENTIFIED`, `NAVIGATION_READY`, or `INTERACTIVE` profile
   within 10s.
 - **Cause:** usually timing/flakiness (slow arrival), sometimes a wrong/absent anchor selector,
   sometimes the screen genuinely isn't there (wrong launch/state — see A8).
@@ -105,7 +105,7 @@ Last updated: 2026-07-22.
   produces a reachability case that always fails.
 - **What happened:** `OnboardingPage` registered `AppEntry → OnboardingPage` with `steps = listOf()`. The
   reachability run launches with the harness default (`skipOnboarding = true`), so onboarding never shows,
-  so the `requiredForPage` anchor (ToU card title) is never found → the generated case fails.
+  so the readiness anchor (ToU card title) is never found → the generated case fails.
 - **Check for every new page object:**
   - It registers at least one `NavigationRegistry` edge with real steps that reach it from `AppEntry`
     (directly or transitively), **or**
@@ -158,16 +158,17 @@ Last updated: 2026-07-22.
 - **Check:** per-strategy tree semantics preserved (A3), a presence check still never throws (A2),
   and validated with a full-suite run (A4).
 
-### B7. Nav entry/arrival selectors must cover EVERY runtime state (2026-07-23, bit us twice)
+### B7. Identity selectors must cover every state; conditional readiness must name the state
 
 - **Why:** a screen's arrival signal or entry control can change with app state. (1) RecentlyClosed's
-  `requiredForPage` was the empty-state view — absent once the list is populated, so populated tests
+  identity was the empty-state view — absent once the list is populated, so populated tests
   couldn't confirm arrival. (2) The UnifiedTrustPanel entry button's testTag depends on the page's
   security and tracking protection state: `SITE_INFO_SECURE` vs `SITE_INFO_INSECURE_CONNECTION` vs
   `SITE_INFO_TRACKING_PROTECTION_OFF` vs `SITE_INFO_UNKNOWN` — the secure-only edge never opened
   the panel on an http page.
-- **Check:** `requiredForPage` must be an element present in ALL states (e.g. a toolbar title, never an
-  empty-list placeholder). A nav edge whose entry control is state-dependent must `ClickIfPresent` every
+- **Check:** `IDENTIFIED` must use evidence present in all states (e.g. a toolbar title, never an
+  empty-list placeholder). Put state-specific requirements in a named `PageReadinessRule` using `AnyOf`
+  or `appliesWhen`. An edge whose entry control is state-dependent must still `ClickIfPresent` every
   variant. effcheck can't see this — verify by hand whenever you build/modify nav.
 
 ### B8. Test-class boilerplate (now enforced by effcheck MWS/IMP)

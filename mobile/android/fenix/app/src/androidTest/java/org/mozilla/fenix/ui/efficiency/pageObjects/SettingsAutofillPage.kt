@@ -23,7 +23,6 @@ import org.mozilla.fenix.settings.creditcards.ui.CreditCardEditorTestTags
 import org.mozilla.fenix.ui.efficiency.data.AddressDetails
 import org.mozilla.fenix.ui.efficiency.data.CreditCardDetails
 import org.mozilla.fenix.ui.efficiency.helpers.BasePage
-import org.mozilla.fenix.ui.efficiency.helpers.Selector
 import org.mozilla.fenix.ui.efficiency.navigation.NavigationOptions
 import org.mozilla.fenix.ui.efficiency.navigation.NavigationRegistry
 import org.mozilla.fenix.ui.efficiency.navigation.NavigationStep
@@ -41,9 +40,7 @@ class SettingsAutofillPage(composeRule: AndroidComposeTestRule<HomeActivityInten
         )
     }
 
-    override fun mozGetSelectorsByGroup(group: String): List<Selector> {
-        return SettingsAutofillSelectors.all.filter { it.groups.contains(group) }
-    }
+    override val selectorCatalog = SettingsAutofillSelectors
 
     // Narrow the return type to this page so callers can fluently chain page-specific helpers
     // (e.g. fillAndSaveAddress) directly off navigateToPage().

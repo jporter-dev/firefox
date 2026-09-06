@@ -46,12 +46,25 @@ the maintenance-cost curve through reuse, and make failures attributable so red 
 
 - **Selector** (`selectors/<Screen>Selectors.kt`) — a strategy + value describing how to find an element
   (`COMPOSE_BY_TAG`, `ESPRESSO_BY_ID`, `UIAUTOMATOR_*`, `*_BY_TEXT`, …). Selectors live **only** in the
-  catalog, never inline in a page object, and are grouped (e.g. `requiredForPage`).
-- **Page object** (`pageObjects/<Screen>Page.kt`) — models one screen: its selector groups, a
-  `requiredForPage` arrival anchor, page-specific helper methods, and one or more `NavigationRegistry`
+  catalog, never inline in a page object. Typed groups define assertion cohorts; typed readiness, scroll,
+  lifecycle, and generated-result fields have distinct meanings.
+- **Page object** (`pageObjects/<Screen>Page.kt`) — models one screen: its selector catalog, three readiness
+  profiles, optional state-dependent readiness rules, page-specific helper methods, and one or more `NavigationRegistry`
   edges describing how to reach it (real click steps, or a `LaunchConfig` for launch-only screens like
   onboarding). Never register an edge with empty steps and no launch config.
 - **PageContext (`on`)** — the entry point tests use: `on.<screen>.navigateToPage()`.
+
+## Readiness is a live contract
+
+`IDENTIFIED`, `NAVIGATION_READY`, and `INTERACTIVE` answer different questions. Navigation verifies the
+starting node and every page reached by an edge; only a successful checkpoint advances `PageStateTracker`.
+Rules can use `AllOf`, `AnyOf`, and `appliesWhen`; the predicate receives the planned state, incoming and outgoing
+edges, and checkpoint role. Factories may therefore select routes and app states without turning optional UI into an
+unconditional assertion. `NavigationOptions.readinessProfiles` provides a typed per-request override.
+
+The evaluator intentionally performs fresh selector lookups. It does not cache a UI snapshot, treat global UI
+idleness as proof, or reuse coordinates for the next action. Events may eventually wake or invalidate a live
+check, but they must not become the readiness oracle.
 
 ## The factories (generation/) — status is honest
 

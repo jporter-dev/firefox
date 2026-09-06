@@ -7,7 +7,6 @@ package org.mozilla.fenix.ui.efficiency.pageObjects
 import androidx.compose.ui.test.junit4.AndroidComposeTestRule
 import org.mozilla.fenix.helpers.HomeActivityIntentTestRule
 import org.mozilla.fenix.ui.efficiency.helpers.BasePage
-import org.mozilla.fenix.ui.efficiency.helpers.Selector
 import org.mozilla.fenix.ui.efficiency.navigation.NavigationOptions
 import org.mozilla.fenix.ui.efficiency.navigation.NavigationRegistry
 import org.mozilla.fenix.ui.efficiency.selectors.AddToHomeScreenSelectors
@@ -37,7 +36,5 @@ class AddToHomeScreenComponent(composeRule: AndroidComposeTestRule<HomeActivityI
         return this
     }
 
-    override fun mozGetSelectorsByGroup(group: String): List<Selector> {
-        return AddToHomeScreenSelectors.all.filter { it.groups.contains(group) }
-    }
+    override val selectorCatalog = AddToHomeScreenSelectors
 }

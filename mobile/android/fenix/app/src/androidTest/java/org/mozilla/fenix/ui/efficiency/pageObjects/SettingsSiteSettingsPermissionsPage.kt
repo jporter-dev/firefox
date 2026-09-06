@@ -7,7 +7,6 @@ package org.mozilla.fenix.ui.efficiency.pageObjects
 import androidx.compose.ui.test.junit4.AndroidComposeTestRule
 import org.mozilla.fenix.helpers.HomeActivityIntentTestRule
 import org.mozilla.fenix.ui.efficiency.helpers.BasePage
-import org.mozilla.fenix.ui.efficiency.helpers.Selector
 import org.mozilla.fenix.ui.efficiency.navigation.NavigationOptions
 import org.mozilla.fenix.ui.efficiency.navigation.NavigationRegistry
 import org.mozilla.fenix.ui.efficiency.navigation.NavigationStep
@@ -42,9 +41,7 @@ class SettingsSiteSettingsPermissionsPage(composeRule: AndroidComposeTestRule<Ho
         )
     }
 
-    override fun mozGetSelectorsByGroup(group: String): List<Selector> {
-        return SettingsSiteSettingsPermissionsSelectors.all.filter { it.groups.contains(group) }
-    }
+    override val selectorCatalog = SettingsSiteSettingsPermissionsSelectors
 
     // Typed override so a test can chain the verbs below straight off navigateToPage(), as the other page objects do.
     override fun navigateToPage(
@@ -61,7 +58,7 @@ class SettingsSiteSettingsPermissionsPage(composeRule: AndroidComposeTestRule<Ho
      * it:" intro, both numbered steps, and the Go to settings button.
      */
     fun verifyBlockedByAndroidSection(): SettingsSiteSettingsPermissionsPage {
-        mozVerifyElementsByGroup("blockedByAndroid")
+        mozVerifyElementsByGroup(SettingsSiteSettingsPermissionsSelectors.Group.BLOCKED_BY_ANDROID)
         return this
     }
 

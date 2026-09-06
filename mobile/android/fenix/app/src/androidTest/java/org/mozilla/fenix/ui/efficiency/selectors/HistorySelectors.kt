@@ -8,16 +8,26 @@ import android.text.format.DateUtils
 import org.mozilla.fenix.R
 import org.mozilla.fenix.helpers.DataGenerationHelper.getStringResource
 import org.mozilla.fenix.helpers.TestHelper.appContext
+import org.mozilla.fenix.ui.efficiency.helpers.PageReadinessProfiles
 import org.mozilla.fenix.ui.efficiency.helpers.Selector
+import org.mozilla.fenix.ui.efficiency.helpers.SelectorContainer
+import org.mozilla.fenix.ui.efficiency.helpers.SelectorGroup
 import org.mozilla.fenix.ui.efficiency.helpers.SelectorStrategy
 
-object HistorySelectors {
+object HistorySelectors : SelectorContainer {
+    enum class Group : SelectorGroup {
+        HISTORY_MENU_VIEW_WITH_HISTORY_ITEMS,
+        EMPTY_HISTORY_MENU_VIEW,
+        DELETE_CONFIRMATION,
+    }
+
     val TOOLBAR_TITLE =
         Selector(
             strategy = SelectorStrategy.UIAUTOMATOR_WITH_TEXT,
             value = "History",
             description = "History Toolbar Title",
-            groups = listOf("requiredForPage", "historyMenuViewWithHistoryItems"),
+            groups = setOf(Group.HISTORY_MENU_VIEW_WITH_HISTORY_ITEMS),
+            readiness = PageReadinessProfiles.IDENTITY_ANCHOR,
         )
 
     val NAVIGATE_BACK_BUTTON =
@@ -25,7 +35,8 @@ object HistorySelectors {
             strategy = SelectorStrategy.UIAUTOMATOR_WITH_DESCRIPTION_CONTAINS,
             value = getStringResource(R.string.action_bar_up_description),
             description = "Navigate back toolbar button",
-            groups = listOf("requiredForPage", "historyMenuViewWithHistoryItems"),
+            groups = setOf(Group.HISTORY_MENU_VIEW_WITH_HISTORY_ITEMS),
+            readiness = PageReadinessProfiles.READY_CONTENT,
         )
 
     val SEARCH_HISTORY_BUTTON =
@@ -33,7 +44,8 @@ object HistorySelectors {
             strategy = SelectorStrategy.UIAUTOMATOR_WITH_RES_ID,
             value = "history_search",
             description = "Search history toolbar button",
-            groups = listOf("requiredForPage", "historyMenuViewWithHistoryItems"),
+            groups = setOf(Group.HISTORY_MENU_VIEW_WITH_HISTORY_ITEMS),
+            readiness = PageReadinessProfiles.READY_CONTENT,
         )
 
     val RECENTLY_CLOSED_TABS_BUTTON =
@@ -41,7 +53,8 @@ object HistorySelectors {
             strategy = SelectorStrategy.UIAUTOMATOR_WITH_RES_ID,
             value = "recently_closed_tabs_header",
             description = "Recently closed tabs button",
-            groups = listOf("requiredForPage", "historyMenuViewWithHistoryItems"),
+            groups = setOf(Group.HISTORY_MENU_VIEW_WITH_HISTORY_ITEMS),
+            readiness = PageReadinessProfiles.READY_CONTENT,
         )
 
     val RECENTLY_CLOSED_TABS_NUMBER_OF_TABS =
@@ -49,7 +62,8 @@ object HistorySelectors {
             strategy = SelectorStrategy.UIAUTOMATOR_WITH_RES_ID,
             value = "recently_closed_tabs_description",
             description = "Number of recently closed tabs",
-            groups = listOf("requiredForPage", "historyMenuViewWithHistoryItems"),
+            groups = setOf(Group.HISTORY_MENU_VIEW_WITH_HISTORY_ITEMS),
+            readiness = PageReadinessProfiles.READY_CONTENT,
         )
 
     val EMPTY_HISTORY_LIST =
@@ -57,7 +71,7 @@ object HistorySelectors {
             strategy = SelectorStrategy.UIAUTOMATOR_WITH_RES_ID,
             value = "history_empty_view",
             description = "Empty history view",
-            groups = listOf("emptyHistoryMenuView"),
+            groups = setOf(Group.EMPTY_HISTORY_MENU_VIEW),
         )
 
     val HISTORY_LIST =
@@ -65,7 +79,7 @@ object HistorySelectors {
             strategy = SelectorStrategy.UIAUTOMATOR_WITH_RES_ID,
             value = "history_list",
             description = "Browsing history list view",
-            groups = listOf("historyMenuViewWithHistoryItems"),
+            groups = setOf(Group.HISTORY_MENU_VIEW_WITH_HISTORY_ITEMS),
         )
 
     val VISITED_TIME_TITLE =
@@ -78,7 +92,7 @@ object HistorySelectors {
                     DateUtils.FORMAT_SHOW_DATE or DateUtils.FORMAT_SHOW_YEAR,
                 ),
             description = "History date chronological timeline title",
-            groups = listOf("historyMenuViewWithHistoryItems"),
+            groups = setOf(Group.HISTORY_MENU_VIEW_WITH_HISTORY_ITEMS),
         )
 
     val HISTORY_ITEM_TITLE =
@@ -86,7 +100,7 @@ object HistorySelectors {
             strategy = SelectorStrategy.UIAUTOMATOR_WITH_RES_ID,
             value = "title",
             description = "History item title",
-            groups = listOf("historyMenuViewWithHistoryItems"),
+            groups = setOf(Group.HISTORY_MENU_VIEW_WITH_HISTORY_ITEMS),
         )
 
     val HISTORY_ITEM_URL =
@@ -94,7 +108,7 @@ object HistorySelectors {
             strategy = SelectorStrategy.UIAUTOMATOR_WITH_RES_ID,
             value = "url",
             description = "History item URL",
-            groups = listOf("historyMenuViewWithHistoryItems"),
+            groups = setOf(Group.HISTORY_MENU_VIEW_WITH_HISTORY_ITEMS),
         )
 
     val HISTORY_ITEM_DELETE_BUTTON =
@@ -102,7 +116,7 @@ object HistorySelectors {
             strategy = SelectorStrategy.UIAUTOMATOR_WITH_DESCRIPTION_CONTAINS,
             value = "Delete",
             description = "History item delete button",
-            groups = listOf("historyMenuViewWithHistoryItems"),
+            groups = setOf(Group.HISTORY_MENU_VIEW_WITH_HISTORY_ITEMS),
         )
 
     val DELETE_ALL_HISTORY_BUTTON =
@@ -110,7 +124,8 @@ object HistorySelectors {
             strategy = SelectorStrategy.UIAUTOMATOR_WITH_RES_ID,
             value = "history_delete",
             description = "Delete all history button",
-            groups = listOf("requiredForPage", "historyMenuViewWithHistoryItems"),
+            groups = setOf(Group.HISTORY_MENU_VIEW_WITH_HISTORY_ITEMS),
+            readiness = PageReadinessProfiles.READY_CONTENT,
         )
 
     val DELETE_CONFIRMATION_DIALOG_TITLE =
@@ -118,7 +133,7 @@ object HistorySelectors {
             strategy = SelectorStrategy.UIAUTOMATOR_WITH_RES_ID,
             value = "title",
             description = "Delete confirmation dialog title",
-            groups = listOf("deleteConfirmation"),
+            groups = setOf(Group.DELETE_CONFIRMATION),
         )
 
     val DELETE_CONFIRMATION_DIALOG_MESSAGE =
@@ -126,7 +141,7 @@ object HistorySelectors {
             strategy = SelectorStrategy.UIAUTOMATOR_WITH_RES_ID,
             value = "body",
             description = "Delete confirmation dialog message",
-            groups = listOf("deleteConfirmation"),
+            groups = setOf(Group.DELETE_CONFIRMATION),
         )
 
     val DELETE_EVERYTHING_OPTION_BUTTON =
@@ -134,7 +149,7 @@ object HistorySelectors {
             strategy = SelectorStrategy.UIAUTOMATOR_WITH_RES_ID,
             value = "everything_button",
             description = "Everything option button in delete dialog",
-            groups = listOf("deleteConfirmation"),
+            groups = setOf(Group.DELETE_CONFIRMATION),
         )
 
     val DELETE_CONFIRM_BUTTON =
@@ -142,7 +157,7 @@ object HistorySelectors {
             strategy = SelectorStrategy.UIAUTOMATOR_WITH_TEXT,
             value = "Delete",
             description = "Confirm delete button in dialog",
-            groups = listOf("deleteConfirmation"),
+            groups = setOf(Group.DELETE_CONFIRMATION),
         )
 
     // Any row on the History screen whose text contains [text]. Mirrors the legacy generic
@@ -155,27 +170,5 @@ object HistorySelectors {
             strategy = SelectorStrategy.UIAUTOMATOR_WITH_TEXT_CONTAINS,
             value = text,
             description = "History item containing '$text'",
-            groups = listOf(),
-        )
-
-    val all =
-        listOf(
-            TOOLBAR_TITLE,
-            NAVIGATE_BACK_BUTTON,
-            SEARCH_HISTORY_BUTTON,
-            RECENTLY_CLOSED_TABS_BUTTON,
-            RECENTLY_CLOSED_TABS_NUMBER_OF_TABS,
-            EMPTY_HISTORY_LIST,
-            HISTORY_LIST,
-            VISITED_TIME_TITLE,
-            HISTORY_ITEM_TITLE,
-            HISTORY_ITEM_URL,
-            HISTORY_ITEM_DELETE_BUTTON,
-            DELETE_ALL_HISTORY_BUTTON,
-            DELETE_CONFIRMATION_DIALOG_TITLE,
-            DELETE_CONFIRMATION_DIALOG_MESSAGE,
-            DELETE_EVERYTHING_OPTION_BUTTON,
-            DELETE_CONFIRM_BUTTON,
-            HISTORY_ITEM_WITH_TEXT(),
         )
 }

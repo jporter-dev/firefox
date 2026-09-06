@@ -37,7 +37,7 @@ class SettingsHomepageTest : BaseTest() {
         val genericURL = mockWebServer.getGenericAsset(1)
 
         on.browserPage.navigateToPage(genericURL.url.toString())
-        on.home.navigateToPage().mozVerifyElementsByGroup("continue")
+        on.home.navigateToPage().mozVerifyElementsByGroup(HomeSelectors.Group.CONTINUE)
         on.settingsHomepage.navigateToPage().mozClick(CONTINUE_BUTTON)
         on.home.navigateToPage().mozVerifyElementAbsent(CONTINUE_SECTION)
     }
@@ -51,7 +51,7 @@ class SettingsHomepageTest : BaseTest() {
         on.browserPage.navigateToPage(genericURL.url.toString())
         on.mainMenu.navigateToPage().mozClick(BOOKMARK_THIS_PAGE_BUTTON)
         on.browserPage.navigateToPage()
-        on.home.navigateToPage().mozVerifyElementsByGroup("recentBookmarksSection")
+        on.home.navigateToPage().mozVerifyElementsByGroup(HomeSelectors.Group.RECENT_BOOKMARKS_SECTION)
         on.settingsHomepage.navigateToPage().mozClick(RECENT_BOOKMARKS_BUTTON)
         on.home.navigateToPage().mozVerifyElementAbsent(RECENT_BOOKMARKS_SECTION)
     }

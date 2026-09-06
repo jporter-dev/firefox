@@ -18,7 +18,6 @@ import org.mozilla.fenix.helpers.TestAssetHelper.waitingTime
 import org.mozilla.fenix.helpers.TestHelper.appContext
 import org.mozilla.fenix.helpers.TestHelper.mDevice
 import org.mozilla.fenix.ui.efficiency.helpers.BasePage
-import org.mozilla.fenix.ui.efficiency.helpers.Selector
 import org.mozilla.fenix.ui.efficiency.helpers.SwipeDirection
 import org.mozilla.fenix.ui.efficiency.selectors.SystemSettingsSelectors
 
@@ -110,9 +109,7 @@ class SystemSettingsPage(composeRule: AndroidComposeTestRule<HomeActivityIntentT
         )
     }
 
-    override fun mozGetSelectorsByGroup(group: String): List<Selector> {
-        return SystemSettingsSelectors.all.filter { it.groups.contains(group) }
-    }
+    override val selectorCatalog = SystemSettingsSelectors
 
     /**
      * Assert [permissionName] is granted, both in the settings UI and according to the OS.

@@ -9,6 +9,7 @@ import org.mozilla.fenix.ui.efficiency.generation.NavigationTestPlanner
 import org.mozilla.fenix.ui.efficiency.generation.toDisplayLabel
 import org.mozilla.fenix.ui.efficiency.helpers.BasePage
 import org.mozilla.fenix.ui.efficiency.helpers.PageContext
+import org.mozilla.fenix.ui.efficiency.helpers.SelectorId
 import org.mozilla.fenix.ui.efficiency.navigation.NavigationRegistry
 
 object InteractionTestPlanner {
@@ -19,7 +20,7 @@ object InteractionTestPlanner {
         val page: PageContext.() -> BasePage,
         val interactionSelectorName: String,
         val interactionDescription: String,
-        val expectedGroup: String,
+        val expectedResultOf: SelectorId,
         val expectedSelectorNames: List<String>,
         val pathCount: Int,
         val isRunnable: Boolean,
@@ -36,10 +37,13 @@ object InteractionTestPlanner {
                 selectorRefs
                     .filter { it.selectorName.endsWith("_BUTTON") }
                     .map { button ->
-                        val expectedGroup = "resultOf:${button.selectorName}"
+                        val expectedResultOf = button.selector.id ?: SelectorId(button.selectorName)
 
                         val expectedSelectors =
-                            selectorRefs.filter { expectedGroup in it.selector.groups }.map { it.selectorName }.sorted()
+                            selectorRefs
+                                .filter { expectedResultOf in it.selector.appearsAfter }
+                                .map { it.selectorName }
+                                .sorted()
 
                         InteractionCasePlan(
                             pagePropertyName = pageCase.propertyName,
@@ -47,7 +51,7 @@ object InteractionTestPlanner {
                             page = pageCase.page,
                             interactionSelectorName = button.selectorName,
                             interactionDescription = button.selector.description,
-                            expectedGroup = expectedGroup,
+                            expectedResultOf = expectedResultOf,
                             expectedSelectorNames = expectedSelectors,
                             pathCount = pathCount,
                             isRunnable = expectedSelectors.isNotEmpty(),

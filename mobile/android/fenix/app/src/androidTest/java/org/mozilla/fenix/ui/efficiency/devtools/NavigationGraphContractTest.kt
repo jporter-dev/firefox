@@ -11,11 +11,16 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.fenix.ui.efficiency.helpers.BaseTest
+import org.mozilla.fenix.ui.efficiency.helpers.PageReadinessProfile
+import org.mozilla.fenix.ui.efficiency.navigation.NavigationCheckpoint
+import org.mozilla.fenix.ui.efficiency.navigation.NavigationEdge
 import org.mozilla.fenix.ui.efficiency.navigation.NavigationFact
 import org.mozilla.fenix.ui.efficiency.navigation.NavigationFacts
 import org.mozilla.fenix.ui.efficiency.navigation.NavigationOptions
+import org.mozilla.fenix.ui.efficiency.navigation.NavigationPath
 import org.mozilla.fenix.ui.efficiency.navigation.NavigationRegistry
 import org.mozilla.fenix.ui.efficiency.navigation.NavigationRouteTrait
+import org.mozilla.fenix.ui.efficiency.navigation.NavigationState
 import org.mozilla.fenix.ui.efficiency.navigation.PageCatalog
 import org.mozilla.fenix.ui.efficiency.navigation.PageObjectKind
 
@@ -200,6 +205,58 @@ class NavigationGraphContractTest : BaseTest() {
                 )
                 ?.pages,
         )
+    }
+
+    @Test
+    fun readinessPlanChecksEveryVisitedPage() {
+        val states = listOf("Start", "Intermediate", "Waypoint", "Destination").map(::NavigationState)
+        val edges = states.zipWithNext { from, to ->
+            NavigationEdge(from = from.page, to = to.page, steps = emptyList())
+        }
+        val path =
+            NavigationPath(
+                pages = states.map { it.page },
+                edges = edges,
+                states = states,
+                waypointPageIndices = setOf(2),
+            )
+
+        val checkpoints =
+            path.readinessCheckpoints(
+                NavigationOptions(readinessProfiles = mapOf("Intermediate" to PageReadinessProfile.IDENTIFIED))
+            )
+
+        assertEquals(states, checkpoints.map { it.state })
+        assertEquals(
+            listOf(
+                PageReadinessProfile.NAVIGATION_READY,
+                PageReadinessProfile.IDENTIFIED,
+                PageReadinessProfile.INTERACTIVE,
+                PageReadinessProfile.INTERACTIVE,
+            ),
+            checkpoints.map { it.profile },
+        )
+        assertEquals(listOf(null) + edges, checkpoints.map { it.incomingEdge })
+        assertEquals(edges + null, checkpoints.map { it.outgoingEdge })
+        assertEquals(listOf(false, false, true, false), checkpoints.map { it.isWaypoint })
+        assertEquals(listOf(false, false, false, true), checkpoints.map { it.isDestination })
+    }
+
+    @Test
+    fun checkpointVerifierReceivesThePlannedStateAndProfile() {
+        val expected =
+            NavigationCheckpoint(
+                NavigationState("CheckpointPage", setOf(NavigationFact("READY"))),
+                PageReadinessProfile.NAVIGATION_READY,
+            )
+        var received: NavigationCheckpoint? = null
+        NavigationRegistry.registerCheckpointVerifier("CheckpointPage") {
+            received = it
+            true
+        }
+
+        assertTrue(NavigationRegistry.verifyCheckpoint(expected))
+        assertEquals(expected, received)
     }
 
     @Test

@@ -8,7 +8,6 @@ import androidx.compose.ui.test.junit4.AndroidComposeTestRule
 import org.mozilla.fenix.helpers.HomeActivityIntentTestRule
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTime
 import org.mozilla.fenix.ui.efficiency.helpers.BasePage
-import org.mozilla.fenix.ui.efficiency.helpers.Selector
 import org.mozilla.fenix.ui.efficiency.navigation.NavigationOptions
 import org.mozilla.fenix.ui.efficiency.navigation.NavigationRegistry
 import org.mozilla.fenix.ui.efficiency.navigation.NavigationStep
@@ -50,9 +49,7 @@ class DownloadsPage(composeRule: AndroidComposeTestRule<HomeActivityIntentTestRu
         )
     }
 
-    override fun mozGetSelectorsByGroup(group: String): List<Selector> {
-        return DownloadsSelectors.all.filter { it.groups.contains(group) }
-    }
+    override val selectorCatalog = DownloadsSelectors
 
     // Narrow the return type to this page so callers can chain page-specific helpers off
     // navigateToPage() (see SettingsAutofillPage for the same pattern).

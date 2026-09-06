@@ -21,12 +21,16 @@ import androidx.test.uiautomator.UiScrollable
 import androidx.test.uiautomator.UiSelector
 import org.hamcrest.Matchers.allOf
 import org.mozilla.fenix.R
+import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.helpers.DataGenerationHelper.getStringResource
 import org.mozilla.fenix.helpers.HomeActivityIntentTestRule
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTimeShort
+import org.mozilla.fenix.helpers.TestHelper.appContext
 import org.mozilla.fenix.helpers.TestHelper.hasCousin
 import org.mozilla.fenix.ui.efficiency.helpers.BasePage
-import org.mozilla.fenix.ui.efficiency.helpers.Selector
+import org.mozilla.fenix.ui.efficiency.helpers.PageReadinessCondition
+import org.mozilla.fenix.ui.efficiency.helpers.PageReadinessProfiles
+import org.mozilla.fenix.ui.efficiency.helpers.PageReadinessRule
 import org.mozilla.fenix.ui.efficiency.navigation.NavigationFacts
 import org.mozilla.fenix.ui.efficiency.navigation.NavigationOptions
 import org.mozilla.fenix.ui.efficiency.navigation.NavigationRegistry
@@ -61,11 +65,7 @@ class SettingsPage(composeRule: AndroidComposeTestRule<HomeActivityIntentTestRul
         NavigationRegistry.register(
             from = pageName,
             to = "SettingsAutofillPage",
-            steps =
-                listOf(
-                    NavigationStep.Action { mozVerify(SettingsSelectors.SYNC_DEBUG_BUTTON) },
-                    NavigationStep.Click(SettingsSelectors.AUTOFILL_BUTTON),
-                ),
+            steps = listOf(NavigationStep.Click(SettingsSelectors.AUTOFILL_BUTTON)),
         )
         NavigationRegistry.register(
             from = pageName,
@@ -132,9 +132,23 @@ class SettingsPage(composeRule: AndroidComposeTestRule<HomeActivityIntentTestRul
         )
     }
 
-    override fun mozGetSelectorsByGroup(group: String): List<Selector> {
-        return SettingsSelectors.all.filter { it.groups.contains(group) }
-    }
+    override val selectorCatalog = SettingsSelectors
+
+    override fun readinessContract() =
+        super.readinessContract()
+            .withRule(
+                PageReadinessRule(
+                    name = "sync-debug-layout-settled",
+                    profiles = PageReadinessProfiles.READY_CONTENT,
+                    condition = PageReadinessCondition.allOf(SettingsSelectors.SYNC_DEBUG_BUTTON),
+                    appliesWhen = { context ->
+                        val nextClick = context.outgoingEdge?.steps?.singleOrNull() as? NavigationStep.Click
+                        appContext.components.settings.showSecretDebugMenuThisSession &&
+                            nextClick != null &&
+                            nextClick.selector != SettingsSelectors.GO_BACK_BUTTON
+                    },
+                )
+            )
 
     override fun navigateToPage(
         url: String,

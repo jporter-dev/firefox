@@ -7,7 +7,6 @@ package org.mozilla.fenix.ui.efficiency.pageObjects
 import androidx.compose.ui.test.junit4.AndroidComposeTestRule
 import org.mozilla.fenix.helpers.HomeActivityIntentTestRule
 import org.mozilla.fenix.ui.efficiency.helpers.BasePage
-import org.mozilla.fenix.ui.efficiency.helpers.Selector
 import org.mozilla.fenix.ui.efficiency.navigation.NavigationOptions
 import org.mozilla.fenix.ui.efficiency.navigation.NavigationRegistry
 import org.mozilla.fenix.ui.efficiency.navigation.NavigationStep
@@ -56,9 +55,7 @@ class UnifiedTrustPanelPage(composeRule: AndroidComposeTestRule<HomeActivityInte
         return this
     }
 
-    override fun mozGetSelectorsByGroup(group: String): List<Selector> {
-        return UnifiedTrustPanelSelectors.all.filter { it.groups.contains(group) }
-    }
+    override val selectorCatalog = UnifiedTrustPanelSelectors
 
     fun verifyTheClearCookiesAndSiteDataDialog(webSite: String): UnifiedTrustPanelPage {
         mozVerify(UnifiedTrustPanelSelectors.CLEAR_COOKIES_AND_SITE_DATA_DIALOG_TITLE)

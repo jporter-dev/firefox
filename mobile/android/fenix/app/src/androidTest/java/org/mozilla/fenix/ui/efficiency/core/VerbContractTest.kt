@@ -32,11 +32,24 @@ class VerbContractTest {
         val logger = RecordingStepLogger()
         val host = FakeVerbHost(TimedReporter(logger))
 
-        val present = host.groupPresent(verb = "verify_group", label = "Page_requiredForPage", selectors = emptyList())
+        val present = host.groupPresent(verb = "verify_group", label = "Page_GROUP", selectors = emptyList())
 
         assertFalse(present)
         assertEquals(0, host.locateCalls)
         assertEquals(Failure.EMPTY_SELECTOR_GROUP, logger.completed.single().args["failure"])
+    }
+
+    @Test
+    fun selectorGroupReportsEveryMissingSelector() {
+        val logger = RecordingStepLogger()
+        val host = FakeVerbHost(TimedReporter(logger), ElementResolution.Absent)
+        val second = selector.copy(value = "second", description = "second")
+
+        val present =
+            host.groupPresent(verb = "verify_group", label = "Page_GROUP", selectors = listOf(selector, second))
+
+        assertFalse(present)
+        assertEquals(2, host.locateCalls)
     }
 
     @Test
