@@ -69,6 +69,7 @@ import org.mozilla.fenix.ui.efficiency.pageObjects.ToolbarComponent
 import org.mozilla.fenix.ui.efficiency.pageObjects.UnifiedTrustPanelPage
 import org.mozilla.fenix.ui.efficiency.pageObjects.WebCompatReporterPage
 
+/** Composes the page catalog, readiness oracles, and one isolated navigation graph for a running test. */
 class PageContext(val composeRule: AndroidComposeTestRule<HomeActivityIntentTestRule, *>) {
     // Let's make sure we have them in a lexicographic order
     val addToHomescreen = AddToHomeScreenComponent(composeRule)

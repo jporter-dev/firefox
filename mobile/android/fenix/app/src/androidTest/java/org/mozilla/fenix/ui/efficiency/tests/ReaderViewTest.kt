@@ -30,7 +30,7 @@ class ReaderViewTest : BaseTest() {
     fun verifyReaderModeControlsTest() {
         val readerViewPage = mockWebServer.loremIpsumAsset
 
-        // Reader-view appearance prefs persist across runs/retries; reset them so the baseline
+        // Reader-view appearance prefs persist across test attempts; reset them so the baseline
         // assertions (font size 3) are deterministic regardless of prior state on the device.
         readerView.resetAppearancePrefsToDefault()
 

@@ -165,8 +165,8 @@ class TimedReporter(
     }
 
     /**
-     * Clear counters between tests. Parameterized tests and retries reuse the same reporter, so without this a summary
-     * describes every run so far rather than this one.
+     * Clear counters between test attempts. The reporter is process-scoped, so without this a summary describes every
+     * attempt so far rather than the current one.
      */
     fun reset() {
         starts.clear()

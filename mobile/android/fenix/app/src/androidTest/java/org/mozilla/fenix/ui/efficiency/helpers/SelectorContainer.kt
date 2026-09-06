@@ -6,6 +6,7 @@ package org.mozilla.fenix.ui.efficiency.helpers
 
 import java.lang.reflect.Field
 
+/** A discoverable selector catalog used by readiness oracles, typed groups, and factory model inspection. */
 interface SelectorContainer {
     val scrollTraversalOrder: Map<SelectorGroup, List<Selector>>
         get() = emptyMap()

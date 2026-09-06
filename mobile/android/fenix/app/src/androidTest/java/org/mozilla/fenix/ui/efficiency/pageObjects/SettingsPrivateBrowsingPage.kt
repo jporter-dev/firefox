@@ -17,10 +17,8 @@ class SettingsPrivateBrowsingPage(composeRule: AndroidComposeTestRule<HomeActivi
     override val pageName = "SettingsPrivateBrowsingPage"
 
     internal override fun registerNavigation(builder: NavigationGraph.Builder) {
-        // Reached only via the Settings hub (SettingsPage -> SettingsPrivateBrowsingPage), like every other
-        // settings subpage. This page intentionally has NO direct HomePage mega-edge: that made the Home route
-        // shorter than the hub route, so BFS routed browser -> Home (via the New tab button, absent on the
-        // private browser) instead of browser -> menu -> Settings -> Private browsing.
+        // This page intentionally has no direct HomePage route. The planner would prefer it to the Settings-hub
+        // route even though its New tab action is unavailable from a private browser.
         builder.register(
             from = pageName,
             to = "SettingsPage",

@@ -8,6 +8,10 @@ import java.lang.reflect.Field
 import org.mozilla.fenix.ui.efficiency.helpers.BasePage
 import org.mozilla.fenix.ui.efficiency.helpers.PageContext
 
+/**
+ * Discovers the modeled UI surface from [PageContext], keeping generated coverage and graph validation from depending
+ * on a second, manually synchronized page list.
+ */
 object PageCatalog {
 
     data class PageRef(

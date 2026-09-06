@@ -130,7 +130,7 @@ class SettingsSearchTest : BaseTest() {
             .mozVerifyAnyContainsText(SearchBarSelectors.AWESOMEBAR_SUGGESTION, text = "mozilla")
 
         // Dismiss the search bar back to Home before routing on: navigating to Settings straight from
-        // the search bar would let BFS pick the equal-length "type a URL + Enter" browser route, which
+        // the search bar would let the planner pick the equal-cost "type a URL + Enter" browser route, which
         // submits the leftover "mozilla " text and opens a tab. Home -> Settings avoids that.
         on.home.navigateToPage()
 

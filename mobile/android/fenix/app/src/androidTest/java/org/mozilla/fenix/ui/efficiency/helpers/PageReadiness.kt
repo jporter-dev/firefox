@@ -73,6 +73,12 @@ data class PageReadinessEvaluation(
         get() = appliedRules.isNotEmpty()
 }
 
+/**
+ * A live page oracle whose rules may vary with navigation state and route context.
+ *
+ * Evaluation is deliberately non-vacuous and delegates each selector probe to the caller, so polling observes current
+ * UI state instead of approving a cached hierarchy for a later interaction.
+ */
 class PageReadinessContract private constructor(private val rules: List<PageReadinessRule>) {
     val declaredProfiles: Set<PageReadinessProfile>
         get() = rules.flatMapTo(mutableSetOf()) { it.profiles }

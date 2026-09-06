@@ -9,6 +9,12 @@ import java.io.File
 import java.util.PriorityQueue
 import org.mozilla.fenix.ui.efficiency.helpers.PageReadinessProfile
 
+/**
+ * The independently maintained, executable model used to plan and verify UI navigation.
+ *
+ * A graph is built and validated for one [org.mozilla.fenix.ui.efficiency.helpers.PageContext], rather than registered
+ * process-wide, so routes cannot leak between tests and every modeled page must supply an arrival oracle.
+ */
 class NavigationGraph
 private constructor(
     private val graph: Map<String, List<NavigationEdge>>,
