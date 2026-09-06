@@ -70,6 +70,10 @@ using mozilla::ipc::PrincipalInfo;
 using mozilla::places::PageIconProtocolHandler;
 #endif
 
+#ifdef MOZ_THUNDERBIRD
+#  include "MailMessageParent.h"
+#endif
+
 namespace mozilla {
 namespace net {
 
@@ -859,6 +863,16 @@ mozilla::ipc::IPCResult NeckoParent::RecvGetMozNewTabWallpaperStream(
 
   return IPC_OK();
 }
+
+#ifdef MOZ_THUNDERBIRD
+mozilla::ipc::IPCResult NeckoParent::RecvGetMailMessageStream(
+    nsIURI* aURI, const LoadInfoArgs& aLoadInfoArgs,
+    GetMailMessageStreamResolver&& aResolve) {
+  return MailMessageParent::RecvGetMailMessageStream(
+      aURI, aLoadInfoArgs,
+      std::forward<GetMailMessageStreamResolver>(aResolve));
+}
+#endif
 
 mozilla::ipc::IPCResult NeckoParent::RecvGetPageIconStream(
     nsIURI* aURI, const LoadInfoArgs& aLoadInfoArgs,
