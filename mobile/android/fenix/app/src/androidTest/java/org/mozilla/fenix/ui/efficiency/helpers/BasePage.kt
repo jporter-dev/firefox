@@ -121,6 +121,11 @@ abstract class BasePage(protected val composeRule: AndroidComposeTestRule<HomeAc
 
     internal fun declaredReadinessProfiles(): Set<PageReadinessProfile> = readinessContract().declaredProfiles
 
+    internal fun declaredIdentityFingerprint(): Set<Triple<SelectorStrategy, String, String?>> =
+        selectorCatalog.all
+            .filter { PageReadinessProfile.IDENTIFIED in it.readiness }
+            .mapTo(mutableSetOf()) { Triple(it.strategy, it.value, it.secondaryValue) }
+
     companion object {
         // Mirrors the minimum displayed-area Espresso's click() action requires before it will tap.
         private const val CLICKABLE_VISIBILITY_PERCENT = 90

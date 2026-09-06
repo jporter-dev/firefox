@@ -21,11 +21,9 @@ object SettingsCustomizeSelectors : SelectorContainer {
     }
 
     val SETTINGS_CUSTOMIZE_TITLE =
-        Selector(
-            strategy = SelectorStrategy.UIAUTOMATOR_WITH_TEXT,
-            value = "Customize",
-            description = "The Customize Settings title",
-            readiness = PageReadinessProfiles.IDENTITY_ANCHOR,
+        navigationToolbarTitle(
+            title = getStringResource(R.string.preferences_customize),
+            description = "Customize toolbar title",
         )
 
     val SHOW_TOOLBAR_TOGGLE =
@@ -34,6 +32,7 @@ object SettingsCustomizeSelectors : SelectorContainer {
             value = "show_toolbar_toggle",
             description = "Show Toolbar Toggle",
             groups = setOf(Group.CUSTOMIZE_SETTINGS),
+            readiness = PageReadinessProfiles.READY_CONTENT,
         )
 
     val SHOW_TAB_BAR_TOGGLE =
@@ -91,7 +90,6 @@ object SettingsCustomizeSelectors : SelectorContainer {
             strategy = SelectorStrategy.UIAUTOMATOR_WITH_DESCRIPTION_CONTAINS,
             value = "Navigate up",
             description = "Navigate back toolbar button",
-            readiness = PageReadinessProfiles.READY_CONTENT,
         )
 
     override val scrollTraversalOrder: Map<SelectorGroup, List<Selector>> =

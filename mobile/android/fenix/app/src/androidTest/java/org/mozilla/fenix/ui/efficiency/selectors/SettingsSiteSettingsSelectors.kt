@@ -19,11 +19,9 @@ object SettingsSiteSettingsSelectors : SelectorContainer {
     }
 
     val TOOLBAR_TITLE =
-        Selector(
-            strategy = SelectorStrategy.ESPRESSO_BY_TEXT,
-            value = "Site settings",
+        navigationToolbarTitle(
+            title = getStringResource(R.string.preferences_site_settings),
             description = "Site settings toolbar title",
-            readiness = PageReadinessProfiles.IDENTITY_ANCHOR,
         )
 
     val EXCEPTIONS_BUTTON =
@@ -47,6 +45,7 @@ object SettingsSiteSettingsSelectors : SelectorContainer {
             strategy = SelectorStrategy.UIAUTOMATOR_WITH_TEXT,
             value = getStringResource(R.string.preference_phone_feature_camera),
             description = "Site settings Camera button",
+            readiness = PageReadinessProfiles.READY_CONTENT,
         )
 
     val LOCATION_BUTTON =

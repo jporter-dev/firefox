@@ -18,12 +18,18 @@ object SettingsDeleteBrowsingDataSelectors : SelectorContainer {
         DELETE_BROWSING_DATA_DIALOG,
     }
 
+    val TOOLBAR_TITLE =
+        navigationToolbarTitle(
+            title = getStringResource(R.string.preferences_delete_browsing_data),
+            description = "Delete browsing data toolbar title",
+        )
+
     val DELETE_BROWSING_DATA_BUTTON =
         Selector(
             strategy = SelectorStrategy.ESPRESSO_BY_ID,
             value = "delete_data",
             description = "Delete browsing data button",
-            readiness = PageReadinessProfiles.IDENTITY_ANCHOR,
+            readiness = PageReadinessProfiles.READY_CONTENT,
         )
 
     // Each data-type row is a CheckBox (R.id.checkbox) beside its title TextView; match the checkbox by

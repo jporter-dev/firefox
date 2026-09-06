@@ -17,12 +17,18 @@ object SettingsPrivateBrowsingSelectors : SelectorContainer {
         DEFAULT_VALUES
     }
 
+    val TOOLBAR_TITLE =
+        navigationToolbarTitle(
+            title = getStringResource(R.string.preferences_private_browsing_options),
+            description = "Private browsing toolbar title",
+        )
+
     val ADD_PRIVATE_BROWSING_SHORTCUT =
         Selector(
             strategy = SelectorStrategy.ESPRESSO_BY_TEXT,
-            value = "Add private browsing shortcut",
+            value = getStringResource(R.string.preferences_add_private_browsing_shortcut),
             description = "Add private browsing shortcut button",
-            readiness = PageReadinessProfiles.IDENTITY_ANCHOR,
+            readiness = PageReadinessProfiles.READY_CONTENT,
         )
 
     val OPEN_LINKS_IN_PRIVATE_TAB =

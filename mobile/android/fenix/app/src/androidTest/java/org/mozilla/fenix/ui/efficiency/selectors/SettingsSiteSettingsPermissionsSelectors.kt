@@ -18,16 +18,19 @@ object SettingsSiteSettingsPermissionsSelectors : SelectorContainer {
         BLOCKED_BY_ANDROID,
     }
 
+    val TOOLBAR_TITLE =
+        navigationToolbarTitle(
+            title = getStringResource(R.string.preference_phone_feature_camera),
+            description = "Camera permission toolbar title",
+        )
+
     val ASK_TO_ALLOW_RADIO_BUTTON =
         Selector(
             strategy = SelectorStrategy.ESPRESSO_BY_ID,
             value = "ask_to_allow_radio",
             description = "Ask to allow radio button",
-            // Readiness: the permission detail screen always shows the "Ask to allow" radio, so it is
-            // what proves we arrived. The page registers a real nav edge, so without an anchor here
-            // navigateToPage() would report success for whatever screen happened to be in front of it.
             groups = setOf(Group.ASK_TO_ALLOW),
-            readiness = PageReadinessProfiles.IDENTITY_ANCHOR,
+            readiness = PageReadinessProfiles.READY_CONTENT,
         )
 
     // The whole blocked-state section, taken from a live dump. Legacy waited on this container going away to call a

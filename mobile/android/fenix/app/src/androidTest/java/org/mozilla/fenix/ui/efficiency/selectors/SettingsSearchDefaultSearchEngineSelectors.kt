@@ -6,7 +6,6 @@ package org.mozilla.fenix.ui.efficiency.selectors
 
 import org.mozilla.fenix.R
 import org.mozilla.fenix.helpers.DataGenerationHelper.getStringResource
-import org.mozilla.fenix.ui.efficiency.helpers.PageReadinessProfiles
 import org.mozilla.fenix.ui.efficiency.helpers.Selector
 import org.mozilla.fenix.ui.efficiency.helpers.SelectorContainer
 import org.mozilla.fenix.ui.efficiency.helpers.SelectorGroup
@@ -18,11 +17,9 @@ object SettingsSearchDefaultSearchEngineSelectors : SelectorContainer {
     }
 
     val DEFAULT_SEARCH_ENGINE_TITLE =
-        Selector(
-            strategy = SelectorStrategy.ESPRESSO_BY_TEXT,
-            value = "Default search engine",
-            description = "Default search engine title",
-            readiness = PageReadinessProfiles.IDENTITY_ANCHOR,
+        navigationToolbarTitle(
+            title = getStringResource(R.string.preferences_default_search_engine),
+            description = "Default search engine toolbar title",
         )
 
     fun DEFAULT_SEARCH_ENGINE_OPTION(engineName: String = "") =

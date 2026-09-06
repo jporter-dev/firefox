@@ -19,11 +19,9 @@ object SettingsPageSummariesSelectors : SelectorContainer {
     }
 
     val PAGE_SUMMARIES_TOOLBAR_TITLE =
-        Selector(
-            strategy = SelectorStrategy.UIAUTOMATOR_WITH_TEXT_CONTAINS,
-            value = getStringResource(R.string.preferences_page_summaries),
+        navigationToolbarTitle(
+            title = getStringResource(R.string.preferences_page_summaries),
             description = "the Page summaries toolbar title",
-            readiness = PageReadinessProfiles.IDENTITY_ANCHOR,
         )
 
     val SUMMARIZE_PAGES_OPTION =

@@ -7,6 +7,9 @@ package org.mozilla.fenix.ui.efficiency.pageObjects
 import androidx.compose.ui.test.junit4.AndroidComposeTestRule
 import org.mozilla.fenix.helpers.HomeActivityIntentTestRule
 import org.mozilla.fenix.ui.efficiency.helpers.BasePage
+import org.mozilla.fenix.ui.efficiency.helpers.PageReadinessCondition
+import org.mozilla.fenix.ui.efficiency.helpers.PageReadinessProfiles
+import org.mozilla.fenix.ui.efficiency.helpers.PageReadinessRule
 import org.mozilla.fenix.ui.efficiency.navigation.NavigationRegistry
 import org.mozilla.fenix.ui.efficiency.navigation.NavigationStep
 import org.mozilla.fenix.ui.efficiency.selectors.BrowserPageSelectors
@@ -71,4 +74,18 @@ class SettingsSavedPasswordsPage(composeRule: AndroidComposeTestRule<HomeActivit
     }
 
     override val selectorCatalog = SettingsSavedPasswordsSelectors
+
+    override fun readinessContract() =
+        super.readinessContract()
+            .withRule(
+                PageReadinessRule(
+                    name = "saved-passwords-content-state",
+                    profiles = PageReadinessProfiles.IDENTITY_ANCHOR,
+                    condition =
+                        PageReadinessCondition.anyOf(
+                            SettingsSavedPasswordsSelectors.EMPTY_SAVED_PASSWORDS_LIST_ADD_PASSWORD_BUTTON,
+                            SettingsSavedPasswordsSelectors.SAVED_PASSWORDS_LIST,
+                        ),
+                )
+            )
 }

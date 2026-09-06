@@ -27,6 +27,7 @@ object BookmarksSelectors : SelectorContainer {
             value = BookmarksTestTag.BOOKMARK_TOOLBAR,
             description = "Bookmarks toolbar",
             groups = setOf(Group.EMPTY_BOOKMARKS_MENU_VIEW),
+            readiness = PageReadinessProfiles.IDENTITY_ANCHOR,
         )
 
     val TOOLBAR_TITLE =
@@ -35,7 +36,6 @@ object BookmarksSelectors : SelectorContainer {
             value = "Bookmarks",
             description = "Bookmarks Toolbar Title",
             groups = setOf(Group.EMPTY_BOOKMARKS_MENU_VIEW),
-            readiness = PageReadinessProfiles.IDENTITY_ANCHOR,
         )
 
     val SORT_MENU_BUTTON =

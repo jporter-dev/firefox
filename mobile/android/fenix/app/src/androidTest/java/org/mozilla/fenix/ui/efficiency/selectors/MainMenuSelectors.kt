@@ -30,6 +30,14 @@ object MainMenuSelectors : SelectorContainer {
         MORE_MENU_ITEMS,
     }
 
+    val MAIN_MENU_ANCHOR =
+        Selector(
+            strategy = SelectorStrategy.UIAUTOMATOR_WITH_COMPOSE_TAG,
+            value = MenuDialogTestTag.EXTENSIONS,
+            description = "Main menu Extensions item anchor",
+            readiness = PageReadinessProfiles.IDENTITY_ANCHOR,
+        )
+
     val NEW_PRIVATE_TAB_BUTTON =
         Selector(
             strategy = SelectorStrategy.COMPOSE_BY_TEXT,
@@ -45,7 +53,6 @@ object MainMenuSelectors : SelectorContainer {
             value = getStringResource(R.string.browser_menu_extensions),
             description = "Main menu Extensions button",
             groups = setOf(Group.HOME_PAGE_MAIN_MENU_ITEMS, Group.BROWSER_VIEW_MAIN_MENU_ITEMS),
-            readiness = PageReadinessProfiles.IDENTITY_ANCHOR,
         )
 
     val BOOKMARKS_BUTTON =
@@ -56,7 +63,6 @@ object MainMenuSelectors : SelectorContainer {
             // Below the fold in the landscape browser main menu; a no-op in portrait.
             // where the item is already displayed (mozSwipeTo returns before swiping).
             groups = setOf(Group.HOME_PAGE_MAIN_MENU_ITEMS, Group.BROWSER_VIEW_MAIN_MENU_ITEMS),
-            readiness = PageReadinessProfiles.READY_CONTENT,
             scrollDirection = SwipeDirection.UP,
         )
 
@@ -66,7 +72,6 @@ object MainMenuSelectors : SelectorContainer {
             value = getStringResource(R.string.library_history),
             description = "Main menu History button",
             groups = setOf(Group.HOME_PAGE_MAIN_MENU_ITEMS, Group.BROWSER_VIEW_MAIN_MENU_ITEMS),
-            readiness = PageReadinessProfiles.READY_CONTENT,
             scrollDirection = SwipeDirection.UP,
         )
 
@@ -76,7 +81,6 @@ object MainMenuSelectors : SelectorContainer {
             value = getStringResource(R.string.library_downloads),
             description = "Main menu Downloads button",
             groups = setOf(Group.HOME_PAGE_MAIN_MENU_ITEMS, Group.BROWSER_VIEW_MAIN_MENU_ITEMS),
-            readiness = PageReadinessProfiles.READY_CONTENT,
             scrollDirection = SwipeDirection.UP,
         )
 
@@ -86,7 +90,6 @@ object MainMenuSelectors : SelectorContainer {
             value = getStringResource(R.string.browser_menu_passwords),
             description = "Main menu Passwords button",
             groups = setOf(Group.HOME_PAGE_MAIN_MENU_ITEMS, Group.BROWSER_VIEW_MAIN_MENU_ITEMS),
-            readiness = PageReadinessProfiles.READY_CONTENT,
             scrollDirection = SwipeDirection.UP,
         )
 
@@ -96,7 +99,6 @@ object MainMenuSelectors : SelectorContainer {
             value = getStringResource(R.string.browser_menu_sign_in),
             description = "Main menu Sign in button",
             groups = setOf(Group.HOME_PAGE_MAIN_MENU_ITEMS, Group.BROWSER_VIEW_MAIN_MENU_ITEMS),
-            readiness = PageReadinessProfiles.READY_CONTENT,
             scrollDirection = SwipeDirection.UP,
         )
 
@@ -106,7 +108,6 @@ object MainMenuSelectors : SelectorContainer {
             value = getStringResource(R.string.browser_menu_settings),
             description = "Main menu Settings button",
             groups = setOf(Group.HOME_PAGE_MAIN_MENU_ITEMS, Group.BROWSER_VIEW_MAIN_MENU_ITEMS),
-            readiness = PageReadinessProfiles.READY_CONTENT,
             scrollDirection = SwipeDirection.UP,
         )
 

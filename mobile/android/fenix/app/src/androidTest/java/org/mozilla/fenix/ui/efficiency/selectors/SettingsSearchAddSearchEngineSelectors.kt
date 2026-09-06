@@ -4,6 +4,8 @@
 
 package org.mozilla.fenix.ui.efficiency.selectors
 
+import org.mozilla.fenix.R
+import org.mozilla.fenix.helpers.DataGenerationHelper.getStringResource
 import org.mozilla.fenix.ui.efficiency.helpers.PageReadinessProfiles
 import org.mozilla.fenix.ui.efficiency.helpers.Selector
 import org.mozilla.fenix.ui.efficiency.helpers.SelectorContainer
@@ -11,13 +13,19 @@ import org.mozilla.fenix.ui.efficiency.helpers.SelectorStrategy
 
 object SettingsSearchAddSearchEngineSelectors : SelectorContainer {
 
+    val TOOLBAR_TITLE =
+        navigationToolbarTitle(
+            title = getStringResource(R.string.search_engine_add_custom_search_engine_title),
+            description = "Add search engine toolbar title",
+        )
+
     // View-based form (fragment_save_search_engine): match by resource id.
     val ENGINE_NAME_FIELD =
         Selector(
             strategy = SelectorStrategy.ESPRESSO_BY_ID,
             value = "edit_engine_name",
             description = "Search engine name field",
-            readiness = PageReadinessProfiles.IDENTITY_ANCHOR,
+            readiness = PageReadinessProfiles.READY_CONTENT,
         )
 
     val SEARCH_STRING_FIELD =

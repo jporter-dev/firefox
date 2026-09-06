@@ -20,13 +20,19 @@ object SettingsAppIconSelectors : SelectorContainer {
         CHANGE_ICON_DIALOG,
     }
 
+    val TOOLBAR_TITLE =
+        navigationToolbarTitle(
+            title = getStringResource(R.string.preferences_app_icon),
+            description = "App icon toolbar title",
+        )
+
     val FEATURED_SECTION =
         Selector(
             strategy = SelectorStrategy.UIAUTOMATOR_WITH_TEXT,
             value = getStringResource(R.string.alternative_app_icon_group_featured),
             description = "Featured app icon section header",
             groups = setOf(Group.APP_ICON_ITEMS),
-            readiness = PageReadinessProfiles.IDENTITY_ANCHOR,
+            readiness = PageReadinessProfiles.READY_CONTENT,
         )
     val RETRO_2004 =
         Selector(

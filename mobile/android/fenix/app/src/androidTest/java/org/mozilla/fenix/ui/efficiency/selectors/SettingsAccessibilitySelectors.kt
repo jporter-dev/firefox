@@ -19,11 +19,9 @@ object SettingsAccessibilitySelectors : SelectorContainer {
     }
 
     val SETTINGS_ACCESSIBILITY_TITLE =
-        Selector(
-            strategy = SelectorStrategy.UIAUTOMATOR_WITH_TEXT,
-            value = getStringResource(R.string.preferences_accessibility),
-            description = "The Accessibility Settings header",
-            readiness = PageReadinessProfiles.IDENTITY_ANCHOR,
+        navigationToolbarTitle(
+            title = getStringResource(R.string.preferences_accessibility),
+            description = "Accessibility toolbar title",
         )
 
     val USE_SYSTEM_FONT_SIZE_TOGGLE =
@@ -32,6 +30,7 @@ object SettingsAccessibilitySelectors : SelectorContainer {
             value = "use_system_font_size_toggle",
             description = "Use System Font Size Toggle",
             groups = setOf(Group.ACCESSIBILITY_SETTINGS),
+            readiness = PageReadinessProfiles.READY_CONTENT,
         )
 
     val AUTOMATIC_FONT_SIZING_TITLE =

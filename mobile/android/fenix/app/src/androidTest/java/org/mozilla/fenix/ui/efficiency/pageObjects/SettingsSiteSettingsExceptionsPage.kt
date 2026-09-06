@@ -7,6 +7,9 @@ package org.mozilla.fenix.ui.efficiency.pageObjects
 import androidx.compose.ui.test.junit4.AndroidComposeTestRule
 import org.mozilla.fenix.helpers.HomeActivityIntentTestRule
 import org.mozilla.fenix.ui.efficiency.helpers.BasePage
+import org.mozilla.fenix.ui.efficiency.helpers.PageReadinessCondition
+import org.mozilla.fenix.ui.efficiency.helpers.PageReadinessProfiles
+import org.mozilla.fenix.ui.efficiency.helpers.PageReadinessRule
 import org.mozilla.fenix.ui.efficiency.navigation.NavigationRegistry
 import org.mozilla.fenix.ui.efficiency.navigation.NavigationStep
 import org.mozilla.fenix.ui.efficiency.selectors.HomeSelectors
@@ -36,4 +39,18 @@ class SettingsSiteSettingsExceptionsPage(composeRule: AndroidComposeTestRule<Hom
     }
 
     override val selectorCatalog = SettingsSiteSettingsExceptionsSelectors
+
+    override fun readinessContract() =
+        super.readinessContract()
+            .withRule(
+                PageReadinessRule(
+                    name = "site-exceptions-content-loaded",
+                    profiles = PageReadinessProfiles.READY_CONTENT,
+                    condition =
+                        PageReadinessCondition.anyOf(
+                            SettingsSiteSettingsExceptionsSelectors.EMPTY_EXCEPTIONS_LIST,
+                            SettingsSiteSettingsExceptionsSelectors.EXCEPTIONS_LIST,
+                        ),
+                )
+            )
 }

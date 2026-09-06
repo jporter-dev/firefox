@@ -4,7 +4,8 @@
 
 package org.mozilla.fenix.ui.efficiency.selectors
 
-import org.mozilla.fenix.ui.efficiency.helpers.PageReadinessProfiles
+import org.mozilla.fenix.R
+import org.mozilla.fenix.helpers.DataGenerationHelper.getStringResource
 import org.mozilla.fenix.ui.efficiency.helpers.Selector
 import org.mozilla.fenix.ui.efficiency.helpers.SelectorContainer
 import org.mozilla.fenix.ui.efficiency.helpers.SelectorGroup
@@ -18,11 +19,9 @@ object RecentlyClosedTabsSelectors : SelectorContainer {
     // Toolbar title is present whether the list is empty or populated, so it (not the empty-state view)
     // is the reliable page-arrival signal for navigateToPage().
     val MENU_TITLE =
-        Selector(
-            strategy = SelectorStrategy.UIAUTOMATOR_WITH_TEXT,
-            value = "Recently closed tabs",
+        navigationToolbarTitle(
+            title = getStringResource(R.string.library_recently_closed_tabs),
             description = "Recently closed tabs toolbar title",
-            readiness = PageReadinessProfiles.IDENTITY_ANCHOR,
         )
 
     // Only present when there are no recently-closed tabs. Kept out of readiness so the page

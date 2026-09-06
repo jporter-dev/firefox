@@ -28,7 +28,6 @@ object CustomTabsSelectors : SelectorContainer {
             strategy = SelectorStrategy.UIAUTOMATOR_WITH_DESCRIPTION_CONTAINS,
             value = getStringResource(R.string.content_description_menu),
             description = "Custom tabs main menu button",
-            readiness = PageReadinessProfiles.IDENTITY_ANCHOR,
         )
 
     val CLOSE_BUTTON =
@@ -37,6 +36,7 @@ object CustomTabsSelectors : SelectorContainer {
             value = getStringResource(customtabsR.string.mozac_feature_customtabs_exit_button),
             description = "Custom tabs close button",
             groups = setOf(Group.CUSTOM_TAB_TOOLBAR),
+            readiness = PageReadinessProfiles.IDENTITY_ANCHOR,
         )
 
     val SITE_INFO_BUTTON =

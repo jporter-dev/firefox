@@ -5,6 +5,7 @@
 package org.mozilla.fenix.ui.efficiency.selectors
 
 import mozilla.components.feature.addons.R as addonsR
+import org.mozilla.fenix.R
 import org.mozilla.fenix.helpers.DataGenerationHelper.getStringResource
 import org.mozilla.fenix.ui.efficiency.helpers.PageReadinessProfiles
 import org.mozilla.fenix.ui.efficiency.helpers.Selector
@@ -19,12 +20,17 @@ object SettingsAddonsManagerSelectors : SelectorContainer {
         ADD_ONS,
     }
 
+    val TOOLBAR_TITLE =
+        navigationToolbarTitle(
+            title = getStringResource(R.string.preferences_extensions),
+            description = "Extensions toolbar title",
+        )
+
     val NAVIGATE_BACK_TOOLBAR_BUTTON =
         Selector(
             strategy = SelectorStrategy.ESPRESSO_BY_CONTENT_DESC,
             value = "Navigate up",
             description = "Navigate back toolbar button",
-            readiness = PageReadinessProfiles.IDENTITY_ANCHOR,
         )
 
     val ENABLE_OR_DISABLE_EXTENSION_TOGGLE =
@@ -41,6 +47,7 @@ object SettingsAddonsManagerSelectors : SelectorContainer {
             value = "add_ons_list",
             description = "Add-ons List",
             groups = setOf(Group.ADD_ONS),
+            readiness = PageReadinessProfiles.READY_CONTENT,
         )
 
     // The progress bar shown while the add-ons manager list loads. Mirrors the legacy

@@ -28,11 +28,9 @@ object SettingsAutofillSelectors : SelectorContainer {
     }
 
     val SETTINGS_AUTOFILL_TITLE =
-        Selector(
-            strategy = SelectorStrategy.UIAUTOMATOR_WITH_TEXT,
-            value = "Autofill",
-            description = "The Autofill Settings title",
-            readiness = PageReadinessProfiles.IDENTITY_ANCHOR,
+        navigationToolbarTitle(
+            title = getStringResource(R.string.preferences_autofill),
+            description = "Autofill toolbar title",
         )
 
     val AUTOFILL_ADDRESSES_TOGGLE =
@@ -41,6 +39,7 @@ object SettingsAutofillSelectors : SelectorContainer {
             value = "autofill_addresses_toggle",
             description = "Autofill Addresses Toggle",
             groups = setOf(Group.AUTOFILL_SETTINGS),
+            readiness = PageReadinessProfiles.READY_CONTENT,
         )
 
     // "Add address" entry point on the Autofill settings screen (and inside Manage addresses).

@@ -13,12 +13,17 @@ import org.mozilla.fenix.ui.efficiency.helpers.SelectorStrategy
 
 object SettingsDataCollectionSelectors : SelectorContainer {
 
+    val TOOLBAR_TITLE =
+        navigationToolbarTitle(
+            title = getStringResource(R.string.preferences_data_collection),
+            description = "Data collection toolbar title",
+        )
+
     val NAVIGATE_BACK_TOOLBAR_BUTTON =
         Selector(
             strategy = SelectorStrategy.UIAUTOMATOR_WITH_DESCRIPTION_CONTAINS,
             value = "Navigate up",
             description = "Navigate back toolbar button",
-            readiness = PageReadinessProfiles.IDENTITY_ANCHOR,
         )
 
     val SEND_TECHNICAL_AND_INTERACTION_DATA_OPTION =

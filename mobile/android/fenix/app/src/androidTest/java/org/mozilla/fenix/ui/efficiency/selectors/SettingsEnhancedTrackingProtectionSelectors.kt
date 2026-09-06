@@ -4,6 +4,8 @@
 
 package org.mozilla.fenix.ui.efficiency.selectors
 
+import org.mozilla.fenix.R
+import org.mozilla.fenix.helpers.DataGenerationHelper.getStringResource
 import org.mozilla.fenix.helpers.TestHelper.appName
 import org.mozilla.fenix.ui.efficiency.helpers.PageReadinessProfiles
 import org.mozilla.fenix.ui.efficiency.helpers.Selector
@@ -17,12 +19,18 @@ object SettingsEnhancedTrackingProtectionSelectors : SelectorContainer {
         ETPSECTION
     }
 
+    val TOOLBAR_TITLE =
+        navigationToolbarTitle(
+            title = getStringResource(R.string.preference_enhanced_tracking_protection),
+            description = "Enhanced Tracking Protection toolbar title",
+        )
+
     val ENHANCED_TRACKING_PROTECTION_SUMMARY =
         Selector(
             strategy = SelectorStrategy.ESPRESSO_BY_TEXT,
             value = "$appName protects you from many of the most common trackers that follow what you do online.",
             description = "Enhanced tracking protection section summary",
-            readiness = PageReadinessProfiles.IDENTITY_ANCHOR,
+            readiness = PageReadinessProfiles.READY_CONTENT,
         )
 
     val ENHANCED_TRACKING_PROTECTION_EXCEPTIONS_BUTTON =

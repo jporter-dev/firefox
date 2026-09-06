@@ -69,7 +69,6 @@ object TabDrawerSelectors : SelectorContainer {
             value = TabsTrayTestTag.NORMAL_TABS_PAGE_BUTTON,
             description = "Normal browsing tabs tray button",
             groups = setOf(Group.TAB_DRAWER_BANNER_BUTTONS),
-            readiness = PageReadinessProfiles.READY_CONTENT,
         )
 
     val NORMAL_TABS_LIST =
@@ -99,7 +98,6 @@ object TabDrawerSelectors : SelectorContainer {
             value = TabsTrayTestTag.SYNCED_TABS_PAGE_BUTTON,
             description = "Synced tabs button",
             groups = setOf(Group.TAB_DRAWER_BANNER_BUTTONS),
-            readiness = PageReadinessProfiles.READY_CONTENT,
         )
 
     val SIGN_IN_TO_SYNC_BUTTON =
@@ -140,7 +138,6 @@ object TabDrawerSelectors : SelectorContainer {
             value = TabsTrayTestTag.PRIVATE_TABS_PAGE_BUTTON,
             description = "Private browsing tabs tray button",
             groups = setOf(Group.TAB_DRAWER_BANNER_BUTTONS),
-            readiness = PageReadinessProfiles.READY_CONTENT,
         )
 
     val TAB_GROUPS_BUTTON =
@@ -149,7 +146,6 @@ object TabDrawerSelectors : SelectorContainer {
             value = TabsTrayTestTag.TAB_GROUPS_PAGE_BUTTON,
             description = "Tab groups button",
             groups = setOf(Group.TAB_DRAWER_BANNER_BUTTONS),
-            readiness = PageReadinessProfiles.READY_CONTENT,
         )
 
     val EMPTY_TAB_GROUP_PAGE =
@@ -165,7 +161,6 @@ object TabDrawerSelectors : SelectorContainer {
             strategy = SelectorStrategy.COMPOSE_BY_TAG,
             value = TabsTrayTestTag.THREE_DOT_BUTTON,
             description = "Three dot menu button",
-            readiness = PageReadinessProfiles.READY_CONTENT,
         )
 
     val SELECT_TABS_BUTTON =
@@ -346,7 +341,6 @@ object TabDrawerSelectors : SelectorContainer {
             strategy = SelectorStrategy.COMPOSE_BY_TAG,
             value = TabsTrayTestTag.FAB,
             description = "Floating action button",
-            readiness = PageReadinessProfiles.READY_CONTENT,
         )
 
     val EMPTY_PRIVATE_TABS_LIST =

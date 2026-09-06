@@ -13,12 +13,18 @@ import org.mozilla.fenix.ui.efficiency.helpers.SelectorStrategy
 
 object SettingsTranslationSelectors : SelectorContainer {
 
+    val TOOLBAR_TITLE =
+        navigationToolbarTitle(
+            title = getStringResource(R.string.preferences_translations),
+            description = "Translations toolbar title",
+        )
+
     val DOWNLOAD_LANGUAGES_BUTTON =
         Selector(
             strategy = SelectorStrategy.COMPOSE_BY_TEXT,
             value = getStringResource(R.string.translation_settings_download_language),
             description = "Download languages button",
-            readiness = PageReadinessProfiles.IDENTITY_ANCHOR,
+            readiness = PageReadinessProfiles.READY_CONTENT,
         )
 
     /**

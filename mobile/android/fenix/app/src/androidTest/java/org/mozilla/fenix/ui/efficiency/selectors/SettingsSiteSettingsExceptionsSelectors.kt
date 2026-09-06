@@ -18,10 +18,16 @@ object SettingsSiteSettingsExceptionsSelectors : SelectorContainer {
     }
 
     val TOOLBAR_TITLE =
+        navigationToolbarTitle(
+            title = getStringResource(R.string.preference_exceptions),
+            description = "Site settings exceptions toolbar title",
+        )
+
+    val EXCEPTIONS_ROOT =
         Selector(
-            strategy = SelectorStrategy.UIAUTOMATOR_WITH_TEXT_CONTAINS,
-            value = "Exceptions",
-            description = "Site settings toolbar title",
+            strategy = SelectorStrategy.ESPRESSO_BY_ID,
+            value = "container",
+            description = "Site settings exceptions content",
             readiness = PageReadinessProfiles.IDENTITY_ANCHOR,
         )
 
@@ -31,6 +37,13 @@ object SettingsSiteSettingsExceptionsSelectors : SelectorContainer {
             value = "No site exceptions",
             description = "Empty site settings exceptions list",
             groups = setOf(Group.EMPTY_SITE_SETTINGS_EXCEPTIONS_LIST),
+        )
+
+    val EXCEPTIONS_LIST =
+        Selector(
+            strategy = SelectorStrategy.ESPRESSO_BY_ID,
+            value = "exceptions",
+            description = "Site settings exceptions list",
         )
 
     @Suppress("ktlint:standard:function-naming", "FunctionName")

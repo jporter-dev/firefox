@@ -16,6 +16,7 @@ import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.AndroidComposeTestRule
 import androidx.test.espresso.Espresso.onView
+import androidx.test.espresso.matcher.ViewMatchers.hasDescendant
 import androidx.test.espresso.matcher.ViewMatchers.hasSibling
 import androidx.test.espresso.matcher.ViewMatchers.withContentDescription
 import androidx.test.espresso.matcher.ViewMatchers.withId
@@ -59,10 +60,10 @@ object Resolvers {
                 Handle.RES_NAME -> withResourceName(containsString(selector.value))
                 else -> return null
             }
-        return if (locator.extra == Extra.SIBLING_TEXT) {
-            onView(allOf(base, hasSibling(withText(second))))
-        } else {
-            onView(base)
+        return when (locator.extra) {
+            Extra.SIBLING_TEXT -> onView(allOf(base, hasSibling(withText(second))))
+            Extra.DESCENDANT_TEXT -> onView(allOf(base, hasDescendant(withText(second))))
+            else -> onView(base)
         }
     }
 

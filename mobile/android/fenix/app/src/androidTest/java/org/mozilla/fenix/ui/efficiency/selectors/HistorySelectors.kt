@@ -22,12 +22,10 @@ object HistorySelectors : SelectorContainer {
     }
 
     val TOOLBAR_TITLE =
-        Selector(
-            strategy = SelectorStrategy.UIAUTOMATOR_WITH_TEXT,
-            value = "History",
-            description = "History Toolbar Title",
+        navigationToolbarTitle(
+            title = getStringResource(R.string.library_history),
+            description = "History toolbar title",
             groups = setOf(Group.HISTORY_MENU_VIEW_WITH_HISTORY_ITEMS),
-            readiness = PageReadinessProfiles.IDENTITY_ANCHOR,
         )
 
     val NAVIGATE_BACK_BUTTON =

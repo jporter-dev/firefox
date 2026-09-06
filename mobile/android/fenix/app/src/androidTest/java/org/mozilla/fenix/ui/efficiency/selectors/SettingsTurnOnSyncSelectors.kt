@@ -13,12 +13,18 @@ import org.mozilla.fenix.ui.efficiency.helpers.SelectorStrategy
 
 object SettingsTurnOnSyncSelectors : SelectorContainer {
 
+    val TOOLBAR_TITLE =
+        navigationToolbarTitle(
+            title = getStringResource(R.string.preferences_sign_in),
+            description = "Sign in toolbar title",
+        )
+
     val USE_EMAIL_INSTEAD_BUTTON =
         Selector(
             strategy = SelectorStrategy.UIAUTOMATOR_WITH_RES_ID,
             value = "signInEmailButton",
             description = "Use email instead button",
-            readiness = PageReadinessProfiles.IDENTITY_ANCHOR,
+            readiness = PageReadinessProfiles.READY_CONTENT,
         )
 
     val READY_TO_SCAN_BUTTON =

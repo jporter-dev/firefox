@@ -14,11 +14,9 @@ import org.mozilla.fenix.ui.efficiency.helpers.SwipeDirection
 
 object SettingsSearchSelectors : SelectorContainer {
     val SETTINGS_SEARCH_TITLE =
-        Selector(
-            strategy = SelectorStrategy.ESPRESSO_BY_TEXT,
-            value = "Search",
-            description = "the Settings Search title",
-            readiness = PageReadinessProfiles.IDENTITY_ANCHOR,
+        navigationToolbarTitle(
+            title = getStringResource(R.string.preferences_search),
+            description = "Search toolbar title",
         )
 
     val DEFAULT_SEARCH_ENGINE_SETTING_OPTION =

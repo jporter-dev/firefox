@@ -7,6 +7,7 @@ package org.mozilla.fenix.ui.efficiency.selectors
 import org.mozilla.fenix.R
 import org.mozilla.fenix.helpers.DataGenerationHelper.getStringResource
 import org.mozilla.fenix.settings.logins.ui.LoginsTestingTags.LOGIN_DETAILS_PASSWORD_TEXT_FIELD
+import org.mozilla.fenix.settings.logins.ui.LoginsTestingTags.SAVED_LOGINS_LIST
 import org.mozilla.fenix.ui.efficiency.helpers.PageReadinessProfiles
 import org.mozilla.fenix.ui.efficiency.helpers.Selector
 import org.mozilla.fenix.ui.efficiency.helpers.SelectorContainer
@@ -20,12 +21,19 @@ object SettingsSavedPasswordsSelectors : SelectorContainer {
         LOGIN_DETAILS,
     }
 
+    val SAVED_PASSWORDS_TOOLBAR_TITLE =
+        Selector(
+            strategy = SelectorStrategy.COMPOSE_BY_TEXT,
+            value = getStringResource(R.string.preferences_passwords_saved_logins_2),
+            description = "Saved passwords toolbar title",
+            readiness = PageReadinessProfiles.IDENTITY_ANCHOR,
+        )
+
     val GO_BACK_BUTTON =
         Selector(
             strategy = SelectorStrategy.COMPOSE_BY_CONTENT_DESCRIPTION,
             value = getStringResource(R.string.logins_navigate_back_button_content_description),
             description = "Go back toolbar button",
-            readiness = PageReadinessProfiles.IDENTITY_ANCHOR,
         )
 
     val LOGINS_SECURITY_DIALOG_TITLE =
@@ -42,6 +50,13 @@ object SettingsSavedPasswordsSelectors : SelectorContainer {
             value = getStringResource(R.string.logins_warning_dialog_later),
             description = "Logins security dialog later button",
             groups = setOf(Group.LOGINS_SECURITY_DIALOG),
+        )
+
+    val SAVED_PASSWORDS_LIST =
+        Selector(
+            strategy = SelectorStrategy.COMPOSE_BY_TAG,
+            value = SAVED_LOGINS_LIST,
+            description = "Saved passwords list",
         )
 
     val EMPTY_SAVED_PASSWORDS_LIST_DESCRIPTION =
@@ -66,7 +81,6 @@ object SettingsSavedPasswordsSelectors : SelectorContainer {
             value = getStringResource(R.string.preferences_logins_add_login_2),
             description = "Add password button",
             groups = setOf(Group.EMPTY_SAVED_PASSWORDS_LIST),
-            readiness = PageReadinessProfiles.READY_CONTENT,
         )
 
     val REVEAL_PASSWORD_BUTTON =

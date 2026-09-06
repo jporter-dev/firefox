@@ -4,6 +4,9 @@
 
 package org.mozilla.fenix.ui.efficiency.selectors
 
+import org.mozilla.fenix.R
+import org.mozilla.fenix.helpers.DataGenerationHelper.getStringResource
+import org.mozilla.fenix.helpers.TestHelper.appName
 import org.mozilla.fenix.ui.efficiency.helpers.PageReadinessProfiles
 import org.mozilla.fenix.ui.efficiency.helpers.Selector
 import org.mozilla.fenix.ui.efficiency.helpers.SelectorContainer
@@ -25,12 +28,17 @@ object SettingsAboutSelectors : SelectorContainer {
         ABOUT_INFO,
     }
 
+    val TOOLBAR_TITLE =
+        navigationToolbarTitle(
+            title = getStringResource(R.string.preferences_about, appName),
+            description = "About toolbar title",
+        )
+
     val NAVIGATE_BACK_TOOLBAR_BUTTON =
         Selector(
             strategy = SelectorStrategy.ESPRESSO_BY_CONTENT_DESC,
             value = "Navigate up",
             description = "Navigate back toolbar button",
-            readiness = PageReadinessProfiles.IDENTITY_ANCHOR,
         )
 
     val WHATS_NEW_BUTTON =
@@ -39,6 +47,7 @@ object SettingsAboutSelectors : SelectorContainer {
             value = "new in",
             description = "The Whats New Title",
             groups = setOf(Group.ABOUT_SECTION, Group.ABOUT_FIREFOX, Group.WHATS_NEW),
+            readiness = PageReadinessProfiles.READY_CONTENT,
         )
 
     val SUPPORT_BUTTON =

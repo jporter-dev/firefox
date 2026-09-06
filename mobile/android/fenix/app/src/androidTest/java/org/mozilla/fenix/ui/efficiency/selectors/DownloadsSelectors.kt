@@ -25,12 +25,27 @@ object DownloadsSelectors : SelectorContainer {
         DOWNLOADS_LIST,
     }
 
+    val DOWNLOADS_TOOLBAR_TITLE =
+        Selector(
+            strategy = SelectorStrategy.COMPOSE_BY_TEXT,
+            value = getStringResource(R.string.library_downloads),
+            description = "Downloads toolbar title",
+            readiness = PageReadinessProfiles.IDENTITY_ANCHOR,
+        )
+
+    val DOWNLOADS_SETTINGS_BUTTON =
+        Selector(
+            strategy = SelectorStrategy.COMPOSE_BY_CONTENT_DESCRIPTION,
+            value = getStringResource(R.string.download_navigate_settings_description),
+            description = "Downloads settings button",
+            readiness = PageReadinessProfiles.IDENTITY_ANCHOR,
+        )
+
     val NAVIGATE_BACK_TOOLBAR_BUTTON =
         Selector(
             strategy = SelectorStrategy.COMPOSE_BY_CONTENT_DESCRIPTION,
             value = getStringResource(R.string.download_navigate_back_description),
             description = "Navigate back toolbar button",
-            readiness = PageReadinessProfiles.IDENTITY_ANCHOR,
         )
 
     val EMPTY_DOWNLOADS_MESSAGE =

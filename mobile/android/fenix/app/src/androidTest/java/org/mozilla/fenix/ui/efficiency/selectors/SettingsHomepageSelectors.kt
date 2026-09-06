@@ -18,11 +18,9 @@ object SettingsHomepageSelectors : SelectorContainer {
     }
 
     val SETTINGS_HOMEPAGE_TITLE =
-        Selector(
-            strategy = SelectorStrategy.UIAUTOMATOR_WITH_TEXT,
-            value = "Homepage",
-            description = "The Homepage Settings menu item",
-            readiness = PageReadinessProfiles.IDENTITY_ANCHOR,
+        navigationToolbarTitle(
+            title = getStringResource(R.string.preferences_home_2),
+            description = "Homepage toolbar title",
         )
 
     val SHOW_TOP_SITES_TOGGLE =

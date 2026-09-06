@@ -7,7 +7,6 @@ package org.mozilla.fenix.ui.efficiency.selectors
 import org.mozilla.fenix.R
 import org.mozilla.fenix.helpers.DataGenerationHelper.getStringResource
 import org.mozilla.fenix.helpers.TestHelper.appName
-import org.mozilla.fenix.ui.efficiency.helpers.PageReadinessProfiles
 import org.mozilla.fenix.ui.efficiency.helpers.Selector
 import org.mozilla.fenix.ui.efficiency.helpers.SelectorContainer
 import org.mozilla.fenix.ui.efficiency.helpers.SelectorGroup
@@ -45,7 +44,6 @@ object SettingsSelectors : SelectorContainer {
             value = "Navigate up",
             description = "the Back Arrow button",
             groups = setOf(Group.GENERAL_SETTINGS_SECTION),
-            readiness = PageReadinessProfiles.IDENTITY_ANCHOR,
         )
 
     val GENERAL_HEADING =
@@ -79,11 +77,9 @@ object SettingsSelectors : SelectorContainer {
         )
 
     val SETTINGS_TITLE =
-        Selector(
-            strategy = SelectorStrategy.ESPRESSO_BY_TEXT,
-            value = getStringResource(R.string.settings),
+        navigationToolbarTitle(
+            title = getStringResource(R.string.settings),
             description = "Settings screen title",
-            readiness = PageReadinessProfiles.READY_CONTENT,
         )
 
     val SYNC_DEBUG_BUTTON =

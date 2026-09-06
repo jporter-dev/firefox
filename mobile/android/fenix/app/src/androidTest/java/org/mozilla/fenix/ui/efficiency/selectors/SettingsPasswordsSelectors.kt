@@ -4,6 +4,8 @@
 
 package org.mozilla.fenix.ui.efficiency.selectors
 
+import org.mozilla.fenix.R
+import org.mozilla.fenix.helpers.DataGenerationHelper.getStringResource
 import org.mozilla.fenix.ui.efficiency.helpers.PageReadinessProfiles
 import org.mozilla.fenix.ui.efficiency.helpers.Selector
 import org.mozilla.fenix.ui.efficiency.helpers.SelectorContainer
@@ -20,15 +22,12 @@ object SettingsPasswordsSelectors : SelectorContainer {
             strategy = SelectorStrategy.ESPRESSO_BY_CONTENT_DESC,
             value = "Navigate up",
             description = "the Back Arrow button",
-            readiness = PageReadinessProfiles.IDENTITY_ANCHOR,
         )
 
     val SETTINGS_PASSWORDS_TITLE =
-        Selector(
-            strategy = SelectorStrategy.UIAUTOMATOR_WITH_TEXT,
-            value = "Passwords",
-            description = "The Passwords Settings title",
-            readiness = PageReadinessProfiles.READY_CONTENT,
+        navigationToolbarTitle(
+            title = getStringResource(R.string.preferences_passwords_logins_and_passwords_2),
+            description = "Passwords toolbar title",
         )
 
     val SAVE_PASSWORDS_TOGGLE =
