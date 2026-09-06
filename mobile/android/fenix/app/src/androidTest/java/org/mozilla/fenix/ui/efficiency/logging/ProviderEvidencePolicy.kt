@@ -10,7 +10,7 @@ data class RedactedProviderEvent(
 )
 
 object ProviderEvidencePolicy {
-    const val VERSION = 2
+    const val VERSION = 3
 
     private val envelopeFields =
         setOf(
@@ -81,10 +81,36 @@ object ProviderEvidencePolicy {
                     "elapsedMs",
                     "stepId",
                     "verb",
+                    "selector",
+                    "selectorId",
                     "strategy",
+                    "backend",
+                    "tree",
+                    "semanticRoles",
                     "failure",
+                    "failureCategory",
+                    "failurePhase",
                     "page",
+                    "screen",
                     "attempts",
+                    "actionAttempts",
+                    "waitPolicy",
+                    "timeoutMs",
+                    "timedOut",
+                    "lastObservation",
+                    "resolution",
+                    "retryable",
+                    "navigationEdge",
+                    "navigationStepIndex",
+                    "navigationFacts",
+                    "incomingRoute",
+                    "outgoingRoute",
+                    "readinessProfile",
+                    "isWaypoint",
+                    "isDestination",
+                    "appliedRules",
+                    "skippedRules",
+                    "missingSelectors",
                 ),
             "dump" to setOf("layer"),
             "dumpNode" to setOf("layer"),

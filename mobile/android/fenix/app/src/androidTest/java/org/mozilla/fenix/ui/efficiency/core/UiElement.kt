@@ -98,9 +98,9 @@ internal class UiObjectUiElement(val obj: UiObject) : UiElement {
 }
 
 internal class UiObject2UiElement(val obj: UiObject2) : UiElement {
-    override fun exists(): Boolean = true
+    override fun exists(): Boolean = runCatching { !obj.visibleBounds.isEmpty }.getOrDefault(false)
 
-    override fun isDisplayed(): Boolean = true
+    override fun isDisplayed(): Boolean = exists()
 
     override fun click() {
         obj.click()

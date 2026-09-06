@@ -80,6 +80,8 @@ import org.mozilla.fenix.ui.efficiency.navigation.NavigationStep
 abstract class BasePage(protected val composeRule: AndroidComposeTestRule<HomeActivityIntentTestRule, *>) : VerbHost {
 
     private lateinit var navigationGraph: NavigationGraph
+    private var executingNavigationEdge: NavigationEdge? = null
+    private var executingNavigationStep: Int? = null
 
     // --- What the verb executor needs from a page --------------------------------
 
@@ -113,6 +115,13 @@ abstract class BasePage(protected val composeRule: AndroidComposeTestRule<HomeAc
     }
 
     override fun stepId(prefix: String, description: String) = safeId(prefix, description)
+
+    override fun contextFacts(): Map<String, Any?> = buildMap {
+        put("screen", PageStateTracker.currentPageName)
+        put("navigationFacts", PageStateTracker.currentFacts.map { it.name }.sorted())
+        executingNavigationEdge?.let { put("navigationEdge", it.id) }
+        executingNavigationStep?.let { put("navigationStepIndex", it) }
+    }
 
     // --- Page identity -----------------------------------------------------------
 
@@ -228,10 +237,12 @@ abstract class BasePage(protected val composeRule: AndroidComposeTestRule<HomeAc
 
             selectedPath.edges.forEachIndexed { edgeIndex, edge ->
                 activeEdge = edge
+                executingNavigationEdge = edge
                 activeReadinessProfile = null
                 edge.effects.forEach(NavigationOperations::apply)
                 edge.steps.forEachIndexed { index, navigationStep ->
                     activeStepIndex = index
+                    executingNavigationStep = index
                     when (navigationStep) {
                         is NavigationStep.Click -> mozClick(navigationStep.selector, navigationActionWait)
                         is NavigationStep.LongClick -> mozLongClick(navigationStep.selector, navigationActionWait)
@@ -255,6 +266,7 @@ abstract class BasePage(protected val composeRule: AndroidComposeTestRule<HomeAc
                 }
 
                 activeStepIndex = null
+                executingNavigationStep = null
                 val pageIndex = edgeIndex + 1
                 val checkpoint = readinessCheckpoints[pageIndex]
                 activeReadinessProfile = checkpoint.profile
@@ -264,6 +276,7 @@ abstract class BasePage(protected val composeRule: AndroidComposeTestRule<HomeAc
                 PageStateTracker.arrive(selectedPath.states[pageIndex])
                 activeReadinessProfile = null
             }
+            executingNavigationEdge = null
             step.ok(
                 "Navigation to '$pageName' completed",
                 facts(
@@ -299,6 +312,8 @@ abstract class BasePage(protected val composeRule: AndroidComposeTestRule<HomeAc
             )
             // Without this a nav failure says only "did not arrive" - not which page we landed on.
             dumpFailure("navigateToPage failed: $pageName")
+            executingNavigationEdge = null
+            executingNavigationStep = null
             throw t
         }
     }

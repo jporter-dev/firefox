@@ -85,9 +85,6 @@ a candidate for a real primitive/helper, and worth flagging:
 - A launcher-intent launch (some flows only appear via a launcher intent; the efficiency
   `HomeActivityIntentTestRule` path may need this option — verify against onboarding).
 - Scroll as a first-class step (selectors now declare an explicit `scrollDirection`).
-- `mozClick` resolves through `Resolvers.displayed()` while every other verb resolves through
-  `mozGetElement`, so an element can be clickable but unverifiable. Both paths now live in
-  `core/Resolvers.kt`; closing the gap is tracked on MTE-5737.
 
 ## Gotchas
 

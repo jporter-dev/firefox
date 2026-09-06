@@ -66,8 +66,7 @@ object ElementState {
                     Trait.ENABLED -> raw.isEnabled
                     Trait.SELECTED -> raw.isSelected
                     Trait.CHECKED -> raw.isChecked
-                    // UiAutomator2 only hands back an object it already found on screen.
-                    Trait.DISPLAYED -> true
+                    Trait.DISPLAYED -> element.isDisplayed()
                 }
             is SemanticsNodeInteraction -> {
                 when (trait) {

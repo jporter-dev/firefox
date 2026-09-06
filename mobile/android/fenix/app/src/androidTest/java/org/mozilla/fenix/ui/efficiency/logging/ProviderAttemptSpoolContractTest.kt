@@ -27,6 +27,12 @@ class ProviderAttemptSpoolContractTest {
                     "scopeType" to "CMD",
                     "outcome" to "FAIL",
                     "verb" to "click",
+                    "selectorId" to "menu.open",
+                    "backend" to "COMPOSE",
+                    "timeoutMs" to 5_000,
+                    "attempts" to 3,
+                    "lastObservation" to "absent",
+                    "navigationEdge" to "HomePage->MainMenuPage",
                     "value" to "private input",
                     "cause" to "secret stack",
                 ),
@@ -52,6 +58,12 @@ class ProviderAttemptSpoolContractTest {
         val records = bytes.decodeToString().lineSequence().filter(String::isNotBlank).map(::JSONObject).toList()
         assertEquals(listOf("testStart", "stepEnd", "attemptEnd"), records.map { it.getString("type") })
         assertEquals("click", records[1].getString("verb"))
+        assertEquals("menu.open", records[1].getString("selectorId"))
+        assertEquals("COMPOSE", records[1].getString("backend"))
+        assertEquals(5_000, records[1].getInt("timeoutMs"))
+        assertEquals(3, records[1].getInt("attempts"))
+        assertEquals("absent", records[1].getString("lastObservation"))
+        assertEquals("HomePage->MainMenuPage", records[1].getString("navigationEdge"))
         assertFalse(records[1].has("value"))
         assertFalse(records[1].has("cause"))
         assertFalse(records[0].getJSONObject("meta").has("token"))

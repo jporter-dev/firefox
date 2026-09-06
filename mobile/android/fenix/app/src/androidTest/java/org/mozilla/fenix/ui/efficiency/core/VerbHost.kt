@@ -5,6 +5,7 @@
 package org.mozilla.fenix.ui.efficiency.core
 
 import androidx.compose.ui.test.SemanticsNodeInteractionCollection
+import org.mozilla.fenix.ui.efficiency.helpers.PageReadinessProfile
 import org.mozilla.fenix.ui.efficiency.helpers.Selector
 import org.mozilla.fenix.ui.efficiency.logging.TimedReporter
 
@@ -26,6 +27,8 @@ interface VerbHost {
     fun dumpFailure(label: String)
 
     fun stepId(prefix: String, description: String): String
+
+    fun contextFacts(): Map<String, Any?> = emptyMap()
 }
 
 /**
@@ -65,6 +68,9 @@ object Failure {
     /** A condition with no selector behind it never became true. */
     const val CONDITION_TIMEOUT = "condition_timeout"
 
+    /** A condition with no selector behind it threw instead of answering true or false. */
+    const val CONDITION_ERROR = "condition_error"
+
     /** A page's required elements were not all on screen. */
     const val NOT_ARRIVED = "not_arrived"
 
@@ -95,13 +101,45 @@ fun facts(
     put("verb", verb)
     selector?.let {
         put("selector", it.description)
+        it.id?.let { id -> put("selectorId", id.value) }
         put("strategy", it.strategy.name)
         put("value", it.value)
+        STRATEGY_LOCATORS[it.strategy]?.let { locator ->
+            put("backend", locator.layer.name)
+            if (locator.layer == Layer.COMPOSE) put("tree", locator.tree.name)
+        }
+        val roles = buildList {
+            if (PageReadinessProfile.IDENTIFIED in it.readiness) add("identity_anchor")
+            if (
+                PageReadinessProfile.NAVIGATION_READY in it.readiness ||
+                    PageReadinessProfile.INTERACTIVE in it.readiness
+            ) {
+                add("ready_content")
+            }
+        }
+        if (roles.isNotEmpty()) put("semanticRoles", roles)
     }
-    failure?.let { put("failure", it) }
+    failure?.let {
+        put("failure", it)
+        put("failureCategory", Failure.category(it))
+    }
     expectation?.let { put("expectation", it) }
     putAll(extra)
 }
+
+private fun Failure.category(failure: String): String =
+    when (failure) {
+        Failure.UNSUPPORTED_STRATEGY -> "inapplicable"
+        Failure.RESOLUTION_ERROR -> "infrastructure"
+        Failure.CONDITION_TIMEOUT -> "timeout"
+        Failure.EMPTY_SELECTOR_GROUP,
+        Failure.EMPTY_READINESS_CONTRACT,
+        Failure.PREDICATE_ERROR,
+        Failure.CONDITION_ERROR,
+        Failure.ACTION_FAILED,
+        Failure.NO_PATH -> "harness"
+        else -> "assertion"
+    }
 
 /** Open the CMD scope a verb reports under. */
 internal fun VerbHost.cmd(verb: String, description: String, announce: String) =
