@@ -256,6 +256,8 @@ skip-if = [
 
 ["browser_net_sort-reset.js"]
 
+["browser_net_source-preview-search.js"]
+
 ["browser_net_speculation-rules-prefetch-requests.js"]
 
 ["browser_net_sse-basic.js"]
