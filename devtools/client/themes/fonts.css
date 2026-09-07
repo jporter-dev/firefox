@@ -301,7 +301,7 @@
   border: 1px solid var(--input-border-color);
   background-color: var(--input-background-color);
   /* Use the same block padding so the input and the select have the same height (for example
-     for the "Size" line */
+     for the "Size" line) */
   padding-block: 2px;
 }
 
