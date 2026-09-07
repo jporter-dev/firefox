@@ -96,20 +96,6 @@ const UNLIMITED_MAX_RESULTS = 99;
 const SCHEMELESS_INPUT_SCHEMEFUL = 1;
 const SCHEMELESS_INPUT_SCHEMELESS = 2;
 
-let getBoundsWithoutFlushing = UrlbarShared.getBoundsWithoutFlushing;
-
-// `promiseDocumentFlushed` is chrome-only. A frame does instead, since the
-// measurements it guards flush layout themselves in a content document.
-let promiseLayoutFlushed =
-  typeof ChromeUtils != "undefined"
-    ? win => win.promiseDocumentFlushed(() => {})
-    : win => new Promise(resolve => win.requestAnimationFrame(resolve));
-
-let px = number => number.toFixed(2) + "px";
-
-// The name urlbar.css positions the popover against.
-const ANCHOR_NAME = "--urlbar-anchor";
-
 const XHTML_NS = "http://www.w3.org/1999/xhtml";
 
 /**
@@ -153,6 +139,7 @@ export class UrlbarInputBase extends HTMLElement {
     return `
       <div class="urlbar-background"/>
       <div class="urlbar-input-container"
+           role="presentation"
            pageproxystate="invalid">
         <moz-urlbar-slot name="remote-control-box" />
 
@@ -205,8 +192,10 @@ ${
         <moz-urlbar-slot name="page-actions" />
       </div>
       <div class="urlbarView"
+           popover="manual"
            role="group"
            tooltip="aHTMLTooltip">
+        <div class="urlbarView-background"/>
         <div class="urlbarView-body-outer">
           <div class="urlbarView-body-inner">
             <div class="urlbarView-results"
@@ -274,22 +263,6 @@ ${
    * blocks while showing.
    */
   #popoverBlockerCount = 0;
-
-  /**
-   * Invalidates an anchor measurement that is still in flight when a newer one
-   * starts.
-   */
-  #popoverAnchorUpdateKey = {};
-
-  /**
-   * The container the popover anchors to, which also reserves the space the
-   * bar leaves behind while it is in the top layer.
-   *
-   * @type {Element}
-   */
-  get #popoverAnchor() {
-    return this.parentNode;
-  }
 
   /**
    * Whether the popover may open right now.
@@ -564,8 +537,8 @@ ${
 
     // Don't attach event listeners if the urlbar is readonly.
     if (this.readOnly) {
-      this.#releasePopoverAnchor();
       this.#popoverAllowed = false;
+      this.updatePopover();
       // Focused won't be updated so remove it to avoid it becoming stale.
       this.removeAttribute("focused");
       return;
@@ -614,8 +587,6 @@ ${
     // recording abandonment events when the command causes a blur event.
     this.view.panel.addEventListener("command", this, true);
 
-    this.window.addEventListener("uidensitychanged", this);
-
     if (this.window.gBrowser) {
       // On startup, this will be called again by browser-init.js
       // once gBrowser has been initialized.
@@ -632,17 +603,14 @@ ${
     }
 
     this.#popoverAllowed =
-      // A content document has no toolbar to break out of, so there the popover
-      // attribute is what says the element can go in the top layer.
+      // A content document has no toolbar to overlay, so there the embedder
+      // saying the bar is hosted in a page is what says it may use the top
+      // layer.
       (typeof ChromeUtils == "undefined"
-        ? this.hasAttribute("popover")
+        ? this.hasAttribute("in-page")
         : !!this.closest("toolbar")) &&
       !document.documentElement.hasAttribute("customizing");
-    if (this.#canOpenPopover) {
-      this.#updatePopoverAnchor();
-    } else {
-      this.#releasePopoverAnchor();
-    }
+    this.updatePopover();
 
     this._addObservers();
   }
@@ -695,8 +663,6 @@ ${
     // This is used to detect commands launched from the panel, to avoid
     // recording abandonment events when the command causes a blur event.
     this.view.panel.removeEventListener("command", this, true);
-
-    this.window.removeEventListener("uidensitychanged", this);
 
     if (this.#gBrowserListenersAdded) {
       this.window.gBrowser.tabContainer.removeEventListener("TabSelect", this);
@@ -3185,74 +3151,35 @@ ${
     return state;
   }
 
-  async #updatePopoverAnchor() {
-    if (!this.#canOpenPopover) {
-      return;
-    }
-    if (this.document.fullscreenElement) {
-      // Toolbars are hidden in DOM fullscreen mode, so we can't get proper
-      // layout information and need to retry after leaving that mode.
-      this.window.addEventListener(
-        "fullscreen",
-        () => {
-          this.#updatePopoverAnchor();
-        },
-        { once: true }
-      );
-      return;
-    }
-    await this.#measurePopoverAnchor();
-  }
-
   #openPopover() {
-    if (!this.#canOpenPopover || this.matches(":popover-open")) {
-      // Do not expand if the Urlbar can't be expanded right now or is already
-      // expanded.
+    if (this.panel.matches(":popover-open")) {
       return;
     }
 
-    this.showPopover();
-    this.#fixAddressbarSearchbarOrder();
-
-    // Enable the animation only after the first extend call to ensure it
-    // doesn't run when opening a new window.
-    if (!this.hasAttribute("popover-animate")) {
-      promiseLayoutFlushed(this.window).then(() => {
-        this.window.requestAnimationFrame(() => {
-          this.toggleAttribute("popover-animate", true);
-        });
-      });
-    }
+    this.panel.showPopover();
   }
 
   #closePopover() {
-    // If reduce motion is enabled, we want to collapse the Urlbar here so the
-    // user sees only sees two states: not expanded, and expanded with the view
-    // open.
-    if (!this.matches(":popover-open")) {
+    if (!this.panel.matches(":popover-open")) {
       return;
     }
 
-    if (this.view.isOpen && this.view.visibleRowCount) {
-      return;
-    }
-
-    this.hidePopover();
+    this.panel.hidePopover();
   }
 
   /**
-   * Opens the popover while the user is interacting with the input. An in-page
-   * element also counts focus, so that a modal dialog the page opens paints
-   * over the closed bar. Entering and leaving the top layer reconstructs the
-   * input's frame, which drops the editor's undo history (bug 2017065), so both
-   * transitions stay outside the interaction.
+   * Keeps the view's popover in the top layer, and the `popover-open`
+   * attribute set, for as long as the view is open. `popover-open` says the
+   * sheet the background paints is bigger than the input.
    */
   updatePopover() {
-    if (this.view.isOpen || (this.hasAttribute("in-page") && this.focused)) {
+    let popoverOpen = this.#canOpenPopover && this.view.isOpen;
+    if (popoverOpen) {
       this.#openPopover();
     } else {
       this.#closePopover();
     }
+    this.toggleAttribute("popover-open", popoverOpen);
   }
 
   /**
@@ -3376,22 +3303,6 @@ ${
   }
 
   /**
-   * @param {Window} subject
-   * @param {"ai-window-state-changed"} _topic
-   * @param {string} data
-   */
-  observe = (subject, _topic, data) => {
-    // nav-bar-visible event is unique to Smart Window and emits when the urlbar
-    // is revealed after completing onboarding.
-    if (
-      subject == this.window &&
-      (data == "classic" || data == "nav-bar-visible")
-    ) {
-      this.#updatePopoverAnchor();
-    }
-  };
-
-  /**
    * @param {"removed"|"changed"|"default"} modifiedType
    * @param {PartialSearchEngine} engine
    */
@@ -3477,24 +3388,9 @@ ${
     return result.payload.providesSearchMode;
   }
 
-  // The observer service holds this weakly, so it has to outlive _addObservers.
-  _observer;
-
   _addObservers() {
     if (this._observersAdded) {
       return;
-    }
-    // The AI window's state only ever concerns a chrome window, so there is
-    // nothing there for a content-realm input to observe.
-    if (typeof ChromeUtils != "undefined") {
-      this._observer = {
-        observe: this.observe,
-        QueryInterface: ChromeUtils.generateQI([
-          "nsIObserver",
-          "nsISupportsWeakReference",
-        ]),
-      };
-      Services.obs.addObserver(this._observer, "ai-window-state-changed", true);
     }
     this.controller.engineStore.addObserver(this.onSearchEngineUpdate);
     this._observersAdded = true;
@@ -3503,9 +3399,6 @@ ${
   _removeObservers() {
     if (!this._observersAdded) {
       return;
-    }
-    if (this._observer) {
-      Services.obs.removeObserver(this._observer, "ai-window-state-changed");
     }
     this.controller.engineStore.removeObserver(this.onSearchEngineUpdate);
     this._observersAdded = false;
@@ -3548,25 +3441,10 @@ ${
     this.view.close();
   }
 
-  /**
-   * Hides the popover and releases the anchor state on its container, undoing
-   * #measurePopoverAnchor. #closePopover only hides the popover, leaving the
-   * anchor in place for the next open.
-   */
-  #releasePopoverAnchor() {
-    if (this.matches(":popover-open")) {
-      this.hidePopover();
-    }
-    this.#popoverAnchor.style.removeProperty("--urlbar-container-height");
-    this.#popoverAnchor.style.removeProperty("anchor-name");
-    this.#popoverAnchor.style.removeProperty("anchor-scope");
-    this.#popoverAnchorUpdateKey = {};
-  }
-
   incrementPopoverBlockerCount() {
     this.#popoverBlockerCount++;
     if (this.#popoverBlockerCount == 1) {
-      this.#releasePopoverAnchor();
+      this.updatePopover();
     }
   }
 
@@ -3574,43 +3452,9 @@ ${
     if (this.#popoverBlockerCount > 0) {
       this.#popoverBlockerCount--;
     }
-    if (this.#popoverBlockerCount === 0) {
-      this.#updatePopoverAnchor();
+    if (!this.#popoverBlockerCount) {
+      this.updatePopover();
     }
-  }
-
-  async #measurePopoverAnchor() {
-    this.#releasePopoverAnchor();
-
-    // When this method gets called a second time before the first call
-    // finishes, we need to disregard the first one.
-    let updateKey = {};
-    this.#popoverAnchorUpdateKey = updateKey;
-    await promiseLayoutFlushed(this.window);
-    await new Promise(resolve => {
-      this.window.requestAnimationFrame(() => {
-        if (this.#popoverAnchorUpdateKey != updateKey || !this.isConnected) {
-          return;
-        }
-
-        if (!this.#canOpenPopover) {
-          return;
-        }
-
-        this.#popoverAnchor.style.setProperty(
-          "--urlbar-container-height",
-          px(getBoundsWithoutFlushing(this.#popoverAnchor).height)
-        );
-        this.#popoverAnchor.style.setProperty("anchor-name", ANCHOR_NAME);
-        // Every input gives its container the same name, so scope it there too:
-        // an unscoped name resolves to whichever container comes last in the
-        // document, which would anchor the address bar to the search bar's.
-        this.#popoverAnchor.style.setProperty("anchor-scope", ANCHOR_NAME);
-        this.updatePopover();
-
-        resolve();
-      });
-    });
   }
 
   /**
@@ -3952,52 +3796,6 @@ ${
         lazy.CustomizableUI.AREA_FIXED_OVERFLOW_PANEL ||
       this.parentElement.getAttribute("overflowedItem") == "true"
     );
-  }
-
-  /**
-   * Should be directly after every showPopover to fix the popover order
-   * among urlbar and searchbar.
-   * Since a moz-urlbar only extends downwards when focused, the moz-urlbar
-   * that's higher (along the y axis) should also be on top (along the z axis).
-   *
-   * Note: this is a hack necessary because of bug 2014481.
-   * Once that's fixed, we can simply always show the focused one on top.
-   */
-  #fixAddressbarSearchbarOrder() {
-    let addressbar = /** @type {?UrlbarInput} */ (
-      this.document.getElementById("urlbar")
-    );
-    let searchbar = /** @type {?UrlbarInput} */ (
-      this.document.getElementById("searchbar-new")
-    );
-    if (
-      !searchbar?.matches(":popover-open") ||
-      !addressbar?.matches(":popover-open")
-    ) {
-      return;
-    }
-
-    let searchbarArea =
-      lazy.CustomizableUI.getPlacementOfWidget("search-container")?.area;
-    if (!searchbarArea) {
-      return;
-    }
-
-    const areasAboveNavbar = [
-      lazy.CustomizableUI.AREA_MENUBAR,
-      lazy.CustomizableUI.AREA_TABSTRIP,
-    ];
-    const areasBelowNavbar = [lazy.CustomizableUI.AREA_BOOKMARKS];
-
-    // If `this` is higher than the other bar, we don't need to do anything since
-    // showPopover was just called (hence we're already on top of the other one).
-    if (areasAboveNavbar.includes(searchbarArea) && this != searchbar) {
-      searchbar.hidePopover();
-      searchbar.showPopover();
-    } else if (areasBelowNavbar.includes(searchbarArea) && this != addressbar) {
-      addressbar.hidePopover();
-      addressbar.showPopover();
-    }
   }
 
   _updateUrlTooltip() {
@@ -5444,7 +5242,6 @@ ${
     if (!UrlbarPrefs.get("ui.popup.disable_autohide")) {
       this.view.close();
     }
-    this.updatePopover();
 
     // We may have hidden popup notifications, show them again if necessary.
     if (
@@ -5530,7 +5327,6 @@ ${
     if (!this._hideFocus) {
       this.toggleAttribute("focused", true);
     }
-    this.updatePopover();
 
     // If the value was trimmed, check whether we should untrim it.
     // This is necessary when a protocol was typed, but the whole url has
@@ -6362,13 +6158,6 @@ ${
     // See the handling in `setURI` for further details.
     this.userTypedValue = null;
     this.setURI({ dueToTabSwitch: true });
-  }
-
-  _on_uidensitychanged() {
-    if (this.#popoverBlockerCount) {
-      return;
-    }
-    this.#updatePopoverAnchor();
   }
 
   #allTextSelectedOnKeyDown = false;

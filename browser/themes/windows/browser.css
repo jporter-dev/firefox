@@ -238,7 +238,7 @@
   }
 
   @media -moz-pref("browser.nova.enabled") {
-    .urlbar:popover-open:where([open], :not([in-page])) > .urlbar-background {
+    .urlbar[popover-open] > .urlbar-background {
       border-color: currentColor;
     }
   }
