@@ -347,10 +347,6 @@ with modules["NETWORK"]:
     errors["NS_ERROR_NET_HTTP3_PROTOCOL_ERROR"] = FAILURE(84)
     # A timeout error code that can be used to cancel requests.
     errors["NS_ERROR_NET_TIMEOUT_EXTERNAL"] = FAILURE(85)
-    # An HTTP/2 or HTTP/3 session was closed without a clean shutdown (e.g. no
-    # GOAWAY) and no response bytes were received for the stream, so it is
-    # safe to retry on a new connection.
-    errors["NS_ERROR_NET_UNCLEAN_SHUTDOWN"] = FAILURE(101)
     # An error related to HTTPS-only mode
     errors["NS_ERROR_HTTPS_ONLY"] = FAILURE(86)
     # A WebSocket connection is failed.

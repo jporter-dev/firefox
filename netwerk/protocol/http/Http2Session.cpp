@@ -278,10 +278,7 @@ void Http2Session::ShutdownStream(Http2StreamBase* aStream, nsresult aReason) {
   } else if (!mCleanShutdown && PossibleZeroRTTRetryError(aReason)) {
     CloseStream(aStream, aReason);
   } else {
-    // The connection went away without a clean GOAWAY-based shutdown, but
-    // this stream never received any response data, so it is safe to retry
-    // it on a new connection.
-    CloseStream(aStream, NS_ERROR_NET_UNCLEAN_SHUTDOWN);
+    CloseStream(aStream, NS_ERROR_ABORT);
   }
 }
 
