@@ -112,8 +112,8 @@ class WorkletImpl {
   /**
    * Called on the execution thread from NotifyWorkletFinished(), after the
    * global scope has been released and so once GetGlobalScope() can no longer
-   * construct another one. Subclasses may release state that ConstructGlobalScope()
-   * would otherwise have consumed.
+   * construct another one. Subclasses may release state that
+   * ConstructGlobalScope() would otherwise have consumed.
    */
   virtual void OnFinishedOnExecutionThread() {}
 
