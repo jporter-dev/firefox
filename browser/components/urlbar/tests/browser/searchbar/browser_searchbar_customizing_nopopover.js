@@ -5,7 +5,7 @@
 
 const WIDGET_ID = "search-container";
 
-async function assertBreakout(enabled, message) {
+async function assertAnchored(enabled, message) {
   // Wait until urlbar code updates the container.
   await window.promiseDocumentFlushed(() => {});
   await new Promise(r => window.requestAnimationFrame(r));
@@ -16,24 +16,24 @@ async function assertBreakout(enabled, message) {
   Assert.equal(
     !!searchbar.parentNode.style.getPropertyValue("--urlbar-container-height"),
     enabled,
-    message + (enabled ? ": breakout on" : ": breakout off")
+    message + (enabled ? ": anchored" : ": not anchored")
   );
 }
 
-add_task(async function test_breakout() {
-  await assertBreakout(true, "Enabled in navbar");
+add_task(async function test_anchored() {
+  await assertAnchored(true, "Enabled in navbar");
 
   CustomizableUI.removeWidgetFromArea(WIDGET_ID);
   await startCustomizing();
-  await assertBreakout(false, "Disabled in palette");
+  await assertAnchored(false, "Disabled in palette");
 
   CustomizableUI.addWidgetToArea(WIDGET_ID, CustomizableUI.AREA_NAVBAR);
-  await assertBreakout(false, "Disabled in navbar while customizing");
+  await assertAnchored(false, "Disabled in navbar while customizing");
 
   CustomizableUI.removeWidgetFromArea(WIDGET_ID);
-  await assertBreakout(false, "Disabled in palette");
+  await assertAnchored(false, "Disabled in palette");
 
   CustomizableUI.addWidgetToArea(WIDGET_ID, CustomizableUI.AREA_NAVBAR);
   await endCustomizing();
-  await assertBreakout(true, "Enabled in navbar after customizing");
+  await assertAnchored(true, "Enabled in navbar after customizing");
 });

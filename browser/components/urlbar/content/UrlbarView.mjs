@@ -677,7 +677,7 @@ export class UrlbarView {
     }
 
     if (!this.isOpen) {
-      this.input.updateLayoutExtend();
+      this.input.updatePopover();
       return;
     }
 
@@ -1255,7 +1255,7 @@ export class UrlbarView {
       return;
     }
     if (this.isOpen) {
-      this.input.updateLayoutExtend();
+      this.input.updatePopover();
       return;
     }
     this.controller.userSelectionBehavior = "none";

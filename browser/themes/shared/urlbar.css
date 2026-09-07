@@ -20,11 +20,11 @@
    * for other layout calculations too */
   --urlbar-snapped-1px-border-width: max(env(hairline), round(down, 1px, env(hairline)));
   --urlbar-input-container-border-width: var(--urlbar-snapped-1px-border-width);
-  --urlbar-input-container-border-width-breakout: calc(2 * var(--urlbar-input-container-border-width));
-  --urlbar-input-container-padding: round(nearest, var(--space-xxsmall) + var(--urlbar-input-container-border-width-breakout), 1px);
+  --urlbar-input-container-border-width-open: calc(2 * var(--urlbar-input-container-border-width));
+  --urlbar-input-container-padding: round(nearest, var(--space-xxsmall) + var(--urlbar-input-container-border-width-open), 1px);
 
   /* How far the background reaches past the input while the view is open. */
-  --urlbar-background-overhang-breakout: 8px;
+  --urlbar-background-overhang-open: 8px;
 
   /* The container's block padding, which the popover takes as its offset from
      the container's border box. */
@@ -34,10 +34,10 @@
     --urlbar-basic-component-size: calc(var(--urlbar-height) - 2 * (var(--urlbar-input-container-border-width) + var(--urlbar-input-container-padding)));
     --urlbar-icon-padding: calc((var(--urlbar-height) - 2px /* border */ - 2px /* padding */ - 16px /* icon */) / 2);
     --urlbar-input-container-padding: round(up, 1px, env(hairline));
-    --urlbar-background-overhang-breakout: 0px;
+    --urlbar-background-overhang-open: 0px;
   }
   &[uidensity="compact"] {
-    --urlbar-background-overhang-breakout: 0px;
+    --urlbar-background-overhang-open: 0px;
   }
   &[uidensity="touch"] {
     --urlbar-container-padding-block: 5px;
@@ -102,49 +102,49 @@
  * optionally be replaced with inline definitions when Proton is removed.
  * Naming conventions:
  *
- * - "breakout" - when the popover is open and *not* focused
- * - "breakout-focused" - when the popover is open and focused
+ * - "open" - when the popover is open and *not* focused
+ * - "open-focused" - when the popover is open and focused
  * - "focused" - when focused and the popover is *not* open
  * - none of the above - when the popover is not open and not focused
  */
 .urlbar,
 #searchbar {
   --urlbar-background-border: var(--urlbar-input-container-border-width) solid var(--toolbar-field-border-color);
-  --urlbar-background-border-breakout: var(--urlbar-input-container-border-width) solid transparent;
-  --urlbar-background-border-focused: var(--urlbar-input-container-border-width-breakout) solid var(--toolbar-field-border-color-focus);
+  --urlbar-background-border-open: var(--urlbar-input-container-border-width) solid transparent;
+  --urlbar-background-border-focused: var(--urlbar-input-container-border-width-open) solid var(--toolbar-field-border-color-focus);
   --urlbar-background-border-radius: var(--urlbarview-border-radius);
   /* The top corners take the input's radius plus however far the background
      reaches past it, so the two stay concentric. The input's radius is capped
      at its pill radius; the bottom corners keep the uncapped one, which the
      results match. */
-  --urlbar-background-border-top-radius-breakout: calc(
-    min(var(--urlbar-background-border-radius), var(--urlbar-height) / 2) + var(--urlbar-background-overhang-breakout)
+  --urlbar-background-border-top-radius-open: calc(
+    min(var(--urlbar-background-border-radius), var(--urlbar-height) / 2) + var(--urlbar-background-overhang-open)
   );
-  --urlbar-background-box-shadow-breakout: 0 0 14px 0 var(--chrome-box-shadow);
-  --urlbar-background-box-shadow-breakout-compact: none;
+  --urlbar-background-box-shadow-open: 0 0 14px 0 var(--chrome-box-shadow);
+  --urlbar-background-box-shadow-open-compact: none;
   --urlbar-background-outline-focused: none;
   --urlbar-input-container-border: var(--urlbar-input-container-border-width) solid var(--toolbar-field-border-color);
-  --urlbar-input-container-outline-breakout: var(--urlbar-input-container-border-width-breakout) solid var(--toolbar-field-border-color);
-  --urlbar-input-container-outline-breakout-focused: var(--urlbar-input-container-border-width-breakout) solid var(--toolbar-field-border-color-focus);
-  --urlbar-input-container-outline-offset-breakout: calc(-1 * var(--urlbar-input-container-border-width-breakout));
-  --urlbar-margin-block-start-breakout: calc((var(--urlbar-container-height) - var(--urlbar-height)) / 2);
+  --urlbar-input-container-outline-open: var(--urlbar-input-container-border-width-open) solid var(--toolbar-field-border-color);
+  --urlbar-input-container-outline-open-focused: var(--urlbar-input-container-border-width-open) solid var(--toolbar-field-border-color-focus);
+  --urlbar-input-container-outline-offset-open: calc(-1 * var(--urlbar-input-container-border-width-open));
+  --urlbar-margin-block-start-open: calc((var(--urlbar-container-height) - var(--urlbar-height)) / 2);
   --urlbar-searchmode-switcher-panel-list-min-width: 17em;
 
   @media not -moz-pref("browser.nova.enabled") {
     --urlbar-background-border: var(--urlbar-input-container-border-width) solid var(--toolbar-field-border-color);
-    --urlbar-background-border-breakout: var(--urlbar-input-container-border-width) solid var(--panel-border-color);
+    --urlbar-background-border-open: var(--urlbar-input-container-border-width) solid var(--panel-border-color);
     --urlbar-background-border-focused: var(--urlbar-background-border);
-    --urlbar-background-box-shadow-breakout: 0 2px 14px var(--chrome-box-shadow);
-    --urlbar-background-box-shadow-breakout-compact: var(--urlbar-background-box-shadow-breakout);
+    --urlbar-background-box-shadow-open: 0 2px 14px var(--chrome-box-shadow);
+    --urlbar-background-box-shadow-open-compact: var(--urlbar-background-box-shadow-open);
     /* We want the focus outline with the theme's border-color when focused.
        --toolbar-field-border-color-focus is set equal to --focus-outline-color
        on :root, but LWT themes can override this value. */
     --urlbar-background-outline-focused: var(--focus-outline-width) solid var(--toolbar-field-border-color-focus);
     --urlbar-input-container-border: var(--urlbar-input-container-border-width) solid transparent;
-    --urlbar-input-container-outline-breakout: none;
-    --urlbar-input-container-outline-breakout-focused: none;
-    --urlbar-input-container-outline-offset-breakout: 0px;
-    --urlbar-margin-block-start-breakout: 0px;
+    --urlbar-input-container-outline-open: none;
+    --urlbar-input-container-outline-open-focused: none;
+    --urlbar-input-container-outline-offset-open: 0px;
+    --urlbar-margin-block-start-open: 0px;
     --urlbar-searchmode-switcher-panel-list-min-width: auto;
   }
 }
@@ -213,7 +213,7 @@ toolbar[inactive="true"] .urlbar,
     position-area: span-block-end center;
     inset-block-start: 0;
     width: 100%;
-    margin-block-start: var(--urlbar-margin-block-start-breakout);
+    margin-block-start: var(--urlbar-margin-block-start-open);
   }
 
   /* In a page the viewport clips the top layer, where a chrome panel may extend
@@ -221,7 +221,7 @@ toolbar[inactive="true"] .urlbar,
      within it, bounded by a screenful so a long page doesn't give it one and by
      the room the background needs past the border box. */
   &[in-page]:popover-open {
-    max-height: min(calc(100% - var(--urlbar-background-overhang-breakout)), 100vh);
+    max-height: min(calc(100% - var(--urlbar-background-overhang-open)), 100vh);
     display: flex;
     flex-direction: column;
   }
@@ -289,15 +289,15 @@ toolbar[inactive="true"] .urlbar,
   }
 
   .urlbar:popover-open:where([open], :not([in-page])) > & {
-    border: var(--urlbar-background-border-breakout);
-    box-shadow: var(--urlbar-background-box-shadow-breakout);
-    inset: calc(-1 * var(--urlbar-background-overhang-breakout));
-    border-start-start-radius: var(--urlbar-background-border-top-radius-breakout);
-    border-start-end-radius: var(--urlbar-background-border-top-radius-breakout);
+    border: var(--urlbar-background-border-open);
+    box-shadow: var(--urlbar-background-box-shadow-open);
+    inset: calc(-1 * var(--urlbar-background-overhang-open));
+    border-start-start-radius: var(--urlbar-background-border-top-radius-open);
+    border-start-end-radius: var(--urlbar-background-border-top-radius-open);
   }
 
   :root[uidensity="compact"] .urlbar:popover-open:not([open]) > & {
-    box-shadow: var(--urlbar-background-box-shadow-breakout-compact);
+    box-shadow: var(--urlbar-background-box-shadow-open-compact);
   }
 
   .urlbar[open] > & {
@@ -328,12 +328,12 @@ toolbar[inactive="true"] .urlbar,
   }
 
   .urlbar:popover-open:where([open], :not([in-page])) > & {
-    outline: var(--urlbar-input-container-outline-breakout);
-    outline-offset: var(--urlbar-input-container-outline-offset-breakout);
+    outline: var(--urlbar-input-container-outline-open);
+    outline-offset: var(--urlbar-input-container-outline-offset-open);
   }
 
   .urlbar[focused]:popover-open:where([open], :not([in-page])) > & {
-    outline: var(--urlbar-input-container-outline-breakout-focused);
+    outline: var(--urlbar-input-container-outline-open-focused);
   }
 }
 
@@ -349,8 +349,8 @@ toolbar[inactive="true"] .urlbar,
   &:focus-within {
     background-color: var(--urlbar-background-color-focus);
     outline-color: var(--toolbar-field-border-color-focus);
-    outline-width: var(--urlbar-input-container-border-width-breakout);
-    outline-offset: calc(-1 * var(--urlbar-input-container-border-width-breakout));
+    outline-width: var(--urlbar-input-container-border-width-open);
+    outline-offset: calc(-1 * var(--urlbar-input-container-border-width-open));
   }
 
   @media not -moz-pref("browser.nova.enabled") {
@@ -527,7 +527,7 @@ toolbar[inactive="true"] .urlbar,
       animation-timing-function: var(--animation-easing-function);
 
       @media (prefers-reduced-motion: no-preference) {
-        [breakout-extend-animate] > & {
+        [popover-animate] > & {
           animation-duration: 150ms;
         }
       }
@@ -910,7 +910,7 @@ toolbar[inactive="true"] .urlbar,
     background-image: repeating-linear-gradient(-45deg, rgba(255, 60, 60, 0.25) 0 25px, rgba(175, 0, 0, 0.25) 25px 50px);
 
     background-attachment: fixed;
-    /* Override the usual breakout animation so the gradient doesn't shift around
+    /* Override the usual popover animation so the gradient doesn't shift around
        when the panel opens. */
     animation: none !important;
   }
