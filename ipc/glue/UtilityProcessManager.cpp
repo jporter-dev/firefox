@@ -4,6 +4,8 @@
 #include "UtilityProcessManager.h"
 
 #include "JSOracleParent.h"
+#include "mozilla/AppShutdown.h"
+#include "mozilla/Components.h"
 #include "mozilla/ipc/UtilityProcessHost.h"
 #include "mozilla/MemoryReportingProcess.h"
 #include "mozilla/Preferences.h"
@@ -43,18 +45,22 @@ extern LazyLogModule gUtilityProcessLog;
 
 static StaticRefPtr<UtilityProcessManager> sSingleton;
 
-static bool sXPCOMShutdown = false;
+// We tear the Utility processes down at the beginning of XPCOMWillShutdown, so
+// from that point on there is no point in handing out or launching any.
+static bool IsPastLaunchDeadline() {
+  return AppShutdown::IsInOrBeyond(ShutdownPhase::XPCOMWillShutdown);
+}
 
 bool UtilityProcessManager::IsShutdown() const {
   MOZ_ASSERT(NS_IsMainThread());
-  return sXPCOMShutdown || !sSingleton;
+  return IsPastLaunchDeadline() || !sSingleton;
 }
 
 RefPtr<UtilityProcessManager> UtilityProcessManager::GetSingleton() {
   MOZ_ASSERT(XRE_IsParentProcess());
   MOZ_ASSERT(NS_IsMainThread());
 
-  if (!sXPCOMShutdown && sSingleton == nullptr) {
+  if (!IsPastLaunchDeadline() && sSingleton == nullptr) {
     sSingleton = new UtilityProcessManager();
     sSingleton->Init();
   }
@@ -76,6 +82,72 @@ void UtilityProcessManager::Init() {
   mObserver = new Observer(this);
   nsContentUtils::RegisterShutdownObserver(mObserver);
   Preferences::AddStrongObserver(mObserver, "");
+
+  RegisterShutdownBlocker();
+}
+
+void UtilityProcessManager::RegisterShutdownBlocker() {
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(!mShutdownBlocker);
+
+  nsCOMPtr<nsIAsyncShutdownService> svc = components::AsyncShutdown::Service();
+  if (!svc) {
+    return;
+  }
+
+  nsCOMPtr<nsIAsyncShutdownClient> client;
+  if (NS_FAILED(svc->GetXpcomWillShutdown(getter_AddRefs(client))) || !client) {
+    return;
+  }
+
+  RefPtr<ShutdownBlocker> blocker = new ShutdownBlocker(this);
+  if (NS_FAILED(client->AddBlocker(blocker,
+                                   NS_LITERAL_STRING_FROM_CSTRING(__FILE__),
+                                   __LINE__, u""_ns))) {
+    // The phase is already closed for new blockers, so there is nothing left
+    // for us to hold back. OnXPCOMShutdown will do the teardown instead.
+    return;
+  }
+
+  mShutdownBlocker = std::move(blocker);
+  mShutdownBlockerClient = std::move(client);
+}
+
+void UtilityProcessManager::RemoveShutdownBlocker() {
+  MOZ_ASSERT(NS_IsMainThread());
+
+  if (!mShutdownBlocker) {
+    return;
+  }
+
+  LOGD("[%p] UtilityProcessManager::RemoveShutdownBlocker", this);
+
+  mShutdownBlockerClient->RemoveBlocker(mShutdownBlocker);
+  mShutdownBlockerClient = nullptr;
+  mShutdownBlocker = nullptr;
+}
+
+NS_IMPL_ISUPPORTS(UtilityProcessManager::ShutdownBlocker,
+                  nsIAsyncShutdownBlocker)
+
+NS_IMETHODIMP UtilityProcessManager::ShutdownBlocker::GetName(
+    nsAString& aName) {
+  aName = u"UtilityProcessManager: shutting down the Utility processes"_ns;
+  return NS_OK;
+}
+
+NS_IMETHODIMP UtilityProcessManager::ShutdownBlocker::BlockShutdown(
+    nsIAsyncShutdownClient* aBarrierClient) {
+  if (mManager) {
+    mManager->OnXPCOMWillShutdown();
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP UtilityProcessManager::ShutdownBlocker::GetState(
+    nsIPropertyBag** aState) {
+  *aState = nullptr;
+  return NS_OK;
 }
 
 UtilityProcessManager::~UtilityProcessManager() {
@@ -102,13 +174,51 @@ UtilityProcessManager::Observer::Observe(nsISupports* aSubject,
   return NS_OK;
 }
 
+void UtilityProcessManager::OnXPCOMWillShutdown() {
+  LOGD("[%p] UtilityProcessManager::OnXPCOMWillShutdown", this);
+
+  MOZ_ASSERT(NS_IsMainThread());
+
+  mBlockingShutdownPhase = true;
+
+  CleanShutdownAllProcesses();
+
+  // Nothing to wait for; otherwise OnProcessShutdownComplete removes the
+  // blocker once every host is done.
+  if (mPendingShutdowns == 0) {
+    RemoveShutdownBlocker();
+  }
+}
+
 void UtilityProcessManager::OnXPCOMShutdown() {
   LOGD("[%p] UtilityProcessManager::OnXPCOMShutdown", this);
 
   MOZ_ASSERT(NS_IsMainThread());
-  sXPCOMShutdown = true;
-  nsContentUtils::UnregisterShutdownObserver(mObserver);
+  if (mObserver) {
+    nsContentUtils::UnregisterShutdownObserver(mObserver);
+  }
+
+  // Normally a no-op, since our blocker already did this during
+  // xpcom-will-shutdown. If we failed to register it, this is the last chance.
   CleanShutdownAllProcesses();
+}
+
+void UtilityProcessManager::OnProcessShutdownComplete() {
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_DIAGNOSTIC_ASSERT(mPendingShutdowns > 0);
+
+  --mPendingShutdowns;
+  if (mPendingShutdowns > 0) {
+    return;
+  }
+
+  // If we're already within shutdown, ensure our async shutdown blocker is gone
+  // now that all processes have shut down.
+  if (mBlockingShutdownPhase) {
+    MOZ_ASSERT(NoMoreProcesses(),
+               "How was a process launched during shutdown?");
+    RemoveShutdownBlocker();
+  }
 }
 
 void UtilityProcessManager::OnPreferenceChange(const char16_t* aData) {
@@ -753,7 +863,13 @@ void UtilityProcessManager::DestroyProcess(SandboxingKind aSandbox) {
   p->mProcessParent = nullptr;
 
   if (p->mProcess) {
-    p->mProcess->Shutdown();
+    ++mPendingShutdowns;
+    p->mProcess->Shutdown()->Then(
+        GetMainThreadSerialEventTarget(), __func__,
+        [self = RefPtr{this}](const UtilityProcessHost::ShutdownPromiseType::
+                                  ResolveOrRejectValue&) {
+          self->OnProcessShutdownComplete();
+        });
     p->mProcess = nullptr;
   }
 

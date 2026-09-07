@@ -11,6 +11,7 @@
 #endif  // !ANDROID
 #include "mozilla/EnumeratedArray.h"
 #include "mozilla/ProcInfo.h"
+#include "nsIAsyncShutdown.h"
 #include "nsIObserver.h"
 #include "nsTArray.h"
 
@@ -206,9 +207,20 @@ class UtilityProcessManager final : public UtilityProcessHost::Listener {
   bool IsProcessLaunching(SandboxingKind aSandbox);
   bool IsProcessDestroyed(SandboxingKind aSandbox);
 
-  // Called from our xpcom-shutdown observer.
+  // Called from our async shutdown blocker. Tears the Utility processes down,
+  // holding the xpcom-will-shutdown phase open until they are all gone.
+  void OnXPCOMWillShutdown();
+
+  // Called from our xpcom-shutdown observer. Only does anything if we failed to
+  // register the async shutdown blocker.
   void OnXPCOMShutdown();
   void OnPreferenceChange(const char16_t* aData);
+
+  // Called once a UtilityProcessHost has completed its shutdown sequence.
+  void OnProcessShutdownComplete();
+
+  void RegisterShutdownBlocker();
+  void RemoveShutdownBlocker();
 
   UtilityProcessManager();
 
@@ -232,6 +244,33 @@ class UtilityProcessManager final : public UtilityProcessHost::Listener {
   friend class Observer;
 
   RefPtr<Observer> mObserver;
+
+  // Holds the xpcom-will-shutdown phase open while the Utility processes go
+  // through their graceful shutdown sequence, so that the main thread's IPC
+  // channels are still around when they send us their last messages.
+  class ShutdownBlocker final : public nsIAsyncShutdownBlocker {
+   public:
+    NS_DECL_ISUPPORTS
+    NS_DECL_NSIASYNCSHUTDOWNBLOCKER
+
+    explicit ShutdownBlocker(UtilityProcessManager* aManager)
+        : mManager(aManager) {}
+
+   protected:
+    ~ShutdownBlocker() = default;
+
+    RefPtr<UtilityProcessManager> mManager;
+  };
+
+  RefPtr<ShutdownBlocker> mShutdownBlocker;
+  nsCOMPtr<nsIAsyncShutdownClient> mShutdownBlockerClient;
+
+  // Number of UtilityProcessHosts whose shutdown sequence is still in flight.
+  uint32_t mPendingShutdowns = 0;
+
+  // Whether the xpcom-will-shutdown phase is waiting on our blocker. From then
+  // on it must be removed as soon as mPendingShutdowns drains, or we hang.
+  bool mBlockingShutdownPhase = false;
 
   class ProcessFields final {
    public:
