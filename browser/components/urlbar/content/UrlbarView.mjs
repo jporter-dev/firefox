@@ -28,6 +28,13 @@ const RESULT_MENU_COMMANDS = {
   MANAGE: "manage",
 };
 
+// The context menu items that we handle with pickResult.
+const CONTEXT_MENU_OPEN_IDS = new Set([
+  "urlbar-view-context-menu-open-in-tab",
+  "urlbarView-context-menu-open-in-window",
+  "urlbarView-context-menu-open-in-private-window",
+]);
+
 const getBoundsWithoutFlushing = UrlbarShared.getBoundsWithoutFlushing;
 
 // Used to get a unique id to use for row elements, it wraps at 9999, that
@@ -1198,6 +1205,15 @@ export class UrlbarView {
     } else {
       throw new Error("Unrecognized UrlbarView event: " + event.type);
     }
+  }
+
+  isResultMenuOpen() {
+    return (
+      this.resultMenu.hasAttribute("open") ||
+      // Also checks the contextmenu but will be addressed by:
+      // https://bugzilla.mozilla.org/show_bug.cgi?id=2064747
+      !!this.#contextMenu?.hasAttribute("open")
+    );
   }
 
   // Private properties and methods below.
@@ -4506,103 +4522,104 @@ export class UrlbarView {
     this.#enableOrDisableRowWrap();
   }
 
-  // Currently the resultMenu is the only element to consume click events, the context
-  // menu uses command events (below).
   on_click(event) {
-    let result = this.#resultMenuResult;
-    this.#resultMenuResult = null;
-    let menuitem = event.target;
-    switch (menuitem.dataset.command) {
-      case RESULT_MENU_COMMANDS.HELP:
-        menuitem.dataset.url =
-          result.payload.helpUrl ||
-          UrlbarContentUtils.getSupportUrl("awesome-bar-result-menu");
-        break;
-    }
-    this.input.pickResult({ result, event, element: menuitem });
-  }
-
-  on_command(event) {
-    let contextMenu;
-    if ((contextMenu = event.target.closest("#urlbarView-context-menu"))) {
-      let row = contextMenu.triggerNode.closest(".urlbarView-row");
+    if (event.currentTarget == this.resultMenu) {
+      let result = this.#resultMenuResult;
+      this.#resultMenuResult = null;
+      let menuitem = event.target;
+      switch (menuitem.dataset.command) {
+        case RESULT_MENU_COMMANDS.HELP:
+          menuitem.dataset.url =
+            result.payload.helpUrl ||
+            UrlbarContentUtils.getSupportUrl("awesome-bar-result-menu");
+          break;
+      }
+      this.input.pickResult({ result, event, element: menuitem });
+    } else if (event.currentTarget == this.#contextMenu) {
+      let target = event
+        .composedPath()
+        .find(node => node.localName == "panel-item");
+      if (
+        !target ||
+        (!CONTEXT_MENU_OPEN_IDS.has(target.id) && !target.dataset.usercontextid)
+      ) {
+        return;
+      }
+      let row = this.#contextMenu.lastAnchorNode?.closest(".urlbarView-row");
+      if (!row) {
+        return;
+      }
       this.input.pickResult({
         result: row.result,
         event,
-        element: event.target,
+        element: target,
       });
     }
   }
 
   on_showing(event) {
-    let commands;
-    let splitButton = event.target.triggeringEvent.detail.target.closest(
-      ".urlbarView-splitbutton"
-    );
-
-    this.resultMenu.lastAnchorNode
-      .closest(".urlbarView-row")
-      .toggleAttribute("menu-trigger", true);
-
-    if (splitButton) {
-      // Show the commands the are defined in its Split Button.
-      let mainButton = splitButton.firstElementChild;
-      let buttonName = mainButton.dataset.name;
-      commands = this.#resultMenuResult.payload.buttons.find(
-        b => b.name == buttonName
-      ).menu;
-    } else {
-      commands = this.#getResultMenuCommands(this.#resultMenuResult);
-    }
-
-    this.#populateResultMenu({ commands });
-  }
-
-  on_popupshowing(event) {
     if (event.target.id == "urlbarView-context-menu") {
-      if (!UrlbarPrefs.get("contextMenu.featureGate")) {
-        event.preventDefault();
-        return;
-      }
+      let row = this.#contextMenu.lastAnchorNode.closest(".urlbarView-row");
 
-      //  Don't show the context menu if the trigger is not on a result row.
-      let row = event.triggerEvent?.target.closest(".urlbarView-row");
-      if (!row) {
-        event.preventDefault();
-        return;
-      }
-
-      // Set the context-menu-trigger attribute on the row so it can be styled
+      // Set the menu-trigger attribute on the row so it can be styled
       // as if it were hovered while the context menu is open.
       row.toggleAttribute("menu-trigger", true);
 
-      // Disable the context menu if the result does not return a load request.
       let loadRequest = UrlbarShared.getLoadRequestFromResult(row.result, {
         element: row,
       });
-      event.target.toggleAttribute("disabled", !loadRequest);
+      for (let item of event.target.querySelectorAll("panel-item")) {
+        item.disabled = !loadRequest;
+      }
+
+      let containerTabItem = event.target.querySelector(
+        "#urlbarView-context-menu-open-in-container-tab-menu"
+      );
+      if (containerTabItem) {
+        containerTabItem.hidden =
+          this.input.isPrivate ||
+          !UrlbarPrefs.get("privacy.userContext.enabled");
+      }
     } else if (
-      event.target.id == "urlbarView-context-menu-open-in-container-tab-popup"
+      event.target.id == "urlbarView-context-menu-open-in-container-tab-menu"
     ) {
       event.target.documentGlobal.createUserContextMenu(event, {
+        target: event.target.submenuPanel,
         isContextMenu: true,
+        isPanelList: true,
         containerSource: "urlbar_result_context_menu",
       });
-    }
-  }
-
-  on_hidden() {
-    this.resultMenu.lastAnchorNode
-      .closest(".urlbarView-row")
-      ?.toggleAttribute("menu-trigger", false);
-  }
-
-  on_popuphiding(event) {
-    if (event.target.id == "urlbarView-context-menu") {
-      event.target.triggerNode
+    } else if (event.currentTarget == this.resultMenu) {
+      let commands;
+      let splitButton = event.target.triggeringEvent.detail.target.closest(
+        ".urlbarView-splitbutton"
+      );
+      this.resultMenu.lastAnchorNode
         .closest(".urlbarView-row")
-        ?.toggleAttribute("menu-trigger", false);
+        .toggleAttribute("menu-trigger", true);
+
+      if (splitButton) {
+        // Show the commands the are defined in its Split Button.
+        let mainButton = splitButton.firstElementChild;
+        let buttonName = mainButton.dataset.name;
+        commands = this.#resultMenuResult.payload.buttons.find(
+          b => b.name == buttonName
+        ).menu;
+      } else {
+        commands = this.#getResultMenuCommands(this.#resultMenuResult);
+      }
+
+      this.#populateResultMenu({ commands });
     }
+  }
+
+  on_hidden(event) {
+    if (event.target != event.currentTarget) {
+      return;
+    }
+    event.currentTarget.lastAnchorNode
+      ?.closest(".urlbarView-row")
+      ?.toggleAttribute("menu-trigger", false);
   }
 
   on_contextmenu(event) {
@@ -4628,17 +4645,12 @@ export class UrlbarView {
       this.#contextMenu = this.document.querySelector(
         "#urlbarView-context-menu"
       );
-      this.#contextMenu.addEventListener("command", this);
-      this.#contextMenu.addEventListener("popupshowing", this);
-      this.#contextMenu.addEventListener("popuphiding", this);
+      this.#contextMenu.addEventListener("click", this);
+      this.#contextMenu.addEventListener("showing", this);
+      this.#contextMenu.addEventListener("hidden", this);
     }
 
-    this.#contextMenu.openPopupAtScreen(
-      event.screenX,
-      event.screenY,
-      true,
-      event
-    );
+    this.#contextMenu.toggle(event);
   }
 
   clearTopSitesCache() {

@@ -1820,7 +1820,11 @@ ${
       private: this.isPrivate,
     };
 
-    if (element?.closest("#urlbarView-context-menu")) {
+    let isContextMenu = event
+      ?.composedPath()
+      .some(el => el.id == "urlbarView-context-menu");
+
+    if (isContextMenu) {
       switch (element.id) {
         case "urlbar-view-context-menu-open-in-tab": {
           where = "tab";
@@ -5153,7 +5157,7 @@ ${
   }
 
   _on_blur(event) {
-    if (this.view.resultMenu.hasAttribute("open")) {
+    if (this.view.isResultMenuOpen()) {
       return;
     }
 
@@ -5801,7 +5805,7 @@ ${
 
   _on_keydown(event) {
     // If the resultMenu is open then let them handle any key events.
-    if (this.view.resultMenu.hasAttribute("open")) {
+    if (this.view.isResultMenuOpen()) {
       return;
     }
 
