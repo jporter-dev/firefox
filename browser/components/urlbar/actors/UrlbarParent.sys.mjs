@@ -104,11 +104,8 @@ export class UrlbarParent extends JSWindowActorParent {
       case "ResetEngagement":
         controller.resetEngagement();
         break;
-      case "HandleBounceTrigger":
-        controller.handleBounceTrigger(message.data.payload);
-        break;
-      case "TrackBounceBrowser":
-        controller.trackBounceBrowser(message.data.browserId);
+      case "StartTrackingBuiltBounce":
+        controller.startTrackingBuiltBounce(message.data.payload);
         break;
       case "RecordAutofillBackspace":
         controller.recordAutofillBackspace(message.data.url);

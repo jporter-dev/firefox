@@ -7,6 +7,7 @@ import { UrlbarResult } from "chrome://browser/content/urlbar/UrlbarResult.mjs";
 
 /**
  * @import {UrlbarActorPort} from "moz-src:///browser/components/urlbar/actors/UrlbarChild.sys.mjs"
+ * @import {BuiltBounce} from "moz-src:///browser/components/urlbar/UrlbarParentController.sys.mjs"
  */
 
 /**
@@ -81,31 +82,17 @@ export class UrlbarParentControllerProxy {
   }
 
   /**
-   * Asks the parent recorder to record a bounce: the child collector owns the
-   * tracking and sends the resolved payload on a trigger.
+   * Hands the parent recorder a bounce to track: the child collector builds the
+   * event and the parent owns the tracking, since the collector's page may be
+   * gone by the time the bounce triggers.
    *
-   * @param {object} payload
-   *   `{snapshot, startTime, browsingContextId, contentData}`.
+   * @param {BuiltBounce} payload
+   *   The bounce this collector built.
    */
-  handleBounceTrigger(payload) {
-    this.#port.sendAsyncMessage("HandleBounceTrigger", {
+  startTrackingBuiltBounce(payload) {
+    this.#port.sendAsyncMessage("StartTrackingBuiltBounce", {
       instanceId: this.#instanceId,
       payload,
-    });
-  }
-
-  /**
-   * Hands the parent recorder the live browser behind a bounce it's about to
-   * track, so it can resolve it at trigger time even after a closing tab is
-   * gone.
-   *
-   * @param {number} browserId
-   *   The bounce browser's stable browser id.
-   */
-  trackBounceBrowser(browserId) {
-    this.#port.sendAsyncMessage("TrackBounceBrowser", {
-      instanceId: this.#instanceId,
-      browserId,
     });
   }
 
