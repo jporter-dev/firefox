@@ -132,7 +132,7 @@ RefPtr<WaylandBuffer> SurfacePoolWayland::ObtainBufferFromPool(
         LayoutDeviceIntSize::FromUnknownSize(aSize), aGL, aFormat);
   } else {
     buffer = widget::WaylandBufferSHM::Create(
-        LayoutDeviceIntSize::FromUnknownSize(aSize), aFormat);
+        LayoutDeviceIntSize::FromUnknownSize(aSize));
   }
   if (buffer) {
     mInUseEntries.insert(
