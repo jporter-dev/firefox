@@ -142,6 +142,7 @@ static LOONG64Extensions ExtensionsFromISA(LOONG64ISA isa) {
   switch (isa) {
     case LOONG64ISA::LA64V1_1:
       extensions += LOONG64Extension::LamBh;
+      extensions += LOONG64Extension::Lamcas;
       [[fallthrough]];
     case LOONG64ISA::LA64V1_0:
       break;
@@ -165,11 +166,15 @@ static LOONG64Extensions ComputeLOONG64Extensions() {
 
 #if defined(JS_SIMULATOR_LOONG64)
   extensions += LOONG64Extension::LamBh;
+  extensions += LOONG64Extension::Lamcas;
 #elif defined(USE_LARCHINTRIN)
   const LOONGCpucfg2 cpucfg2 = LOONGCpucfg2(__cpucfg(2));
 
   if (cpucfg2.LamBh()) {
     extensions += LOONG64Extension::LamBh;
+  }
+  if (cpucfg2.Lamcas()) {
+    extensions += LOONG64Extension::Lamcas;
   }
 #endif
 
