@@ -79,6 +79,20 @@ export class AddressStorageMigrator {
   }
 
   /**
+   * Whether this profile still owes a dry run of the current generation.
+   *
+   * Static so a caller can ask before it builds the stores: reaching the
+   * migrator means constructing the Rust adapter, which opens autofill.db, and
+   * the dry run is followed by a wipe. A profile that has already measured must
+   * pay neither, every launch, for a run that is not going to happen.
+   *
+   * @returns {boolean}
+   */
+  static get dryRunPending() {
+    return Services.prefs.getIntPref(TEST_VERSION_PREF, 0) < TEST_VERSION;
+  }
+
+  /**
    * Copy the records across, unless this profile has spent its attempts.
    *
    * Divergence is measured and reported, not acted on: a complete copy is the
@@ -95,7 +109,7 @@ export class AddressStorageMigrator {
   async maybeRun({ dryRun = false, wipe = true } = {}) {
     try {
       if (dryRun) {
-        if (Services.prefs.getIntPref(TEST_VERSION_PREF, 0) >= TEST_VERSION) {
+        if (!AddressStorageMigrator.dryRunPending) {
           return false;
         }
         await this.#migrateAndReport({ wipe });

@@ -341,7 +341,8 @@ export class FormAutofillStorage extends FormAutofillStorageBase {
     // dry run would wipe the store out from under it.
     const runMigrationDryRun =
       !enabled &&
-      Services.prefs.getBoolPref(ADDRESS_RUST_MIGRATION_TEST_PREF, false);
+      Services.prefs.getBoolPref(ADDRESS_RUST_MIGRATION_TEST_PREF, false) &&
+      lazy.AddressStorageMigrator.dryRunPending;
     if (!enabled && !runMigrationDryRun) {
       return;
     }

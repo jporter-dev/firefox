@@ -217,7 +217,7 @@ function diffRecords(a, b) {
 // pre-existing data to copy that Rust does not yet have.
 async function setupStorageWithFullRecords(fileName, records) {
   Services.prefs.setBoolPref(ENABLED_PREF, false);
-  Services.prefs.clearUserPref(TEST_MODE_PREF);
+  Services.prefs.setBoolPref(TEST_MODE_PREF, false);
   Services.prefs.clearUserPref(ACTIVE_PREF);
   Services.prefs.clearUserPref(TEST_VERSION_PREF);
   Services.prefs.clearUserPref(ATTEMPTS_PREF);
@@ -362,6 +362,29 @@ add_task(async function test_dry_run_measures_and_then_undoes_itself() {
   // One shot per generation: a second launch does not re-measure.
   s = await restart(s);
   Assert.equal(migrationEvents().length, 1, "the dry run does not repeat");
+
+  await s._finalize();
+});
+
+add_task(async function test_a_measured_profile_leaves_the_store_shut() {
+  // With the dry run on by default, what a profile that has already measured
+  // pays is what most launches pay. Reaching the migrator at all would open
+  // autofill.db, and the wipe that follows a dry run would empty it, both for a
+  // run that returns on its first line.
+  let { s } = await setupStorageWithRecords("mig-dryrun-once.json", ["Once"]);
+
+  s = await restart(s, { [TEST_MODE_PREF]: true });
+  Assert.equal(migrationEvents().length, 1, "the dry run ran");
+
+  RustAutofillAddressesAdapter._instance = null;
+  s = await restart(s);
+
+  Assert.equal(migrationEvents().length, 1, "the next launch does not measure");
+  Assert.equal(
+    RustAutofillAddressesAdapter._instance,
+    null,
+    "and never opens the Rust store"
+  );
 
   await s._finalize();
 });

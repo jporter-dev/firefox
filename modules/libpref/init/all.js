@@ -4119,8 +4119,14 @@ pref("extensions.formautofill.addresses.storage.rust.enabled", false);
 // reading from where its addresses are.
 pref("extensions.formautofill.addresses.storage.rust.active", false);
 // Run the migration purely to measure it, while the pref above is still off.
-// The copy is reported through migrate_to_rust and then wiped.
-pref("extensions.formautofill.addresses.storage.rust.runMigrationTest", false);
+// The copy is reported through migrate_to_rust and then wiped. Nightly only,
+// and once per profile per generation: it is what says whether the real move is
+// safe to make.
+#ifdef NIGHTLY_BUILD
+  pref("extensions.formautofill.addresses.storage.rust.runMigrationTest", true);
+#else
+  pref("extensions.formautofill.addresses.storage.rust.runMigrationTest", false);
+#endif
 // Which generation of the dry run above this profile has done, so a build that
 // fixes a migration bug can bump it and measure the same profiles again.
 pref("extensions.formautofill.addresses.storage.rust.migrationTestVersion", 0);
