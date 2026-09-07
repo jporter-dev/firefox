@@ -530,6 +530,13 @@ void nsWaylandDisplay::SetAppMenuManager(
 
 void nsWaylandDisplay::SetFixes(wl_fixes* aFixes) { mFixes = aFixes; }
 
+// BT2020/PQ is the minimum to enable HDR.
+bool nsWaylandDisplay::IsHDREnabled() const {
+  return mColorManagerSupportedFeature.mParametric &&
+         mSupportedPrimaries[WP_COLOR_MANAGER_V1_PRIMARIES_BT2020] &&
+         mSupportedTransfer[WP_COLOR_MANAGER_V1_TRANSFER_FUNCTION_ST2084_PQ];
+}
+
 void nsWaylandDisplay::SetCMSupportedFeature(uint32_t aFeature) {
   LOG("nsWaylandDisplay::SetCMSupportedFeature() [%d]", aFeature);
   switch (aFeature) {
