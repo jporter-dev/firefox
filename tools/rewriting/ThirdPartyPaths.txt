@@ -187,7 +187,8 @@ toolkit/components/jsoncpp/
 toolkit/components/ml/vendor/
 toolkit/components/normandy/vendor/
 toolkit/components/passwordmgr/shared/PasswordRulesParser.sys.mjs
-toolkit/components/protobuf/
+toolkit/components/protobuf/src/
+toolkit/components/protobuf/third_party/
 toolkit/components/reader/readability/
 toolkit/components/reputationservice/chromium/
 toolkit/components/resistfingerprinting/content/gl-matrix.js
