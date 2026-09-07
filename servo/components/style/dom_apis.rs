@@ -45,7 +45,7 @@ where
     );
     context.scope_element = Some(element.opaque());
     context.current_host = element.containing_shadow_host().map(|e| e.opaque());
-    matching::matches_selector_list(selector_list, element, &mut context)
+    matching::matches_selector_list(selector_list, *element, &mut context)
 }
 
 /// <https://dom.spec.whatwg.org/#dom-element-closest>
@@ -72,7 +72,7 @@ where
 
     let mut current = Some(element);
     while let Some(element) = current.take() {
-        if matching::matches_selector_list(selector_list, &element, &mut context) {
+        if matching::matches_selector_list(selector_list, element, &mut context) {
             return Some(element);
         }
         current = element.parent_element();
@@ -489,7 +489,7 @@ where
                 Operation::from(
                     *element.local_name()
                         == ***matching::select_name(
-                            &element,
+                            element,
                             &local_name.name,
                             &local_name.lower_name,
                         ),
@@ -530,7 +530,7 @@ where
                 }
 
                 Operation::from(element.has_attr_in_no_namespace(matching::select_name(
-                    &element,
+                    element,
                     local_name,
                     local_name_lower,
                 )))
@@ -559,7 +559,7 @@ where
                         operator,
                         case_sensitivity: matching::to_unconditional_case_sensitivity(
                             case_sensitivity,
-                            &element,
+                            element,
                         ),
                         value,
                     },
@@ -672,7 +672,7 @@ where
                                 |e| {
                                     matching::matches_selector_list(
                                         selector_list,
-                                        &e,
+                                        e,
                                         matching_context,
                                     )
                                 },
@@ -779,7 +779,7 @@ where
                     element.has_class(class, class_and_id_case_sensitivity)
                         && matching::matches_selector_list(
                             selector_list,
-                            &element,
+                            element,
                             matching_context,
                         ),
                 )
@@ -799,13 +799,13 @@ where
                     return Operation::RejectSkippingChildren;
                 }
                 if *element.local_name()
-                    != ***matching::select_name(&element, &local_name.name, &local_name.lower_name)
+                    != ***matching::select_name(element, &local_name.name, &local_name.lower_name)
                 {
                     return Operation::Reject;
                 }
                 Operation::from(matching::matches_selector_list(
                     selector_list,
-                    &element,
+                    element,
                     matching_context,
                 ))
             });
@@ -821,7 +821,7 @@ where
                 }
                 Operation::from(matching::matches_selector_list(
                     selector_list,
-                    &element,
+                    element,
                     matching_context,
                 ))
             });
@@ -844,7 +844,7 @@ fn query_selector_slow<E, Q>(
     collect_all_elements::<E, Q, _>(root, results, |element| {
         Operation::from(matching::matches_selector_list(
             selector_list,
-            &element,
+            element,
             matching_context,
         ))
     });

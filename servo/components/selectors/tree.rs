@@ -43,7 +43,7 @@ impl OpaqueElement {
     }
 }
 
-pub trait Element: Sized + Clone + Debug {
+pub trait Element: Sized + Copy + Clone + Debug {
     type Impl: SelectorImpl;
 
     /// Converts self into an opaque representation.

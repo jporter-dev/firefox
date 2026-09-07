@@ -122,7 +122,7 @@ struct LocalMatchingContext<'a, 'b: 'a, Impl: SelectorImpl> {
 #[inline(always)]
 pub fn matches_selector_list<E>(
     selector_list: &SelectorList<E::Impl>,
-    element: &E,
+    element: E,
     context: &mut MatchingContext<E::Impl>,
 ) -> bool
 where
@@ -261,7 +261,7 @@ pub fn matches_selector<E>(
     selector: &Selector<E::Impl>,
     offset: usize,
     hashes: Option<&AncestorHashes>,
-    element: &E,
+    element: E,
     context: &mut MatchingContext<E::Impl>,
 ) -> bool
 where
@@ -285,7 +285,7 @@ pub fn matches_selector_kleene<E>(
     selector: &Selector<E::Impl>,
     offset: usize,
     hashes: Option<&AncestorHashes>,
-    element: &E,
+    element: E,
     context: &mut MatchingContext<E::Impl>,
 ) -> KleeneValue
 where
@@ -325,7 +325,7 @@ pub enum CompoundSelectorMatchingResult {
 
 fn complex_selector_early_reject_by_local_name<E: Element>(
     list: &SelectorList<E::Impl>,
-    element: &E,
+    element: E,
 ) -> bool {
     list.slice()
         .iter()
@@ -337,7 +337,7 @@ fn complex_selector_early_reject_by_local_name<E: Element>(
 pub fn early_reject_by_local_name<E: Element>(
     selector: &Selector<E::Impl>,
     from_offset: usize,
-    element: &E,
+    element: E,
 ) -> bool {
     let iter = selector.iter_from(from_offset);
     for component in iter {
@@ -365,7 +365,7 @@ pub fn matches_compound_selector_from<E>(
     selector: &Selector<E::Impl>,
     mut from_offset: usize,
     context: &mut MatchingContext<E::Impl>,
-    element: &E,
+    element: E,
 ) -> CompoundSelectorMatchingResult
 where
     E: Element,
@@ -444,7 +444,7 @@ where
 #[inline(always)]
 pub fn matches_complex_selector<E>(
     mut iter: SelectorIter<E::Impl>,
-    element: &E,
+    element: E,
     context: &mut MatchingContext<E::Impl>,
     rightmost: SubjectOrPseudoElement,
 ) -> KleeneValue
@@ -499,7 +499,7 @@ where
 /// Matches each selector of a list as a complex selector
 fn matches_complex_selector_list<E: Element>(
     list: &[Selector<E::Impl>],
-    element: &E,
+    element: E,
     context: &mut MatchingContext<E::Impl>,
     rightmost: SubjectOrPseudoElement,
 ) -> KleeneValue {
@@ -510,7 +510,7 @@ fn matches_complex_selector_list<E: Element>(
 
 fn matches_relative_selector<E: Element>(
     relative_selector: &RelativeSelector<E::Impl>,
-    element: &E,
+    element: E,
     context: &mut MatchingContext<E::Impl>,
     rightmost: SubjectOrPseudoElement,
 ) -> bool {
@@ -529,17 +529,13 @@ fn matches_relative_selector<E: Element>(
                     ElementSelectorFlags::RELATIVE_SELECTOR_SEARCH_DIRECTION_ANCESTOR,
                 );
             }
-            let mut matched = matches_complex_selector(
-                relative_selector.selector.iter(),
-                &el,
-                context,
-                rightmost,
-            )
-            .to_bool(true);
+            let mut matched =
+                matches_complex_selector(relative_selector.selector.iter(), el, context, rightmost)
+                    .to_bool(true);
             if !matched && relative_selector.match_hint.is_subtree() {
                 matched = matches_relative_selector_subtree(
                     &relative_selector.selector,
-                    &el,
+                    el,
                     context,
                     rightmost,
                 );
@@ -578,12 +574,12 @@ fn matches_relative_selector<E: Element>(
             let matched = if relative_selector.match_hint.is_subtree() {
                 matches_relative_selector_subtree(
                     &relative_selector.selector,
-                    &el,
+                    el,
                     context,
                     rightmost,
                 )
             } else {
-                matches_complex_selector(relative_selector.selector.iter(), &el, context, rightmost)
+                matches_complex_selector(relative_selector.selector.iter(), el, context, rightmost)
                     .to_bool(true)
             };
             if matched {
@@ -600,7 +596,7 @@ fn matches_relative_selector<E: Element>(
 
 fn relative_selector_match_early<E: Element>(
     selector: &RelativeSelector<E::Impl>,
-    element: &E,
+    element: E,
     context: &mut MatchingContext<E::Impl>,
 ) -> Option<bool> {
     // See if we can return a cached result.
@@ -630,7 +626,7 @@ fn relative_selector_match_early<E: Element>(
 
 fn match_relative_selectors<E: Element>(
     selectors: &[RelativeSelector<E::Impl>],
-    element: &E,
+    element: E,
     context: &mut MatchingContext<E::Impl>,
     rightmost: SubjectOrPseudoElement,
 ) -> KleeneValue {
@@ -662,7 +658,7 @@ fn match_relative_selectors<E: Element>(
 /// Matches a relative selector in a list of relative selectors.
 fn do_match_relative_selectors<E: Element>(
     selectors: &[RelativeSelector<E::Impl>],
-    element: &E,
+    element: E,
     context: &mut MatchingContext<E::Impl>,
     rightmost: SubjectOrPseudoElement,
 ) -> bool {
@@ -709,7 +705,7 @@ fn do_match_relative_selectors<E: Element>(
 
 fn matches_relative_selector_subtree<E: Element>(
     selector: &Selector<E::Impl>,
-    element: &E,
+    element: E,
     context: &mut MatchingContext<E::Impl>,
     rightmost: SubjectOrPseudoElement,
 ) -> bool {
@@ -721,11 +717,11 @@ fn matches_relative_selector_subtree<E: Element>(
                 ElementSelectorFlags::RELATIVE_SELECTOR_SEARCH_DIRECTION_ANCESTOR,
             );
         }
-        if matches_complex_selector(selector.iter(), &el, context, rightmost).to_bool(true) {
+        if matches_complex_selector(selector.iter(), el, context, rightmost).to_bool(true) {
             return true;
         }
 
-        if matches_relative_selector_subtree(selector, &el, context, rightmost) {
+        if matches_relative_selector_subtree(selector, el, context, rightmost) {
             return true;
         }
 
@@ -770,7 +766,7 @@ pub enum SubjectOrPseudoElement {
     No,
 }
 
-fn host_for_part<E>(element: &E, context: &MatchingContext<E::Impl>) -> Option<E>
+fn host_for_part<E>(element: E, context: &MatchingContext<E::Impl>) -> Option<E>
 where
     E: Element,
 {
@@ -788,7 +784,7 @@ where
     }
 }
 
-fn assigned_slot<E>(element: &E, context: &MatchingContext<E::Impl>) -> Option<E>
+fn assigned_slot<E>(element: E, context: &MatchingContext<E::Impl>) -> Option<E>
 where
     E: Element,
 {
@@ -820,7 +816,7 @@ impl<E> NextElement<E> {
 
 #[inline(always)]
 fn next_element_for_combinator<E>(
-    element: &E,
+    element: E,
     combinator: Combinator,
     context: &MatchingContext<E::Impl>,
 ) -> NextElement<E>
@@ -853,7 +849,7 @@ where
 
 fn matches_complex_selector_internal<E>(
     mut selector_iter: SelectorIter<E::Impl>,
-    element: &E,
+    mut element: E,
     context: &mut MatchingContext<E::Impl>,
     mut rightmost: SubjectOrPseudoElement,
     mut first_subject_compound: SubjectOrPseudoElement,
@@ -917,7 +913,6 @@ where
         SelectorMatchingResult::NotMatchedGlobally
     };
 
-    let mut element = element.clone();
     loop {
         if element.is_link() {
             visited_handling = VisitedHandlingMode::AllLinksUnvisited;
@@ -926,7 +921,7 @@ where
         let NextElement {
             next_element,
             featureless,
-        } = next_element_for_combinator(&element, combinator, &context);
+        } = next_element_for_combinator(element, combinator, context);
         element = match next_element {
             None => return candidate_not_found,
             Some(e) => e,
@@ -936,7 +931,7 @@ where
             context.with_featureless(featureless, |context| {
                 matches_complex_selector_internal(
                     selector_iter.clone(),
-                    &element,
+                    element,
                     context,
                     rightmost,
                     first_subject_compound,
@@ -1006,7 +1001,7 @@ where
 }
 
 #[inline]
-fn matches_local_name<E>(element: &E, local_name: &LocalName<E::Impl>) -> bool
+fn matches_local_name<E>(element: E, local_name: &LocalName<E::Impl>) -> bool
 where
     E: Element,
 {
@@ -1015,7 +1010,7 @@ where
 }
 
 fn matches_part<E>(
-    element: &E,
+    element: E,
     parts: &[<E::Impl as SelectorImpl>::Identifier],
     context: &mut MatchingContext<E::Impl>,
 ) -> bool
@@ -1061,7 +1056,7 @@ where
 }
 
 fn matches_host<E>(
-    element: &E,
+    element: E,
     selector: Option<&Selector<E::Impl>>,
     context: &mut MatchingContext<E::Impl>,
     rightmost: SubjectOrPseudoElement,
@@ -1087,7 +1082,7 @@ where
 }
 
 fn matches_slotted<E>(
-    element: &E,
+    element: E,
     selector: &Selector<E::Impl>,
     context: &mut MatchingContext<E::Impl>,
     rightmost: SubjectOrPseudoElement,
@@ -1103,7 +1098,7 @@ where
 }
 
 fn matches_rare_attribute_selector<E>(
-    element: &E,
+    element: E,
     attr_sel: &AttrSelectorWithOptionalNamespace<E::Impl>,
 ) -> bool
 where
@@ -1200,7 +1195,7 @@ pub(crate) fn compound_matches_featureless_host<Impl: SelectorImpl>(
 #[inline]
 fn matches_compound_selector<E>(
     selector_iter: &mut SelectorIter<E::Impl>,
-    element: &E,
+    element: E,
     context: &mut MatchingContext<E::Impl>,
     rightmost: SubjectOrPseudoElement,
 ) -> KleeneValue
@@ -1233,7 +1228,7 @@ where
 /// Determines whether the given element matches the given single selector.
 fn matches_simple_selector<E>(
     selector: &Component<E::Impl>,
-    element: &E,
+    element: E,
     context: &mut LocalMatchingContext<E::Impl>,
 ) -> KleeneValue
 where
@@ -1371,7 +1366,7 @@ where
 
 #[inline(always)]
 pub fn select_name<'a, E: Element, T: PartialEq>(
-    element: &E,
+    element: E,
     local_name: &'a T,
     local_name_lower: &'a T,
 ) -> &'a T {
@@ -1385,7 +1380,7 @@ pub fn select_name<'a, E: Element, T: PartialEq>(
 #[inline(always)]
 pub fn to_unconditional_case_sensitivity<'a, E: Element>(
     parsed: ParsedCaseSensitivity,
-    element: &E,
+    element: E,
 ) -> CaseSensitivity {
     match parsed {
         ParsedCaseSensitivity::CaseSensitive | ParsedCaseSensitivity::ExplicitCaseSensitive => {
@@ -1403,7 +1398,7 @@ pub fn to_unconditional_case_sensitivity<'a, E: Element>(
 }
 
 fn matches_generic_nth_child<E>(
-    element: &E,
+    element: E,
     context: &mut MatchingContext<E::Impl>,
     nth_data: &NthSelectorData,
     selectors: &[Selector<E::Impl>],
@@ -1532,7 +1527,7 @@ where
 
 #[inline]
 fn nth_child_index<E>(
-    element: &E,
+    element: E,
     context: &mut MatchingContext<E::Impl>,
     selectors: &[Selector<E::Impl>],
     is_of_type: bool,
@@ -1556,13 +1551,13 @@ where
             .is_empty()
     {
         let mut index: i32 = 1;
-        let mut curr = element.clone();
+        let mut curr = element;
         while let Some(e) = curr.prev_sibling_element() {
             curr = e;
             let matches = if is_of_type {
                 element.is_same_type(&curr)
             } else if !selectors.is_empty() {
-                matches_complex_selector_list(selectors, &curr, context, rightmost).to_bool(true)
+                matches_complex_selector_list(selectors, curr, context, rightmost).to_bool(true)
             } else {
                 true
             };
@@ -1580,7 +1575,7 @@ where
     }
 
     let mut index: i32 = 1;
-    let mut curr = element.clone();
+    let mut curr = element;
     let next = |e: E| {
         if is_from_end {
             e.next_sibling_element()
@@ -1593,7 +1588,7 @@ where
         let matches = if is_of_type {
             element.is_same_type(&curr)
         } else if !selectors.is_empty() {
-            matches_complex_selector_list(selectors, &curr, context, rightmost).to_bool(true)
+            matches_complex_selector_list(selectors, curr, context, rightmost).to_bool(true)
         } else {
             true
         };

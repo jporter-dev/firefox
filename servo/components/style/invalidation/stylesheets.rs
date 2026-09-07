@@ -12,7 +12,7 @@ use crate::data::ElementData;
 use crate::derives::*;
 use crate::device::Device;
 use crate::dom::{TDocument, TElement, TNode};
-use crate::invalidation::element::element_wrapper::{ElementSnapshot, ElementWrapper};
+use crate::invalidation::element::element_wrapper::{ElementSnapshot, ElementWrapper, Snapshots};
 use crate::invalidation::element::restyle_hints::RestyleHint;
 use crate::selector_map::{MaybeCaseInsensitiveHashMap, PrecomputedHashMap, PrecomputedHashSet};
 use crate::selector_parser::{SelectorImpl, Snapshot, SnapshotMap};
@@ -277,7 +277,8 @@ impl StylesheetInvalidationSet {
         }
 
         let quirks_mode = root.as_node().owner_doc().quirks_mode();
-        self.process_invalidations_in_subtree(root, snapshots, quirks_mode)
+        let snapshots = snapshots.map(Snapshots::new);
+        self.process_invalidations_in_subtree(root, snapshots.as_ref(), quirks_mode)
     }
 
     /// Process style invalidations in a given subtree. This traverses the
@@ -289,7 +290,7 @@ impl StylesheetInvalidationSet {
     fn process_invalidations_in_subtree<E>(
         &self,
         element: E,
-        snapshots: Option<&SnapshotMap>,
+        snapshots: Option<&Snapshots>,
         quirks_mode: QuirksMode,
     ) -> bool
     where

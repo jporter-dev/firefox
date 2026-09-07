@@ -8,7 +8,7 @@
 use crate::context::SharedStyleContext;
 use crate::data::ElementData;
 use crate::dom::{TElement, TNode};
-use crate::invalidation::element::element_wrapper::{ElementSnapshot, ElementWrapper};
+use crate::invalidation::element::element_wrapper::{ElementSnapshot, ElementWrapper, Snapshots};
 use crate::invalidation::element::invalidation_map::*;
 use crate::invalidation::element::invalidator::{
     any_next_has_scope_in_negation, note_scope_dependency_force_at_subject,
@@ -37,7 +37,7 @@ where
     E: TElement,
 {
     element: E,
-    wrapper: ElementWrapper<'b, E>,
+    wrapper: ElementWrapper<'a, 'b, E>,
     snapshot: &'a Snapshot,
     matching_context: &'a mut MatchingContext<'b, E::Impl>,
     lookup_element: E,
@@ -57,6 +57,7 @@ where
 /// changes.
 pub struct StateAndAttrInvalidationProcessor<'a, 'b: 'a, E: TElement> {
     shared_context: &'a SharedStyleContext<'b>,
+    snapshots: Snapshots<'a>,
     element: E,
     data: &'a mut ElementData,
     matching_context: MatchingContext<'a, E::Impl>,
@@ -83,6 +84,7 @@ impl<'a, 'b: 'a, E: TElement + 'b> StateAndAttrInvalidationProcessor<'a, 'b, E> 
 
         Self {
             shared_context,
+            snapshots: Snapshots::new(shared_context.snapshot_map),
             element,
             data,
             matching_context,
@@ -95,8 +97,8 @@ impl<'a, 'b: 'a, E: TElement + 'b> StateAndAttrInvalidationProcessor<'a, 'b, E> 
 /// changed.
 pub fn check_dependency<E, W>(
     dependency: &Dependency,
-    element: &E,
-    wrapper: &W,
+    element: E,
+    wrapper: W,
     context: &mut MatchingContext<'_, E::Impl>,
     scope: Option<OpaqueElement>,
 ) -> bool
@@ -235,14 +237,14 @@ where
         element: E,
         scope: Option<OpaqueElement>,
     ) -> bool {
-        // We cannot assert about `element` having a snapshot here (in fact it
-        // most likely won't), because it may be an arbitrary descendant or
-        // later-sibling of the element we started invalidating with.
-        let wrapper = ElementWrapper::new(element, self.shared_context.snapshot_map);
+        // We cannot assert about `element` having a snapshot here (in fact it most likely won't),
+        // because it may be an arbitrary descendant or later-sibling of the element we started
+        // invalidating with.
+        let wrapper = ElementWrapper::new(element, &self.snapshots);
         check_dependency(
             dependency,
-            &element,
-            &wrapper,
+            element,
+            wrapper,
             &mut self.matching_context,
             scope,
         )
@@ -266,7 +268,7 @@ where
         debug_assert_eq!(element, self.element);
         debug_assert!(element.has_snapshot(), "Why bothering?");
 
-        let wrapper = ElementWrapper::new(element, self.shared_context.snapshot_map);
+        let wrapper = ElementWrapper::new(element, &self.snapshots);
 
         let state_changes = wrapper.state_changes();
         let Some(snapshot) = wrapper.snapshot() else {
@@ -542,8 +544,8 @@ where
     fn check_dependency(&mut self, dependency: &Dependency, set_scope: bool) -> bool {
         check_dependency(
             dependency,
-            &self.element,
-            &self.wrapper,
+            self.element,
+            self.wrapper,
             self.matching_context,
             set_scope.then(|| self.element.opaque()),
         )

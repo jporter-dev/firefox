@@ -1240,7 +1240,7 @@ where
                     &invalidation.dependency.selector,
                     invalidation.offset,
                     ctx,
-                    &self.element,
+                    self.element,
                 )
             })
         };

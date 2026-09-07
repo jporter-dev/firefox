@@ -75,7 +75,7 @@ use style::gecko_bindings::sugar::refptr::RefPtr;
 use style::global_style_data::{
     GlobalStyleData, PlatformThreadHandle, StyleThreadPool, GLOBAL_STYLE_DATA, STYLE_THREAD_POOL,
 };
-use style::invalidation::element::element_wrapper::{ElementSnapshot, ElementWrapper};
+use style::invalidation::element::element_wrapper::{ElementSnapshot, ElementWrapper, Snapshots};
 use style::invalidation::element::invalidation_map::{InvalidationMap, TSStateForInvalidation};
 use style::invalidation::element::invalidator::{InvalidationResult, SiblingTraversalMap};
 use style::invalidation::element::relative_selector::{
@@ -2934,7 +2934,7 @@ where
         MatchingForInvalidation::No,
     );
     ctx.with_shadow_host(host, |ctx| match scopes.as_ref() {
-        None => matches_selector(selector, 0, None, &element, ctx).then(|| on_match(None)),
+        None => matches_selector(selector, 0, None, element, ctx).then(|| on_match(None)),
         Some(s) => {
             let id = ScopeConditionId::new((s.conditions.len() - 1) as u16);
             let candidates = scope_root_candidates(
@@ -2947,7 +2947,7 @@ where
             );
             let scope_root = candidates.candidates.iter().find_map(|candidate| {
                 ctx.nest_for_scope(Some(candidate.root), |ctx| {
-                    matches_selector(selector, 0, None, &element, ctx).then(|| candidate)
+                    matches_selector(selector, 0, None, element, ctx).then(|| candidate)
                 })
             });
             scope_root.map(|root| on_match(Some(root)))
@@ -3174,7 +3174,7 @@ pub unsafe extern "C" fn Servo_SelectorList_QueryAllWithScope(
             continue;
         };
         let matches = match scopes.as_ref() {
-            None => matches_selector_list(&selectors, &element, &mut ctx),
+            None => matches_selector_list(&selectors, element, &mut ctx),
             Some(s) => {
                 let id = ScopeConditionId::new((s.conditions.len() - 1) as u16);
                 let candidates = scope_root_candidates(
@@ -3187,7 +3187,7 @@ pub unsafe extern "C" fn Servo_SelectorList_QueryAllWithScope(
                 );
                 candidates.candidates.iter().any(|candidate| {
                     ctx.nest_for_scope(Some(candidate.root), |ctx| {
-                        matches_selector_list(&selectors, &element, ctx)
+                        matches_selector_list(&selectors, element, ctx)
                     })
                 })
             },
@@ -8406,13 +8406,13 @@ pub extern "C" fn Servo_StyleSet_MaybeInvalidateRelativeSelectorIDDependency(
     let element = GeckoElement(element);
 
     let quirks_mode: QuirksMode = data.stylist.quirks_mode();
+    let snapshots = Snapshots::new(snapshots);
     let invalidator = RelativeSelectorInvalidator {
         element,
         quirks_mode,
-        snapshot_table: Some(snapshots),
+        snapshots: Some(&snapshots),
         invalidated: relative_selector_invalidated_at,
         sibling_traversal_map: SiblingTraversalMap::default(),
-        _marker: std::marker::PhantomData,
     };
 
     invalidator.invalidate_relative_selectors_for_this(
@@ -8448,13 +8448,14 @@ pub extern "C" fn Servo_StyleSet_MaybeInvalidateRelativeSelectorClassDependency(
     let data = raw_data.borrow();
     let element = GeckoElement(element);
     let quirks_mode: QuirksMode = data.stylist.quirks_mode();
+    let snapshot_table = snapshots;
+    let snapshots = Snapshots::new(snapshot_table);
     let invalidator = RelativeSelectorInvalidator {
         element,
         quirks_mode,
-        snapshot_table: Some(snapshots),
+        snapshots: Some(&snapshots),
         invalidated: relative_selector_invalidated_at,
         sibling_traversal_map: SiblingTraversalMap::default(),
-        _marker: std::marker::PhantomData,
     };
 
     invalidator.invalidate_relative_selectors_for_this(
@@ -8463,7 +8464,7 @@ pub extern "C" fn Servo_StyleSet_MaybeInvalidateRelativeSelectorClassDependency(
             let invalidation_map = data.relative_selector_invalidation_map();
 
             relative_selector_dependencies_for_class(
-                &classes_changed(element, snapshots),
+                &classes_changed(element, snapshot_table),
                 &element,
                 scope,
                 quirks_mode,
@@ -8492,15 +8493,15 @@ pub extern "C" fn Servo_StyleSet_MaybeInvalidateRelativeSelectorAttributeDepende
     let element = GeckoElement(element);
 
     let quirks_mode: QuirksMode = data.stylist.quirks_mode();
+    let snapshots = Snapshots::new(snapshots);
     unsafe {
         AtomIdent::with(local_name, |atom| {
             let invalidator = RelativeSelectorInvalidator {
                 element,
                 quirks_mode,
-                snapshot_table: Some(snapshots),
+                snapshots: Some(&snapshots),
                 invalidated: relative_selector_invalidated_at,
                 sibling_traversal_map: SiblingTraversalMap::default(),
-                _marker: std::marker::PhantomData,
             };
 
             invalidator.invalidate_relative_selectors_for_this(
@@ -8535,13 +8536,13 @@ pub extern "C" fn Servo_StyleSet_MaybeInvalidateRelativeSelectorStateDependency(
     let data = raw_data.borrow();
     let quirks_mode: QuirksMode = data.stylist.quirks_mode();
 
+    let snapshots = Snapshots::new(snapshots);
     let invalidator = RelativeSelectorInvalidator {
         element,
         quirks_mode,
-        snapshot_table: Some(snapshots),
+        snapshots: Some(&snapshots),
         invalidated: relative_selector_invalidated_at,
         sibling_traversal_map: SiblingTraversalMap::default(),
-        _marker: std::marker::PhantomData,
     };
 
     invalidator.invalidate_relative_selectors_for_this(
@@ -8572,13 +8573,13 @@ pub extern "C" fn Servo_StyleSet_MaybeInvalidateRelativeSelectorCustomStateDepen
     let element = GeckoElement(element);
 
     let quirks_mode: QuirksMode = data.stylist.quirks_mode();
+    let snapshots = Snapshots::new(snapshots);
     let invalidator = RelativeSelectorInvalidator {
         element,
         quirks_mode,
-        snapshot_table: Some(snapshots),
+        snapshots: Some(&snapshots),
         invalidated: relative_selector_invalidated_at,
         sibling_traversal_map: SiblingTraversalMap::default(),
-        _marker: std::marker::PhantomData,
     };
 
     invalidator.invalidate_relative_selectors_for_this(
@@ -8605,10 +8606,9 @@ fn invalidate_relative_selector_prev_sibling_side_effect(
     let invalidator = RelativeSelectorInvalidator {
         element: prev_sibling,
         quirks_mode,
-        snapshot_table: None,
+        snapshots: None,
         invalidated: relative_selector_invalidated_at,
         sibling_traversal_map,
-        _marker: std::marker::PhantomData,
     };
     invalidator.invalidate_relative_selectors_for_dom_mutation(
         false,
@@ -8627,10 +8627,9 @@ fn invalidate_relative_selector_next_sibling_side_effect(
     let invalidator = RelativeSelectorInvalidator {
         element: next_sibling,
         quirks_mode,
-        snapshot_table: None,
+        snapshots: None,
         invalidated: relative_selector_invalidated_at,
         sibling_traversal_map,
-        _marker: std::marker::PhantomData,
     };
     invalidator.invalidate_relative_selectors_for_dom_mutation(
         false,
@@ -8650,10 +8649,9 @@ fn invalidate_relative_selector_ts_dependency(
     let invalidator = RelativeSelectorInvalidator {
         element,
         quirks_mode,
-        snapshot_table: None,
+        snapshots: None,
         invalidated: relative_selector_invalidated_at,
         sibling_traversal_map: SiblingTraversalMap::default(),
-        _marker: std::marker::PhantomData,
     };
 
     invalidator.invalidate_relative_selectors_for_this(
@@ -8808,10 +8806,9 @@ pub extern "C" fn Servo_StyleSet_MaybeInvalidateRelativeSelectorForInsertion(
     let invalidator = RelativeSelectorInvalidator {
         element,
         quirks_mode,
-        snapshot_table: None,
+        snapshots: None,
         invalidated: relative_selector_invalidated_at,
         sibling_traversal_map: SiblingTraversalMap::default(),
-        _marker: std::marker::PhantomData,
     };
 
     invalidator.invalidate_relative_selectors_for_dom_mutation(
@@ -8850,10 +8847,9 @@ pub extern "C" fn Servo_StyleSet_MaybeInvalidateRelativeSelectorForAppend(
         let invalidator = RelativeSelectorInvalidator {
             element: e,
             quirks_mode,
-            snapshot_table: None,
+            snapshots: None,
             sibling_traversal_map: SiblingTraversalMap::default(),
             invalidated: relative_selector_invalidated_at,
-            _marker: std::marker::PhantomData,
         };
         invalidator.invalidate_relative_selectors_for_dom_mutation(
             true,
@@ -8919,10 +8915,9 @@ pub extern "C" fn Servo_StyleSet_MaybeInvalidateRelativeSelectorForRemoval(
     let invalidator = RelativeSelectorInvalidator {
         element,
         quirks_mode,
-        snapshot_table: None,
+        snapshots: None,
         sibling_traversal_map: SiblingTraversalMap::default(),
         invalidated: relative_selector_invalidated_at,
-        _marker: std::marker::PhantomData,
     };
     invalidator.invalidate_relative_selectors_for_dom_mutation(
         true,
@@ -9289,22 +9284,21 @@ fn process_relative_selector_invalidations(
     let mut classes = None;
 
     let quirks_mode: QuirksMode = data.stylist.quirks_mode();
+    let snapshots = Snapshots::new(snapshot_table);
     let invalidator = RelativeSelectorInvalidator {
         element: *element,
         quirks_mode,
         invalidated: relative_selector_invalidated_at,
         sibling_traversal_map: SiblingTraversalMap::default(),
-        snapshot_table: Some(snapshot_table),
-        _marker: std::marker::PhantomData,
+        snapshots: Some(&snapshots),
     };
 
     invalidator.invalidate_relative_selectors_for_this(
         &data.stylist,
         |element, scope, data, quirks_mode, collector| {
             let invalidation_map = data.relative_selector_invalidation_map();
-            let states = *states.get_or_insert_with(|| {
-                ElementWrapper::new(*element, snapshot_table).state_changes()
-            });
+            let states = *states
+                .get_or_insert_with(|| ElementWrapper::new(*element, &snapshots).state_changes());
             let classes = classes.get_or_insert_with(|| classes_changed(element, snapshot_table));
             if snapshot.id_changed() {
                 relative_selector_dependencies_for_id(
