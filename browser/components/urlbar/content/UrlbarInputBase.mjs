@@ -3185,6 +3185,10 @@ ${
     }
 
     this.toggleAttribute("breakout-extend", true);
+    if (!this.hasAttribute("in-page")) {
+      this.showPopover();
+      this.#fixAddressbarSearchbarOrder();
+    }
 
     // Enable the animation only after the first extend call to ensure it
     // doesn't run when opening a new window.
@@ -3209,6 +3213,9 @@ ${
       return;
     }
 
+    if (!this.hasAttribute("in-page")) {
+      this.hidePopover();
+    }
     this.toggleAttribute("breakout-extend", false);
   }
 
@@ -3588,14 +3595,10 @@ ${
         // an unscoped name resolves to whichever container comes last in the
         // document, which would anchor the address bar to the search bar's.
         this.parentNode.style.setProperty("anchor-scope", ANCHOR_NAME);
-        // A toolbar element is a popover for as long as it has the `breakout`
-        // attribute; an in-page one only while the user is interacting with it,
-        // per #updateInPagePopover.
+        // #updateInPagePopover requires `breakout`, so an already-focused
+        // input enters the top layer here.
         if (this.hasAttribute("in-page")) {
           this.#updateInPagePopover();
-        } else {
-          this.showPopover();
-          this.#fixAddressbarSearchbarOrder();
         }
 
         resolve();
