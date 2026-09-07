@@ -182,6 +182,7 @@ ${
                  dir="auto"
                  aria-autocomplete="both"
                  inputmode="mozAwesomebar"
+                 preserveundohistory=""
                  data-l10n-id="urlbar-placeholder"/>
         </div>
         <moz-urlbar-slot name="revert-button" />
