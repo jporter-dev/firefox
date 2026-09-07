@@ -496,4 +496,7 @@
   margin: 0;
   font-size: var(--font-size-small);
   color: var(--text-color-deemphasized);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
