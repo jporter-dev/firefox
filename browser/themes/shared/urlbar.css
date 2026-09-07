@@ -136,7 +136,6 @@
     min(var(--urlbar-background-border-radius), var(--urlbar-height) / 2) + var(--urlbar-background-overhang-open)
   );
   --urlbar-background-box-shadow-open: 0 0 14px 0 var(--chrome-box-shadow);
-  --urlbar-background-box-shadow-open-compact: none;
   --urlbar-background-outline-focused: none;
   --urlbar-input-container-border: var(--urlbar-input-container-border-width) solid var(--toolbar-field-border-color);
   --urlbar-input-container-outline-open: var(--urlbar-input-container-border-width-open) solid var(--toolbar-field-border-color);
@@ -156,7 +155,6 @@
     --urlbar-background-border-open: var(--urlbar-input-container-border-width) solid var(--panel-border-color);
     --urlbar-background-border-focused: var(--urlbar-background-border);
     --urlbar-background-box-shadow-open: 0 2px 14px var(--chrome-box-shadow);
-    --urlbar-background-box-shadow-open-compact: var(--urlbar-background-box-shadow-open);
     /* We want the focus outline with the theme's border-color when focused.
        --toolbar-field-border-color-focus is set equal to --focus-outline-color
        on :root, but LWT themes can override this value. */
@@ -290,10 +288,6 @@ toolbar[inactive="true"] .urlbar,
     border-start-end-radius: var(--urlbar-background-border-top-radius-open);
   }
 
-  :root[uidensity="compact"] .urlbar[popover-open]:not([open]) > & {
-    box-shadow: var(--urlbar-background-box-shadow-open-compact);
-  }
-
   /* The rest of the joint background is painted by the view's popover, which
      the input can't reach into. Each half runs past the seam by more than the
      shadow's blur radius, so its shadow carries the whole surface's geometry,
@@ -301,7 +295,7 @@ toolbar[inactive="true"] .urlbar,
      same device row, so the row the seam falls in is covered exactly once
      wherever the input's edge lands. The two halves meet as one surface with
      one shadow around it. */
-  .urlbar[popover-open][open] > & {
+  .urlbar[popover-open] > & {
     inset-block-end: calc(-1 * var(--urlbar-joint-background-overlap));
     border-end-start-radius: 0;
     border-end-end-radius: 0;
