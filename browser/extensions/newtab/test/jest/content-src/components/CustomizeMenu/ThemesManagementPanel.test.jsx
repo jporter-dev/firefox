@@ -45,6 +45,18 @@ describe("<ThemesManagementPanel>", () => {
     );
   });
 
+  it("gives the back button an accessible name and tooltip", () => {
+    const { container } = render(
+      <WrapWithProvider>
+        <ThemesManagementPanel {...DEFAULT_PROPS} showPanel={true} />
+      </WrapWithProvider>
+    );
+    expect(container.querySelector("moz-button.arrow-button")).toHaveAttribute(
+      "data-l10n-id",
+      "newtab-customize-panel-back-button"
+    );
+  });
+
   it("dispatches OPEN_ABOUT_ADDONS_THEMES when 'Explore more themes' is clicked", () => {
     const { container } = render(
       <WrapWithProvider>

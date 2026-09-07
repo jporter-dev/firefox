@@ -47,4 +47,23 @@ describe("<SectionsMgmtPanel>", () => {
     );
     expect(container.firstChild).toBeInTheDocument();
   });
+
+  it("gives the back button an accessible name and tooltip", () => {
+    const { container } = render(
+      <WrapWithProvider state={STATE_WITH_SECTIONS}>
+        <SectionsMgmtPanel
+          exitEventFired={false}
+          pocketEnabled={true}
+          onSubpanelToggle={jest.fn()}
+          togglePanel={jest.fn()}
+          showPanel={true}
+          novaEnabled={true}
+        />
+      </WrapWithProvider>
+    );
+    expect(container.querySelector("moz-button.arrow-button")).toHaveAttribute(
+      "data-l10n-id",
+      "newtab-customize-panel-back-button"
+    );
+  });
 });

@@ -57,6 +57,7 @@ function ThemesManagementPanel({ onSubpanelToggle, togglePanel, showPanel }) {
                 type="ghost"
                 className="arrow-button"
                 iconSrc={arrowIconSrc}
+                data-l10n-id="newtab-customize-panel-back-button"
                 onClick={togglePanel}
               ></moz-button>
               <h2 data-l10n-id="newtab-appearance-manage-title"></h2>

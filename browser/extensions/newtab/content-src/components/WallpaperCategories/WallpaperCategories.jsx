@@ -755,14 +755,17 @@ export class _WallpaperCategories extends React.PureComponent {
             {
               // @nova-cleanup(remove-conditional): Remove novaEnabled check and the else branch, keep the nova branch
               novaEnabled ? (
-                <moz-button
-                  ref={this.arrowButtonRef}
-                  type="ghost"
-                  className="wallpapers-arrow-button"
-                  iconSrc={arrowIconSrc}
-                  data-l10n-id={activeCategoryFluentID}
-                  onClick={this.handleBack}
-                />
+                <div className="arrow-wrapper">
+                  <moz-button
+                    ref={this.arrowButtonRef}
+                    type="ghost"
+                    className="arrow-button"
+                    iconSrc={arrowIconSrc}
+                    data-l10n-id="newtab-customize-panel-back-button"
+                    onClick={this.handleBack}
+                  />
+                  <h2 data-l10n-id={activeCategoryFluentID}></h2>
+                </div>
               ) : (
                 <button
                   ref={this.arrowButtonRef}

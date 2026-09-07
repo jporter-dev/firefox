@@ -274,6 +274,11 @@ newtab-error-fallback-refresh-link = Refresh page to try again.
 
 ## Customization Menu
 
+# An arrow button that goes back from a sub-panel in the customize panel, such as a wallpaper category, to the main Customize panel.
+newtab-customize-panel-back-button =
+    .aria-label = Back to Customize
+    .title = Back to Customize
+
 #  (developer note): @nova-cleanup(remove-string): Remove old string once Nova lands. The newtab-custom-shortcuts-nova string will take over
 newtab-custom-shortcuts-toggle =
   .label = Shortcuts
@@ -393,11 +398,6 @@ newtab-wallpaper-dark-mountain = Landscape mountain
 newtab-wallpaper-dark-city = Purple city landscape
 newtab-wallpaper-dark-fox-anniversary = A fox on the pavement near a forest
 newtab-wallpaper-light-fox-anniversary = A fox in a grassy field with a misty mountain landscape
-
-# Goes back from a wallpaper category to the Customize panel. Shown as an
-# arrow with no text, so this is read by screen readers only.
-newtab-wallpaper-category-back =
-    .aria-label = Back to Customize
 
 ## "Your images" is the folder of wallpapers someone has saved. A saved wallpaper
 ## can be a file they uploaded, a Picture of the Day they chose to keep, or a

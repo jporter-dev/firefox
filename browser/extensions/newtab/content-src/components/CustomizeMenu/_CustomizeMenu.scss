@@ -555,26 +555,10 @@
     }
   }
 
-  // @nova-cleanup(remove-conditional): Remove .nova-enabled & selector, keep .panel-content and .arrow-wrapper as default
+  // @nova-cleanup(remove-conditional): Remove .nova-enabled & selector, keep .panel-content as default
   .nova-enabled & {
     .panel-content {
       padding: var(--space-xlarge);
-    }
-
-    .arrow-wrapper {
-      display: flex;
-      align-items: center;
-      margin-block-end: var(--space-xlarge);
-
-      .arrow-button {
-        margin-inline-end: var(--space-small);
-      }
-
-      h2 {
-        font-size: var(--font-size-heading-medium);
-        margin-block: 0;
-        font-weight: var(--button-font-weight);
-      }
     }
   }
 
@@ -602,6 +586,25 @@
   &.themes-mgmt-panel-enter-done,
   &.themes-mgmt-panel-enter-active {
     transform: translateX(0);
+  }
+}
+
+// Header row of a customize subpanel: a back button followed by the panel
+// title. Shared by the management panels and the wallpaper category list.
+// @nova-cleanup(remove-conditional): Remove the .nova-enabled ancestor, keep .arrow-wrapper as default
+.nova-enabled .arrow-wrapper {
+  display: flex;
+  align-items: center;
+  margin-block-end: var(--space-xlarge);
+
+  .arrow-button {
+    margin-inline-end: var(--space-small);
+  }
+
+  h2 {
+    font-size: var(--font-size-heading-medium);
+    margin-block: 0;
+    font-weight: var(--button-font-weight);
   }
 }
 
