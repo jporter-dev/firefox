@@ -275,6 +275,7 @@ treeherder:
         'compose-awesomebar': 'compose-engine'
         'compose-browser-toolbar': 'awesomebar-browser-toolbar'
         'compose-engine': 'compose-engine'
+        'compose-menu': 'compose-menu'
         'compose-tabstray': 'compose-tabstray'
         'concept-accelerometer': 'concept-accelerometer'
         'concept-ai-controls': 'concept-ai-controls'
