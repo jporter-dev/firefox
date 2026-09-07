@@ -294,10 +294,6 @@ class Settings(
             default = false,
         )
 
-    /** Indicates whether or not the Firefox Japan Guide default site should be shown. */
-    val showFirefoxJpGuideDefaultSite: Boolean
-        get() = FxNimbus.features.firefoxJpGuideDefaultSite.value().enabled
-
     /** Indicates whether or not top sites should be shown on the home screen. */
     var showTopSitesFeature by
         booleanPreference(
