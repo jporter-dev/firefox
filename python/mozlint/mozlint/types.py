@@ -179,7 +179,7 @@ class GlobalType(ExternalType):
         # them based on extensions and exclusions.
         files = list(expand_exclusions(files, config, lintargs["root"]))
         if not files:
-            return
+            return []
         func = findobject(config["payload"], config["path"])
         return func(files, config, **lintargs)
 
