@@ -2031,6 +2031,13 @@ export class TelemetryEvent {
    *   The detected intent for the input. Only set when sap is `smartbar`.
    * @param {string} [details.model]
    *   Model selected by the user. Only set when sap is `smartbar`.
+   * @param {?string} [details.engagementSap]
+   *   The search access point. The address bar's `urlbar`, `urlbar_newtab` and
+   *   `urlbar_addonpage` depend on the page loaded at the time the search was
+   *   made. The engagement itself loads a new page, so a recording deferred
+   *   past it passes the sap resolved when the engagement happened. A recording
+   *   made at engagement time omits it, so the sap resolves from `searchSource`
+   *   here.
    */
   #recordSearchEngagementTelemetry(
     method,
@@ -2053,9 +2060,10 @@ export class TelemetryEvent {
       intent = "",
       model = "",
       windowMode,
+      engagementSap,
     }
   ) {
-    let sap = this.#searchSourceToSap(searchSource);
+    let sap = engagementSap ?? this.#searchSourceToSap(searchSource);
     if (!sap) {
       return;
     }
@@ -2493,8 +2501,9 @@ export class TelemetryEvent {
       this._startEventInfo,
       this.#engagementData.visibleResults
     );
+    let sap = snapshot && this.#searchSourceToSap(snapshot.searchSource);
     await this.#startTrackingBounce(browserId, viewTime =>
-      this.#recordBounce(snapshot, viewTime)
+      this.#recordBounce(snapshot, viewTime, sap)
     );
   }
 
@@ -2552,13 +2561,17 @@ export class TelemetryEvent {
    *   The bounce snapshot from `UrlbarTelemetryUtils.collectBounceSnapshot()`.
    * @param {number} viewTime
    *   The time spent on the tab before navigating away, in milliseconds.
+   * @param {?string} sap
+   *   The sap resolved when the engagement happened, or null when it couldn't
+   *   be. A bounce never resolves its own, so it goes unrecorded then.
    */
-  #recordBounce(snapshot, viewTime) {
-    if (!snapshot) {
+  #recordBounce(snapshot, viewTime, sap) {
+    if (!snapshot || !sap) {
       return;
     }
 
     this.#recordSearchEngagementTelemetry("bounce", snapshot.startEventInfo, {
+      engagementSap: sap,
       action: snapshot.action,
       numChars: snapshot.numChars,
       numWords: snapshot.numWords,
