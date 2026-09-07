@@ -27,6 +27,7 @@ import mozilla.components.feature.listentopage.ListenStore
 import mozilla.components.feature.listentopage.content.ContentProvider
 import mozilla.components.feature.listentopage.listenReducer
 import mozilla.components.feature.listentopage.playback.DirectoryAudioFileCache
+import mozilla.components.feature.listentopage.playback.ListenPlaybackController
 import mozilla.components.feature.listentopage.synthesis.SpeechSynthesizer
 import mozilla.components.feature.summarize.PageSummaryFeature
 import mozilla.components.feature.summarize.settings.SummarizationSettings
@@ -484,6 +485,10 @@ class Components(
             core.store.state.findTab(tabId)?.engineState?.engineSession
         }
 
+        // One cache for both: the synthesizer writes the audio into it and the middleware empties it when the session
+        // stops. Two instances would each hold their own directory and neither would clean up after the other.
+        val audioCache = DirectoryAudioFileCache(context)
+
         ListenStore(
             initialState = ListenState(),
             reducer = ::listenReducer,
@@ -495,11 +500,11 @@ class Components(
                                 pageContentExtractor = pageExtractor,
                                 pageMetadataExtractor = pageExtractor,
                             ),
-                        synthesizer =
-                            SpeechSynthesizer.android(
-                                context = context,
-                                audioCache = DirectoryAudioFileCache(context),
-                            ),
+                        synthesizerProvider = {
+                            SpeechSynthesizer.android(context = context, audioCache = audioCache)
+                        },
+                        audioCache = audioCache,
+                        playbackController = ListenPlaybackController(context, applicationScope),
                         scope = applicationScope,
                     )
                 ),
