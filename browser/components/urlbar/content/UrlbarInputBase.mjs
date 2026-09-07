@@ -258,21 +258,6 @@ ${
    */
   #popoverAllowed = false;
 
-  /**
-   * How many things currently suppress the popover, e.g. a window-modal dialog
-   * blocks while showing.
-   */
-  #popoverBlockerCount = 0;
-
-  /**
-   * Whether the popover may open right now.
-   *
-   * @type {boolean}
-   */
-  get #canOpenPopover() {
-    return this.#popoverAllowed && !this.#popoverBlockerCount;
-  }
-
   #gBrowserListenersAdded = false;
   #isAddressbar = false;
   /**
@@ -3173,7 +3158,7 @@ ${
    * sheet the background paints is bigger than the input.
    */
   updatePopover() {
-    let popoverOpen = this.#canOpenPopover && this.view.isOpen;
+    let popoverOpen = this.#popoverAllowed && this.view.isOpen;
     if (popoverOpen) {
       this.#openPopover();
     } else {
@@ -3439,22 +3424,6 @@ ${
     // need to close the view and search mode switcher popup explicitly.
     this.searchModeSwitcher.closePanel();
     this.view.close();
-  }
-
-  incrementPopoverBlockerCount() {
-    this.#popoverBlockerCount++;
-    if (this.#popoverBlockerCount == 1) {
-      this.updatePopover();
-    }
-  }
-
-  decrementPopoverBlockerCount() {
-    if (this.#popoverBlockerCount > 0) {
-      this.#popoverBlockerCount--;
-    }
-    if (!this.#popoverBlockerCount) {
-      this.updatePopover();
-    }
   }
 
   /**
