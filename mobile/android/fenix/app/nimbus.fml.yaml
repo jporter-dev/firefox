@@ -1157,6 +1157,13 @@ features:
         description: If true, Merino Client is enabled.
         type: Boolean
         default: false
+    defaults:
+      - channel: developer
+        value:
+          enabled: true
+      - channel: nightly
+        value:
+          enabled: true
 
   ads-client-for-stories:
     description: Feature to enable the Mozilla Ads Client support for Sponsored Stories for users on Firefox on Android.
