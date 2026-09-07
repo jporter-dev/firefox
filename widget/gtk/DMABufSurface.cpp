@@ -975,10 +975,10 @@ bool DMABufSurfaceRGBA::CreateGBM(int aWidth, int aHeight,
   return true;
 }
 
-bool DMABufSurfaceRGBA::CreateExport(
-    mozilla::gl::GLContext* aGLContext, int aWidth, int aHeight,
-    int aDMABufSurfaceFlags, const DRMFormat* aFormat) {
-
+bool DMABufSurfaceRGBA::CreateExport(mozilla::gl::GLContext* aGLContext,
+                                     int aWidth, int aHeight,
+                                     int aDMABufSurfaceFlags,
+                                     const DRMFormat* aFormat) {
   MOZ_ASSERT(aGLContext);
   MOZ_DIAGNOSTIC_ASSERT(!mTexture && !mEGLImage, "Already exported??");
   MOZ_DIAGNOSTIC_ASSERT(!mGL || mGL == aGLContext);
