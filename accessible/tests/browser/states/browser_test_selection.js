@@ -112,6 +112,7 @@ addAccessibleTask(
       <div id="noAriaSelected" role="gridcell">a</div>
       <div id="ariaSelectedFalse" role="gridcell" aria-selected="false">b</div>
       <div id="ariaSelectedTrue" role="gridcell" aria-selected="true">c</div>
+      <div id="mutGridcell" role="gridcell">d</div>
     </div>
   </div>
   <table role="grid">
@@ -156,6 +157,40 @@ addAccessibleTask(
       "tdAriaSelectedTrue"
     );
     testStates(tdAriaSelectedTrue, STATE_SELECTABLE | STATE_SELECTED);
+
+    // Verify that adding and removing aria-selected toggles the selectable
+    // state accordingly.
+    const mutGridcell = findAccessibleChildByID(docAcc, "mutGridcell");
+    testStates(mutGridcell, 0, 0, STATE_SELECTABLE | STATE_SELECTED);
+
+    info("Setting aria-selected=false on mutGridcell");
+    let stateChanged = waitForStateChange(mutGridcell, STATE_SELECTABLE, true);
+    await invokeSetAttribute(browser, "mutGridcell", "aria-selected", "false");
+    await stateChanged;
+    testStates(mutGridcell, STATE_SELECTABLE, 0, STATE_SELECTED);
+
+    info("Setting aria-selected=undefined on mutGridcell");
+    stateChanged = waitForStateChange(mutGridcell, STATE_SELECTABLE, false);
+    await invokeSetAttribute(
+      browser,
+      "mutGridcell",
+      "aria-selected",
+      "undefined"
+    );
+    await stateChanged;
+    testStates(mutGridcell, 0, 0, STATE_SELECTABLE | STATE_SELECTED);
+
+    info("Setting aria-selected=false on mutGridcell (from undefined)");
+    stateChanged = waitForStateChange(mutGridcell, STATE_SELECTABLE, true);
+    await invokeSetAttribute(browser, "mutGridcell", "aria-selected", "false");
+    await stateChanged;
+    testStates(mutGridcell, STATE_SELECTABLE, 0, STATE_SELECTED);
+
+    info("Removing aria-selected from mutGridcell");
+    stateChanged = waitForStateChange(mutGridcell, STATE_SELECTABLE, false);
+    await invokeSetAttribute(browser, "mutGridcell", "aria-selected");
+    await stateChanged;
+    testStates(mutGridcell, 0, 0, STATE_SELECTABLE | STATE_SELECTED);
   },
   { chrome: true, iframe: true, remoteIframe: true }
 );

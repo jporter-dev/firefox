@@ -1589,6 +1589,32 @@ void LocalAccessible::DOMAttributeChanged(int32_t aNameSpaceID,
   // ARIA or XUL selection
   if ((mContent->IsXULElement() && aAttribute == nsGkAtoms::selected) ||
       aAttribute == nsGkAtoms::aria_selected) {
+    if (aAttribute == nsGkAtoms::aria_selected) {
+      const nsRoleMapEntry* roleMapEntry = ARIARoleMap();
+      if (!roleMapEntry && IsHTMLTableCell() && Role() == roles::GRID_CELL) {
+        // This is a <td> inside a role="grid"; see the similar case in
+        // ApplyARIAState.
+        roleMapEntry = aria::GetRoleMap(nsGkAtoms::gridcell);
+      }
+      if (roleMapEntry && roleMapEntry->IsSelectableIfDefined()) {
+        // For these roles, whether aria-selected is "defined" (present and
+        // neither empty nor "undefined") determines the selectable state.
+        // For other selectable roles (option, tab, treeitem, etc.), the
+        // selectable state doesn't depend on aria-selected's definedness, so
+        // don't fire this there.
+        const bool wasDefined =
+            aOldValue && !aOldValue->IsEmptyString() &&
+            !aOldValue->Equals(nsGkAtoms::_undefined, eCaseMatters);
+        const bool isDefined =
+            nsAccUtils::HasDefinedARIAToken(elm, nsGkAtoms::aria_selected);
+        if (wasDefined != isDefined) {
+          auto stateChangeEvent = MakeRefPtr<AccStateChangeEvent>(
+              this, states::SELECTABLE, isDefined);
+          mDoc->FireDelayedEvent(stateChangeEvent);
+        }
+      }
+    }
+
     LocalAccessible* widget = nsAccUtils::GetSelectableContainer(this, State());
     if (widget) {
       AccSelChangeEvent::SelChangeType selChangeType;
