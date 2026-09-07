@@ -504,7 +504,6 @@ mixed_content:
     notification_emails:
       - seceng-telemetry@mozilla.com
     expires: never
-    telemetry_mirror: MIXED_CONTENT_HSTS
 
 security.ui:
   events:
