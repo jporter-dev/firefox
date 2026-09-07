@@ -11,6 +11,8 @@ at <merge-tree>/ to materialize
 Invoked in make via $(call py_action,l10n_stage,...).
 """
 
+from __future__ import annotations
+
 import argparse
 import fnmatch
 import importlib.util
@@ -131,10 +133,10 @@ class SrcDirs:
     locale_relsrcdir: str
 
     @staticmethod
-    def for_context(context: L10nManifestContextData) -> "SrcDirs":
+    def for_context(context: L10nManifestContextData) -> SrcDirs:
         return SrcDirs(context.relsrcdir, context.locale_relsrcdir)
 
-    def override(self, relativesrcdir: str) -> "SrcDirs":
+    def override(self, relativesrcdir: str) -> SrcDirs:
         """A jar.mn relativesrcdir replaces both forms: it is relative to
         the same locale top dir the context is rooted at.
         """

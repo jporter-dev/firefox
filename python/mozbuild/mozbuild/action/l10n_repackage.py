@@ -16,6 +16,8 @@ Re-packs the en-US dist as a single-locale package. Orchestrates:
 Invoked in make via $(call py_action,l10n_repackage,...).
 """
 
+from __future__ import annotations
+
 import argparse
 import shutil
 import subprocess

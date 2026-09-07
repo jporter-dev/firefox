@@ -14,6 +14,8 @@ jar.mn entries are captured with AB_CD=MOZ_L10N_AB_CD_PLACEHOLDER
 so the manifest stays locale-independent, and are resolved during staging.
 """
 
+from __future__ import annotations
+
 import json
 from collections.abc import Iterator
 from dataclasses import asdict, dataclass, field, replace
