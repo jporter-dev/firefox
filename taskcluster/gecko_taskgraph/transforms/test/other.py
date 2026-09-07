@@ -583,16 +583,6 @@ def enable_code_coverage(config, tasks):
                 task["run-on-projects"] = []
                 continue
 
-            # Skip this transform for android code coverage builds.
-            if "android" in task["build-platform"]:
-                task.setdefault("fetches", {}).setdefault("toolchain", []).append(
-                    "linux64-grcov"
-                )
-                task["mozharness"].setdefault("extra-options", []).append(
-                    "--java-code-coverage"
-                )
-                yield task
-                continue
             task["mozharness"].setdefault("extra-options", []).append("--code-coverage")
             task["instance-size"] = "xlarge-noscratch"
             if "jittest" in task["test-name"]:
