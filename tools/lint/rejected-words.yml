@@ -66,6 +66,7 @@ avoid-blacklist-and-whitelist:
         - browser/components/urlbar/tests/browser-search/browser_searchSingleWordNotification.js
         - browser/components/urlbar/tests/browser-trustPanel/browser_trust_panel.js
         - browser/components/urlbar/tests/browser-trustPanel/browser_trust_panel_icon.js
+        - browser/components/urlbar/tests/browser-trustPanel/browser_trust_panel_privacy_metrics_alignment.js
         - browser/components/urlbar/tests/browser-UrlbarInput/browser_trimURLs.js
         - browser/components/urlbar/tests/unit/test_providerHeuristicFallback.js
         - browser/components/urlbar/tests/unit/test_search_suggestions.js
