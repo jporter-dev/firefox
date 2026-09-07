@@ -181,13 +181,9 @@ class DMABufSurface {
   };
 
   void FenceSet();
-  void FenceWait();
-  static void FenceWait(RefPtr<mozilla::gl::GLContext> aGL,
-                        RefPtr<mozilla::gfx::FileHandleWrapper> aSyncFd);
-  void FenceDelete();
-  static void FenceDelete(RefPtr<mozilla::gl::GLContext> aGL, EGLSyncKHR aSync);
-  void FenceDeleteLocked(const mozilla::MutexAutoLock& aProofOfLock)
-      MOZ_REQUIRES(mSurfaceLock);
+  void FenceWait(mozilla::gl::GLContext* aGLContext = nullptr);
+  static void FenceWaitFd(RefPtr<mozilla::gl::GLContext> aGL,
+                          RefPtr<mozilla::gfx::FileHandleWrapper> aSyncFd);
 
   void MaybeSemaphoreWait(GLuint aGlTexture);
   void SetSemaphoreFd(int aDuppedRawFd, bool aIsSyncFd = false);
@@ -322,7 +318,6 @@ class DMABufSurface {
 #endif
 
   RefPtr<mozilla::gfx::FileHandleWrapper> mSyncFd;
-  EGLSyncKHR mSync;
   RefPtr<mozilla::gfx::FileHandleWrapper> mSemaphoreFd;
   bool mSemaphoreFdIsSyncFd = false;
   // mGL is tied to textures/eglimages created over dmabuf and it's null for
@@ -350,7 +345,6 @@ class DMABufSurface {
   mozilla::Mutex mSurfaceLock MOZ_UNANNOTATED;
 
   mozilla::gfx::ColorRange mColorRange = mozilla::gfx::ColorRange::LIMITED;
-
   mozilla::gfx::YUVColorSpace mColorSpace =
       mozilla::gfx::YUVColorSpace::Default;
   mozilla::gfx::ColorSpace2 mColorPrimaries =

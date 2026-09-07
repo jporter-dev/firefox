@@ -482,7 +482,6 @@ DMABufSurface::DMABufSurface(SurfaceType aSurfaceType)
       mMappedRegion(),
       mMappedRegionStride(),
 #endif
-      mSync(nullptr),
       mGlobalRefCountFd(0),
       mUID(gNewSurfaceUID++),
       mPID(0),
@@ -493,7 +492,6 @@ DMABufSurface::DMABufSurface(SurfaceType aSurfaceType)
 
 DMABufSurface::~DMABufSurface() {
   MOZ_COUNT_DTOR(DMABufSurface);
-  FenceDelete();
   GlobalRefRelease();
   GlobalRefCountDelete();
 }
@@ -520,53 +518,29 @@ already_AddRefed<DMABufSurface> DMABufSurface::CreateDMABufSurface(
   return surf.forget();
 }
 
-/* static */
-void DMABufSurface::FenceDelete(RefPtr<gl::GLContext> aGL, EGLSyncKHR aSync) {
-  if (!aSync) {
-    return;
-  }
-  const auto& gle = gl::GLContextEGL::Cast(aGL);
-  const auto& egl = gle->mEgl;
-  egl->fDestroySync(aSync);
-}
-
-void DMABufSurface::FenceDeleteLocked(const MutexAutoLock& aProofOfLock) {
-  mSyncFd = nullptr;
-  if (!mGL) {
-    return;
-  }
-  EGLSyncKHR sync = mSync;
-  mSync = nullptr;
-  FenceDelete(mGL, sync);
-}
-
-void DMABufSurface::FenceDelete() {
-  MutexAutoLock lock(mSurfaceLock);
-  FenceDeleteLocked(lock);
-}
-
 void DMABufSurface::FenceSet() {
-  if (!HoldsTexture()) {
+  MutexAutoLock lock(mSurfaceLock);
+
+  if (!mGL) {
+    gfxCriticalNoteOnce
+        << "DMABufSurface::FenceSet() failed: missing GL context";
     return;
   }
 
-  MutexAutoLock lock(mSurfaceLock);
-  if (!mGL || !mGL->MakeCurrent()) {
-    MOZ_DIAGNOSTIC_ASSERT(mGL,
-                          "DMABufSurface::FenceSet(): missing GL context!");
-    return;
-  }
+  mGL->MakeCurrent();
+
   const auto& gle = gl::GLContextEGL::Cast(mGL);
   const auto& egl = gle->mEgl;
 
+  LOGDMABUF("DMABufSurface::FenceSet() UID %d", mUID);
+
   if (egl->IsExtensionSupported(EGLExtension::KHR_fence_sync) &&
       egl->IsExtensionSupported(EGLExtension::ANDROID_native_fence_sync)) {
-    FenceDeleteLocked(lock);
-
-    mSync = egl->fCreateSyncKHR(LOCAL_EGL_SYNC_NATIVE_FENCE_ANDROID, nullptr);
-    if (mSync) {
-      auto rawFd = egl->fDupNativeFenceFDANDROID(mSync);
+    if (EGLSyncKHR sync =
+            egl->fCreateSyncKHR(LOCAL_EGL_SYNC_NATIVE_FENCE_ANDROID, nullptr)) {
+      auto rawFd = egl->fDupNativeFenceFDANDROID(sync);
       mSyncFd = new gfx::FileHandleWrapper(UniqueFileHandle(rawFd));
+      egl->fDestroySync(sync);
       mGL->fFlush();
       return;
     }
@@ -576,8 +550,8 @@ void DMABufSurface::FenceSet() {
 }
 
 /* static */
-void DMABufSurface::FenceWait(RefPtr<gl::GLContext> aGL,
-                              RefPtr<gfx::FileHandleWrapper> aSyncFd) {
+void DMABufSurface::FenceWaitFd(RefPtr<gl::GLContext> aGL,
+                                RefPtr<gfx::FileHandleWrapper> aSyncFd) {
   const auto& gle = gl::GLContextEGL::Cast(aGL);
   const auto& egl = gle->mEgl;
   auto syncFd = aSyncFd->ClonePlatformHandle();
@@ -606,34 +580,32 @@ void DMABufSurface::FenceWait(RefPtr<gl::GLContext> aGL,
   (void)syncFd.release();
 
   egl->fClientWaitSync(sync, 0, LOCAL_EGL_FOREVER);
-  const EGLint waitErr = egl->mLib->fGetError();
-  if (waitErr != LOCAL_EGL_SUCCESS) {
-    gfxCriticalNoteOnce << "ClientWaitSync failed: " << FormatEGLError(waitErr);
-    egl->fDestroySync(sync);
-    return;
-  }
   egl->fDestroySync(sync);
 }
 
-void DMABufSurface::FenceWait() {
-  if (!HoldsTexture()) {
-    return;
-  }
-
+void DMABufSurface::FenceWait(mozilla::gl::GLContext* aGLContext) {
   RefPtr<gl::GLContext> gl;
   RefPtr<gfx::FileHandleWrapper> syncFd;
   {
     MutexAutoLock lock(mSurfaceLock);
-    if (!mGL || !mSyncFd) {
-      MOZ_DIAGNOSTIC_ASSERT(mGL,
-                            "DMABufSurface::FenceWait() missing GL context!");
+    if (!mSyncFd) {
       return;
     }
     gl = mGL;
+    // eglCreateSyncKHR() can use any GL context to sync and wait to finish.
+    if (!gl) {
+      gl = aGLContext;
+    }
+    if (!gl) {
+      gfxCriticalNoteOnce
+          << "DMABufSurface::FenceWait() failed: missing GL context";
+      return;
+    }
     syncFd = mSyncFd.forget();
   }
 
-  FenceWait(std::move(gl), std::move(syncFd));
+  LOGDMABUF("DMABufSurface::FenceWait() UID %d", mUID);
+  FenceWaitFd(std::move(gl), std::move(syncFd));
 }
 
 void DMABufSurface::SetSemaphoreFd(int aDuppedRawFd, bool aIsSyncFd) {
@@ -669,7 +641,7 @@ void DMABufSurface::MaybeSemaphoreWait(GLuint aGlTexture) {
     const auto& gle = gl::GLContextEGL::Cast(gl);
     const auto& egl = gle->mEgl;
     if (egl->IsExtensionSupported(EGLExtension::ANDROID_native_fence_sync)) {
-      FenceWait(gl, new gfx::FileHandleWrapper(std::move(fd)));
+      FenceWaitFd(gl, new gfx::FileHandleWrapper(std::move(fd)));
     }
     return;
   }
@@ -677,7 +649,7 @@ void DMABufSurface::MaybeSemaphoreWait(GLuint aGlTexture) {
   if (!gl->IsExtensionSupported(gl::GLContext::EXT_semaphore) ||
       !gl->IsExtensionSupported(gl::GLContext::EXT_semaphore_fd)) {
     MOZ_ASSERT_UNREACHABLE("unexpected to be called");
-    gfxCriticalNoteOnce << "EXT_semaphore_fd is not suppored";
+    gfxCriticalNoteOnce << "EXT_semaphore_fd is not supported";
     return;
   }
 
@@ -1201,7 +1173,7 @@ bool DMABufSurfaceRGBA::Serialize(
     offsets.AppendElement(mOffsets[i]);
   }
 
-  if (mSync && mSyncFd) {
+  if (mSyncFd) {
     fenceFDs.AppendElement(WrapNotNull(mSyncFd));
   }
 
@@ -1312,7 +1284,6 @@ bool DMABufSurfaceRGBA::HoldsTexture() { return mTexture || mEGLImage; }
 
 void DMABufSurfaceRGBA::ReleaseTextures() {
   LOGDMABUF("DMABufSurfaceRGBA::ReleaseTextures() UID %d\n", mUID);
-  FenceDelete();
 
   if (!HoldsTexture()) {
     return;
@@ -2154,7 +2125,7 @@ bool DMABufSurfaceYUV::Serialize(
     modifiers.AppendElement(mBufferModifiers[i]);
   }
 
-  if (mSync && mSyncFd) {
+  if (mSyncFd) {
     fenceFDs.AppendElement(WrapNotNull(mSyncFd));
   }
 
@@ -2393,9 +2364,6 @@ bool DMABufSurfaceYUV::HoldsTexture() {
 
 void DMABufSurfaceYUV::ReleaseTextures() {
   LOGDMABUF("DMABufSurfaceYUV::ReleaseTextures() UID %d", mUID);
-
-  FenceDelete();
-
   if (!HoldsTexture()) {
     return;
   }
