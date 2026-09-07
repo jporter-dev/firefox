@@ -98,6 +98,8 @@ export const ERRORS = Object.freeze({
    */
   from(error) {
     switch (error) {
+      case AUTH_ERRORS.NETWORK_ERROR:
+        return ERRORS.NETWORK;
       case AUTH_ERRORS.SERVER_ERROR:
         return ERRORS.CATASTROPHIC;
       case AUTH_ERRORS.REGION_UNAVAILABLE:
