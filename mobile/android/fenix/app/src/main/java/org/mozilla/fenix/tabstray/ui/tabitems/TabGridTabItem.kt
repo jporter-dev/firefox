@@ -58,6 +58,7 @@ import mozilla.components.ui.icons.R as iconsR
 import org.mozilla.fenix.R
 import org.mozilla.fenix.compose.Favicon
 import org.mozilla.fenix.compose.TabThumbnail
+import org.mozilla.fenix.compose.swipeToDismissFade
 import org.mozilla.fenix.tabstray.TabsTrayTestTag
 import org.mozilla.fenix.tabstray.browser.compose.TabItemInteractionState
 import org.mozilla.fenix.tabstray.data.TabsTrayItem
@@ -118,7 +119,7 @@ fun TabGridTabItem(
         onDismiss = onDismiss,
     ) {
         TabContent(
-            modifier = Modifier.fadeOnSwipeToDismiss(swipeToDismissBoxState),
+            modifier = Modifier.swipeToDismissFade(swipeToDismissBoxState),
             tab = tab,
             thumbnailSize = thumbnailSizePx,
             selectionState = selectionState,

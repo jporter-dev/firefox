@@ -89,6 +89,7 @@ import mozilla.components.compose.base.theme.Theme
 import mozilla.components.compose.base.theme.ThemedValue
 import mozilla.components.compose.base.theme.ThemedValueProvider
 import org.mozilla.fenix.R
+import org.mozilla.fenix.compose.rememberSwipeToDismissBoxState
 import org.mozilla.fenix.tabgroups.TabGroupCard
 import org.mozilla.fenix.tabgroups.TabGroupRow
 import org.mozilla.fenix.tabstray.TabsTrayTestTag
@@ -128,7 +129,6 @@ import org.mozilla.fenix.tabstray.ui.tabitems.TabListTabItem
 import org.mozilla.fenix.tabstray.ui.tabitems.TabsTrayItemClickHandler
 import org.mozilla.fenix.tabstray.ui.tabitems.TabsTrayItemSelectionState
 import org.mozilla.fenix.tabstray.ui.tabitems.gridItemAspectRatio
-import org.mozilla.fenix.tabstray.ui.tabitems.rememberTabSwipeToDismissBoxState
 import org.mozilla.fenix.tabstray.ui.tabitems.tabGridColumnCount
 import org.mozilla.fenix.tabstray.ui.tabitems.tabItemGroupListInteractionAnimation
 import org.mozilla.fenix.tabstray.ui.tabitems.tabListItemShapeStyling
@@ -941,7 +941,7 @@ private fun LazyGridItemScope.ReorderableTabGridItemContent(
     onDeleteTabGroupClick: (TabsTrayItem.TabGroup) -> Unit,
     onUngroupTabGroupClick: (TabsTrayItem.TabGroup) -> Unit,
 ) {
-    val swipeToDismissBoxState = rememberTabSwipeToDismissBoxState(tabId = tabsTrayItem.id)
+    val swipeToDismissBoxState = rememberSwipeToDismissBoxState(id = tabsTrayItem.id)
     val shouldClickListen = reorderState.draggingItemKey != tabsTrayItem.id
     val swipingActive by
         remember(swipeToDismissBoxState) {
@@ -1023,7 +1023,7 @@ private fun LazyGridItemScope.InteractableTabGridItemContent(
     itemInfo: CollectionItemInfo? = null,
     accessibilityActions: List<CustomAccessibilityAction> = emptyList(),
 ) {
-    val swipeToDismissBoxState = rememberTabSwipeToDismissBoxState(tabId = tabsTrayItem.id)
+    val swipeToDismissBoxState = rememberSwipeToDismissBoxState(id = tabsTrayItem.id)
     val shouldClickListen = reorderState.draggedItem.key != tabsTrayItem.id
     val swipingActive by
         remember(swipeToDismissBoxState) {
