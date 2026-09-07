@@ -15,7 +15,7 @@ add_task(async function focus() {
     window,
   });
   Assert.ok(gURLBar.hasAttribute("breakout"));
-  Assert.ok(gURLBar.hasAttribute("breakout-extend"));
+  Assert.ok(gURLBar.matches(":popover-open"));
 
   info("Close view by ESC");
   await UrlbarTestUtils.promisePopupClose(window, () => {
@@ -24,14 +24,14 @@ add_task(async function focus() {
   Assert.ok(!gURLBar.view.isOpen);
   Assert.ok(gURLBar.hasAttribute("focused"));
   Assert.ok(gURLBar.hasAttribute("breakout"));
-  Assert.ok(!gURLBar.hasAttribute("breakout-extend"));
+  Assert.ok(!gURLBar.matches(":popover-open"));
 
   info("Blur the focus from the urlbar");
   EventUtils.synthesizeKey("KEY_Escape");
   Assert.ok(!gURLBar.view.isOpen);
   Assert.ok(!gURLBar.hasAttribute("focused"));
   Assert.ok(gURLBar.hasAttribute("breakout"));
-  Assert.ok(!gURLBar.hasAttribute("breakout-extend"));
+  Assert.ok(!gURLBar.matches(":popover-open"));
 });
 
 add_task(async function empty_to_some() {
@@ -47,7 +47,7 @@ add_task(async function empty_to_some() {
   Assert.ok(gURLBar.view.isOpen);
   Assert.ok(gURLBar.hasAttribute("focused"));
   Assert.ok(gURLBar.hasAttribute("breakout"));
-  Assert.ok(gURLBar.hasAttribute("breakout-extend"));
+  Assert.ok(gURLBar.matches(":popover-open"));
 
   info("Open view with some results");
   let someProvider = new UrlbarTestUtils.TestProvider({
@@ -72,7 +72,7 @@ add_task(async function empty_to_some() {
     window,
   });
   Assert.ok(gURLBar.hasAttribute("breakout"));
-  Assert.ok(gURLBar.hasAttribute("breakout-extend"));
+  Assert.ok(gURLBar.matches(":popover-open"));
 
   manager.unregisterProvider(someProvider);
   await UrlbarTestUtils.promisePopupClose(window);
@@ -103,7 +103,7 @@ add_task(async function some_to_empty() {
     window,
   });
   Assert.ok(gURLBar.hasAttribute("breakout"));
-  Assert.ok(gURLBar.hasAttribute("breakout-extend"));
+  Assert.ok(gURLBar.matches(":popover-open"));
   manager.unregisterProvider(someProvider);
 
   info("Open view with empty results");
@@ -121,7 +121,7 @@ add_task(async function some_to_empty() {
   Assert.ok(gURLBar.view.isOpen);
   Assert.ok(gURLBar.hasAttribute("focused"));
   Assert.ok(gURLBar.hasAttribute("breakout"));
-  Assert.ok(gURLBar.hasAttribute("breakout-extend"));
+  Assert.ok(gURLBar.matches(":popover-open"));
 
   manager.unregisterProvider(emptyProvider);
   await UrlbarTestUtils.promisePopupClose(window);
@@ -147,7 +147,7 @@ add_task(async function oneoffs() {
   Assert.equal(UrlbarTestUtils.getResultCount(window), 0);
   Assert.ok(gURLBar.hasAttribute("breakout"));
   Assert.ok(gURLBar.hasAttribute("focused"));
-  Assert.ok(gURLBar.hasAttribute("breakout-extend"));
+  Assert.ok(gURLBar.matches(":popover-open"));
 
   manager.unregisterProvider(emptyProvider);
   await UrlbarTestUtils.promisePopupClose(window);

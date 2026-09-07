@@ -210,20 +210,11 @@ toolbar[inactive="true"] .urlbar,
     display: block;
 
     &:popover-open {
-      /* UrlbarInputBase names the anchor on the container. The area starts at
-         the container's border box, so an unextended element takes the
-         container's block padding to sit where it does in flow. */
+      /* UrlbarInputBase names the anchor on the container. */
       position-anchor: --urlbar-anchor;
       position-area: span-block-end center;
       inset-block-start: 0;
       width: 100%;
-
-      &:not([breakout-extend]) {
-        inset-block-start: var(--urlbar-container-padding-block);
-      }
-    }
-
-    &[breakout-extend] {
       margin-block-start: var(--urlbar-margin-block-start-breakout);
     }
   }
@@ -304,7 +295,7 @@ toolbar[inactive="true"] .urlbar,
     border: var(--urlbar-background-border-focused);
   }
 
-  .urlbar[breakout-extend] > & {
+  .urlbar:popover-open:where([open], :not([in-page])) > & {
     border: var(--urlbar-background-border-breakout);
     box-shadow: var(--urlbar-background-box-shadow-breakout);
     inset: calc(-1 * var(--urlbar-background-overhang-breakout));
@@ -312,7 +303,7 @@ toolbar[inactive="true"] .urlbar,
     border-start-end-radius: var(--urlbar-background-border-top-radius-breakout);
   }
 
-  :root[uidensity="compact"] .urlbar[breakout-extend]:not([open]) > & {
+  :root[uidensity="compact"] .urlbar:popover-open:not([open]) > & {
     box-shadow: var(--urlbar-background-box-shadow-breakout-compact);
   }
 
@@ -343,12 +334,12 @@ toolbar[inactive="true"] .urlbar,
     height: 100%;
   }
 
-  .urlbar[breakout][breakout-extend] > & {
+  .urlbar[breakout]:popover-open:where([open], :not([in-page])) > & {
     outline: var(--urlbar-input-container-outline-breakout);
     outline-offset: var(--urlbar-input-container-outline-offset-breakout);
   }
 
-  .urlbar[breakout][breakout-extend][focused] > & {
+  .urlbar[breakout][focused]:popover-open:where([open], :not([in-page])) > & {
     outline: var(--urlbar-input-container-outline-breakout-focused);
   }
 }
@@ -528,7 +519,7 @@ toolbar[inactive="true"] .urlbar,
     border: var(--urlbar-input-container-border);
   }
 
-  .urlbar[breakout][breakout-extend] {
+  .urlbar[breakout]:popover-open:where([open], :not([in-page])) {
     width: calc(100% + 2 * var(--urlbar-margin-inline));
 
     > .urlbar-input-container {

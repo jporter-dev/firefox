@@ -3174,7 +3174,7 @@ ${
   }
 
   startLayoutExtend() {
-    if (!this.#allowBreakout || this.hasAttribute("breakout-extend")) {
+    if (!this.#allowBreakout || this.matches(":popover-open")) {
       // Do not expand if the Urlbar does not support being expanded or it is
       // already expanded.
       return;
@@ -3184,7 +3184,6 @@ ${
       return;
     }
 
-    this.toggleAttribute("breakout-extend", true);
     if (!this.hasAttribute("in-page")) {
       this.showPopover();
       this.#fixAddressbarSearchbarOrder();
@@ -3205,7 +3204,7 @@ ${
     // If reduce motion is enabled, we want to collapse the Urlbar here so the
     // user sees only sees two states: not expanded, and expanded with the view
     // open.
-    if (!this.hasAttribute("breakout-extend")) {
+    if (!this.matches(":popover-open")) {
       return;
     }
 
@@ -3216,7 +3215,6 @@ ${
     if (!this.hasAttribute("in-page")) {
       this.hidePopover();
     }
-    this.toggleAttribute("breakout-extend", false);
   }
 
   /**
