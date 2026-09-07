@@ -850,6 +850,19 @@ bool DMABufSurfaceRGBA::OpenFileDescriptorForPlane(
 bool DMABufSurfaceRGBA::Create(mozilla::gl::GLContext* aGLContext, int aWidth,
                                int aHeight, int aDMABufSurfaceFlags,
                                RefPtr<DRMFormat> aFormat) {
+  if (!aFormat) {
+    mFOURCCFormat = aDMABufSurfaceFlags & DMABUF_ALPHA ? GBM_FORMAT_ARGB8888
+                                                       : GBM_FORMAT_XRGB8888;
+    aFormat = GetGlobalDMABufFormats()->GetDRMFormat(mFOURCCFormat);
+    if (!aFormat) {
+      LOGDMABUF("DMABufSurfaceRGBA::Create(): Missing drm format 0x%x!",
+                mFOURCCFormat);
+      return false;
+    }
+  } else {
+    mFOURCCFormat = aFormat->GetFormat();
+  }
+
   bool useGLSnapshot = gfx::gfxVars::UseDMABufSurfaceExport() && !aGLContext;
   if (useGLSnapshot) {
     LOGDMAVERBOSES("DMABufSurfaceRGBA::Create(): use GL snapshot.");
@@ -868,7 +881,7 @@ bool DMABufSurfaceRGBA::Create(mozilla::gl::GLContext* aGLContext, int aWidth,
           "UseDmaBufExportExtension!");
       return false;
     }
-    return CreateExport(context, aWidth, aHeight, aDMABufSurfaceFlags);
+    return CreateExport(context, aWidth, aHeight, aDMABufSurfaceFlags, aFormat);
   }
 
   if (gfx::gfxVars::UseDMABufSurfaceExport()) {
@@ -878,19 +891,10 @@ bool DMABufSurfaceRGBA::Create(mozilla::gl::GLContext* aGLContext, int aWidth,
           "UseDmaBufExportExtension!");
       return false;
     }
-    return CreateExport(aGLContext, aWidth, aHeight, aDMABufSurfaceFlags);
+    return CreateExport(aGLContext, aWidth, aHeight, aDMABufSurfaceFlags,
+                        aFormat);
   }
 
-  if (!aFormat) {
-    mFOURCCFormat = aDMABufSurfaceFlags & DMABUF_ALPHA ? GBM_FORMAT_ARGB8888
-                                                       : GBM_FORMAT_XRGB8888;
-    aFormat = GetGlobalDMABufFormats()->GetDRMFormat(mFOURCCFormat);
-    if (!aFormat) {
-      LOGDMABUF("DMABufSurfaceRGBA::Create(): Missing drm format 0x%x!",
-                mFOURCCFormat);
-      return false;
-    }
-  }
   return CreateGBM(aWidth, aHeight, aDMABufSurfaceFlags, aFormat);
 }
 
@@ -971,16 +975,20 @@ bool DMABufSurfaceRGBA::CreateGBM(int aWidth, int aHeight,
   return true;
 }
 
-bool DMABufSurfaceRGBA::CreateExport(mozilla::gl::GLContext* aGLContext,
-                                     int aWidth, int aHeight,
-                                     int aDMABufSurfaceFlags) {
-  LOGDMABUF("DMABufSurfaceRGBA::CreateExport() UID %d size %d x %d flags %d",
-            mUID, aWidth, aHeight, aDMABufSurfaceFlags);
+bool DMABufSurfaceRGBA::CreateExport(
+    mozilla::gl::GLContext* aGLContext, int aWidth, int aHeight,
+    int aDMABufSurfaceFlags, const DRMFormat* aFormat) {
 
   MOZ_ASSERT(aGLContext);
   MOZ_DIAGNOSTIC_ASSERT(!mTexture && !mEGLImage, "Already exported??");
   MOZ_DIAGNOSTIC_ASSERT(!mGL || mGL == aGLContext);
   MOZ_DIAGNOSTIC_ASSERT(aGLContext);
+  MOZ_DIAGNOSTIC_ASSERT(aFormat);
+
+  LOGDMABUF(
+      "DMABufSurfaceRGBA::CreateExport() UID %d size %d x %d flags %d format "
+      "0x%x",
+      mUID, aWidth, aHeight, aDMABufSurfaceFlags, aFormat->GetFormat());
 
   mGL = aGLContext;
   auto releaseTextures = MakeScopeExit([&] { ReleaseTextures(); });
@@ -997,8 +1005,12 @@ bool DMABufSurfaceRGBA::CreateExport(mozilla::gl::GLContext* aGLContext,
   const ScopedBindTexture savedTex(mGL, mTexture);
 
   GLContext::LocalErrorScope errorScope(*mGL);
+  GLenum type = LOCAL_GL_UNSIGNED_BYTE;
+  if (aFormat->GetFormat() == GBM_FORMAT_ABGR2101010) {
+    type = LOCAL_GL_UNSIGNED_INT_2_10_10_10_REV;
+  }
   mGL->fTexImage2D(LOCAL_GL_TEXTURE_2D, 0, LOCAL_GL_RGBA, mWidth, mHeight, 0,
-                   LOCAL_GL_RGBA, LOCAL_GL_UNSIGNED_BYTE, nullptr);
+                   LOCAL_GL_RGBA, type, nullptr);
   const auto err = errorScope.GetError();
   if (err) {
     LOGDMABUF("  TexImage2D failed %x error %s", err,
@@ -1543,7 +1555,8 @@ bool DMABufSurfaceRGBA::HasAlpha() {
   return mFOURCCFormat == GBM_FORMAT_ARGB8888 ||
          mFOURCCFormat == GBM_FORMAT_ABGR8888 ||
          mFOURCCFormat == GBM_FORMAT_RGBA8888 ||
-         mFOURCCFormat == GBM_FORMAT_BGRA8888;
+         mFOURCCFormat == GBM_FORMAT_BGRA8888 ||
+         mFOURCCFormat == GBM_FORMAT_ABGR2101010;
 }
 
 gfx::SurfaceFormat DMABufSurfaceRGBA::GetFormat() {
@@ -1569,6 +1582,9 @@ gfx::SurfaceFormat DMABufSurfaceRGBA::GetFormat() {
       gfxCriticalError() << "DMABufSurfaceRGBA::GetFormat(): Unsupported "
                             "format GBM_FORMAT_RGBX8888";
       return gfx::SurfaceFormat::UNKNOWN;
+
+    case GBM_FORMAT_ABGR2101010:
+      return gfx::SurfaceFormat::R10G10B10A2_UINT32;
 
     default:
       gfxCriticalError() << "DMABufSurfaceRGBA::GetFormat(): Unknown format"

@@ -425,7 +425,8 @@ class DMABufSurfaceRGBA final : public DMABufSurface {
   bool CreateGBM(int aWidth, int aHeight, int aDMABufSurfaceFlags,
                  RefPtr<mozilla::widget::DRMFormat> aFormat);
   bool CreateExport(mozilla::gl::GLContext* aGLContext, int aWidth, int aHeight,
-                    int aDMABufSurfaceFlags);
+                    int aDMABufSurfaceFlags,
+                    const mozilla::widget::DRMFormat* aFormat);
 
   bool Create(const mozilla::layers::SurfaceDescriptor& aDesc) override;
   bool Create(RefPtr<mozilla::gfx::FileHandleWrapper>&& aFd,
