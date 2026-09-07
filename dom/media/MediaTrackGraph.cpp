@@ -4491,7 +4491,14 @@ nsresult MediaTrackGraphImpl::Dispatch(
   return QueueMessageForTailDispatch(event.forget());
 }
 
-bool MediaTrackGraphImpl::IsCurrentThreadIn() const { return OnGraphThread(); }
+bool MediaTrackGraphImpl::IsCurrentThreadIn() const {
+  // While the graph is not running, its state is owned by the main thread.
+  // Note that this must not use mDriver unconditionally, as OnGraphThread()
+  // does: mDriver is cleared on the main thread while consumers of the graph
+  // as an event target, e.g. an ipc::MessageChannel opened on the graph
+  // thread, may still be tearing down.
+  return OnGraphThreadOrNotRunning();
+}
 
 TaskDispatcher& MediaTrackGraphImpl::TailDispatcher() {
   MOZ_ASSERT(OnGraphThread());
