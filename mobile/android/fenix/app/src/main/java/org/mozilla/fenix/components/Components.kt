@@ -26,6 +26,7 @@ import mozilla.components.feature.listentopage.ListenState
 import mozilla.components.feature.listentopage.ListenStore
 import mozilla.components.feature.listentopage.content.ContentProvider
 import mozilla.components.feature.listentopage.listenReducer
+import mozilla.components.feature.listentopage.playback.DirectoryAudioFileCache
 import mozilla.components.feature.listentopage.synthesis.SpeechSynthesizer
 import mozilla.components.feature.summarize.PageSummaryFeature
 import mozilla.components.feature.summarize.settings.SummarizationSettings
@@ -494,7 +495,11 @@ class Components(
                                 pageContentExtractor = pageExtractor,
                                 pageMetadataExtractor = pageExtractor,
                             ),
-                        synthesizer = SpeechSynthesizer.android(context),
+                        synthesizer =
+                            SpeechSynthesizer.android(
+                                context = context,
+                                audioCache = DirectoryAudioFileCache(context),
+                            ),
                         scope = applicationScope,
                     )
                 ),
