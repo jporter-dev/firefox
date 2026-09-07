@@ -94,11 +94,43 @@ of April 2023.
     "flickering" by the user. As a result, we try to limit the number of times
     the view needs to update.
 
-    :::{figure} assets/lifetime/lifetime.png
+    ```{mermaid}
     :align: center
-    :alt: |-
-    :  A chart with boxes representing the various components of the
-    :  address bar. An arrow moves between the boxes to illustrate a query
-    :  moving through the components.
-    :scale: 80%
-    :::
+    :caption: UrlbarQueryContext lifetime
+
+    ---
+    config:
+      flowchart:
+        wrappingWidth: 400
+    ---
+    %% wrappingWidth works around https://github.com/mermaid-js/mermaid/issues/5785,
+    %% which makes Firefox drop labels containing long words.
+    flowchart TD
+        dom([DOM])
+
+        subgraph uiModules ["UI modules"]
+            input[UrlbarInput]
+            child[UrlbarChildController]
+            view[UrlbarView]
+        end
+
+        subgraph parentSide ["Parent process"]
+            parent[UrlbarParentController]
+            manager[UrlbarProvidersManager]
+            providers["Providers<br/>UrlbarProviderPlaces<br/>UrlbarProviderSearchSuggestions<br/>UrlbarProviderTopSites<br/>..."]
+            muxer[UrlbarMuxer]
+        end
+
+        dom -- "1: text input" --> input
+        input -- "2: UrlbarQueryContext" --> child
+        child -- "2: UrlbarQueryContext" --> parent
+        parent -- "3: fetch results" --> manager
+        manager -- "4, 5: isActive, startQuery" --> providers
+        providers -. "6, 7: UrlbarResults" .-> manager
+        manager -- "8: sort" --> muxer
+        muxer -. "9: sorted results" .-> manager
+        manager -. "10: results ready" .-> parent
+        parent -. "11: notification" .-> child
+        child -. "11: notification" .-> view
+        view -. "result rows" .-> dom
+    ```
