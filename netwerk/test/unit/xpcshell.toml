@@ -769,6 +769,9 @@ skip-if = [
 
 ["test_gre_resources.js"]
 
+["test_h2_unclean_shutdown_retry.js"]
+prefs = ["network.http.speculative-parallel-limit=0"]
+
 ["test_h2proxy_connection_limit.js"]
 run-sequentially = ["true"] # node server exceptions dont replay well
 
