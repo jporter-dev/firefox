@@ -529,9 +529,18 @@ def build_src(install_dir, host, targets, patches):
 
         # x.py install does everything we need for us.
         # If you're running into issues, consider using `-vv` to debug it.
-        command = ["python3", "x.py", "install", "-v", "--host", host, "--build", host]
-        for target in targets:
-            command.extend(["--target", target])
+        command = [
+            "python3",
+            "x.py",
+            "install",
+            "-v",
+            "--host",
+            host,
+            "--build",
+            host,
+            "--target",
+            ",".join(targets),
+        ]
 
         subprocess.check_call(command, stderr=subprocess.STDOUT, env=env, cwd=rust_dir)
 
