@@ -801,12 +801,6 @@ module.exports = function (config) {
               functions: 0,
               branches: 0,
             },
-            "content-src/components/Widgets/useMouseDnD.jsx": {
-              statements: 0,
-              lines: 0,
-              functions: 0,
-              branches: 0,
-            },
             // Covered by test/jest/content-src/components/Widgets/useCountUp.test.jsx
             "content-src/components/Widgets/useCountUp.jsx": {
               statements: 0,
@@ -865,6 +859,12 @@ module.exports = function (config) {
             },
             // Coverage for this module lives in Jest (test/jest/content-src/lib/panel-list-utils.test.jsx)
             "content-src/lib/panel-list-utils.jsx": {
+              statements: 0,
+              lines: 0,
+              functions: 0,
+              branches: 0,
+            },
+            "content-src/lib/usePointerReorder.jsx": {
               statements: 0,
               lines: 0,
               functions: 0,

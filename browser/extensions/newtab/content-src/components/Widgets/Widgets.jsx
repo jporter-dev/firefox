@@ -44,7 +44,6 @@ import { WIDGET_ROW_COMPONENTS } from "./WidgetsComponentRegistry.jsx";
 import { WidgetWrapper } from "./WidgetWrapper";
 import { ErrorBoundary } from "content-src/components/ErrorBoundary/ErrorBoundary";
 import { useWidgetDnD } from "./useWidgetDnD.jsx";
-import { useReorderFlip } from "content-src/lib/useReorderFlip.jsx";
 import { usePageVisible } from "./usePageVisible.jsx";
 
 const CONTAINER_ACTION_TYPES = {
@@ -290,33 +289,13 @@ function Widgets() {
 
   const {
     effectiveOrder,
-    draggedId,
-    previewOrder,
-    previewOrderMap,
-    handleDragStart,
-    handleDragOver,
-    handleDrop,
-    handleDragEnd,
-    handleMouseDown,
+    containerRef: widgetsContainerRef,
+    getItemProps,
   } = useWidgetDnD({
     widgetOrder,
     prefs,
     dispatch,
-  });
-
-  // Drives the FLIP reorder animation off the actual visual id sequence: the
-  // live preview order while dragging, otherwise the committed order. Keying
-  // off the sequence keeps the key stable across the drop/dragend re-renders so
-  // the last move's animation isn't cancelled. The dragged tile is excluded so
-  // it tracks the cursor instantly instead of being flung by its own (largest)
-  // inverse transform.
-  const flipKey = (previewOrder || effectiveOrder).join(",");
-  const widgetsContainerRef = useReorderFlip({
-    orderKey: flipKey,
-    resetKey: draggedId,
     enabled: novaEnabled,
-    childSelector: "[data-widget-id]",
-    skipSelector: ".is-dragging",
   });
 
   const anyWidgetInRow =
@@ -399,7 +378,7 @@ function Widgets() {
       ROW_TOGGLE_HEIGHT_ANIMATION_FALLBACK_MS
     );
     return finishRowHeightAnimation;
-    // widgetsContainerRef is a stable ref from useReorderFlip; listed to satisfy
+    // widgetsContainerRef is a stable ref from useWidgetDnD; listed to satisfy
     // exhaustive-deps, its identity never changes so only rowExpanded reruns this.
   }, [rowExpanded, sectionCollapsed, widgetsContainerRef]);
 
@@ -904,28 +883,16 @@ function Widgets() {
               const wrapperClassName = [
                 size && `${size}-widget`,
                 "widget-draggable",
-                draggedId === id && "is-dragging",
               ]
                 .filter(Boolean)
                 .join(" ");
-              const dragProps = {
-                style: previewOrderMap
-                  ? { order: previewOrderMap[id] }
-                  : undefined,
-                draggable: true,
-                onDragStart: e => handleDragStart(e, id),
-                onDragOverCapture: handleDragOver,
-                onDrop: handleDrop,
-                onDragEnd: handleDragEnd,
-                onMouseDown: handleMouseDown,
-              };
               return (
                 <WidgetWrapper
                   key={id}
                   className={wrapperClassName}
                   data-widget-id={id}
                   {...hiddenAttrs}
-                  {...dragProps}
+                  {...getItemProps(id)}
                 >
                   {/* Contain a crash to this widget's cell so one failing
                       widget can't tear down the whole widgets section. */}
