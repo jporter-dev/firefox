@@ -503,6 +503,7 @@ ${
     }
 
     this.updateLayoutExtend();
+    this.#updateInPagePopover();
   }
 
   connectedCallback() {
@@ -3184,9 +3185,6 @@ ${
     }
 
     this.toggleAttribute("breakout-extend", true);
-    if (this.hasAttribute("in-page")) {
-      this.showPopover();
-    }
 
     // Enable the animation only after the first extend call to ensure it
     // doesn't run when opening a new window.
@@ -3212,9 +3210,22 @@ ${
     }
 
     this.toggleAttribute("breakout-extend", false);
-    if (this.hasAttribute("in-page")) {
-      this.hidePopover();
+  }
+
+  /**
+   * Opens an in-page element's popover while the user is interacting with it --
+   * focused, or with the view open -- and closes it otherwise, so that a modal
+   * dialog the page opens paints over it. Entering and leaving the top layer
+   * reconstructs the input's frame, which drops the editor's undo history
+   * (bug 2017065), so both transitions stay outside the interaction.
+   */
+  #updateInPagePopover() {
+    if (!this.hasAttribute("in-page")) {
+      return;
     }
+    this.togglePopover(
+      this.hasAttribute("breakout") && (this.focused || this.view.isOpen)
+    );
   }
 
   updateLayoutExtend() {
@@ -3578,11 +3589,11 @@ ${
         // document, which would anchor the address bar to the search bar's.
         this.parentNode.style.setProperty("anchor-scope", ANCHOR_NAME);
         // A toolbar element is a popover for as long as it has the `breakout`
-        // attribute; an in-page one only while it also has `breakout-extend`,
-        // so that a modal dialog the page opens covers the closed element: the
-        // top layer paints in the order elements enter it, which z-index cannot
-        // reorder.
-        if (!this.hasAttribute("in-page")) {
+        // attribute; an in-page one only while the user is interacting with it,
+        // per #updateInPagePopover.
+        if (this.hasAttribute("in-page")) {
+          this.#updateInPagePopover();
+        } else {
           this.showPopover();
           this.#fixAddressbarSearchbarOrder();
         }
@@ -5423,6 +5434,7 @@ ${
     if (!UrlbarPrefs.get("ui.popup.disable_autohide")) {
       this.view.close();
     }
+    this.#updateInPagePopover();
 
     // We may have hidden popup notifications, show them again if necessary.
     if (
@@ -5508,6 +5520,7 @@ ${
     if (!this._hideFocus) {
       this.toggleAttribute("focused", true);
     }
+    this.#updateInPagePopover();
 
     // If the value was trimmed, check whether we should untrim it.
     // This is necessary when a protocol was typed, but the whole url has
