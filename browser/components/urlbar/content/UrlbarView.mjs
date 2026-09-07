@@ -1731,6 +1731,8 @@ export class UrlbarView {
    *     Maps element dataset keys to values. Values should be strings with the
    *     following exceptions: `undefined` is ignored, and `null` causes the key
    *     to be removed from the dataset.
+   *   {object} style
+   *     Maps CSS property names to values.
    *   {Array} classList
    *     An array of CSS classes to set on the element. If this is defined, the
    *     element's previous classes will be cleared first!
@@ -1761,6 +1763,26 @@ export class UrlbarView {
           element.setAttribute(key, this.#getBlobUrlForResult(result, value));
         } else {
           element.setAttribute(key, value);
+        }
+      }
+    }
+
+    if (update.style) {
+      for (let [styleName, value] of Object.entries(update.style)) {
+        if (value === undefined) {
+          continue;
+        }
+        if (styleName.includes("-")) {
+          // Expect hyphen-case. e.g. "background-image", "--a-variable".
+          if (value === null) {
+            element.style.removeProperty(styleName);
+          } else {
+            element.style.setProperty(styleName, value);
+          }
+        } else {
+          // Expect camel-case. e.g. "backgroundImage"
+          // NOTE: If want to define the variable, please use hyphen-case.
+          element.style[styleName] = value === null ? "" : value;
         }
       }
     }
@@ -2817,18 +2839,6 @@ export class UrlbarView {
       }
       let node = item.querySelector(`#${item.id}-${nodeName}`);
       this.#updateElementForDynamicType(node, update, item, result);
-      if (update.style) {
-        for (let [styleName, value] of Object.entries(update.style)) {
-          if (styleName.includes("-")) {
-            // Expect hyphen-case. e.g. "background-image", "--a-variable".
-            node.style.setProperty(styleName, value);
-          } else {
-            // Expect camel-case. e.g. "backgroundImage"
-            // NOTE: If want to define the variable, please use hyphen-case.
-            node.style[styleName] = value;
-          }
-        }
-      }
       if (update.l10n) {
         this.#l10nCache.setElementL10n(node, update.l10n);
       } else if (update.hasOwnProperty("textContent")) {
