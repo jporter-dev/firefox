@@ -150,7 +150,7 @@ std::string Model::transcribe_16k(const std::vector<float>& pcm16k,
     if (sub_tile > 0) {
         MelBatch mb1;
         mb1.B = 1; mb1.n_mels = n_mels; mb1.T_max = T; mb1.valid_T = { T };
-        mb1.data = feats;   // feats is [n_mels,T] = the B=1 batch buffer
+        mb1.data = std::move(feats);   // feats is [n_mels,T] = the B=1 batch buffer
         std::vector<std::vector<float>> eo; std::vector<int> vT;
         int dm1 = 0, To1 = 0;
         encoder.forward_batch_tiled(mb1, eo, dm1, To1, vT, sub_tile);
@@ -402,7 +402,7 @@ Transcription Model::transcribe_16k_with_timestamps(
     if (sub_tile > 0) {
         MelBatch mb1;
         mb1.B = 1; mb1.n_mels = n_mels; mb1.T_max = T; mb1.valid_T = { T };
-        mb1.data = feats;   // feats is [n_mels,T] = the B=1 batch buffer
+        mb1.data = std::move(feats);   // feats is [n_mels,T] = the B=1 batch buffer
         std::vector<std::vector<float>> eo; std::vector<int> vT;
         int dm1 = 0, To1 = 0;
         encoder.forward_batch_tiled(mb1, eo, dm1, To1, vT, sub_tile);

@@ -40,3 +40,4 @@ vendoring:
     - parakeet-no-drwav.patch # drop the vendored dr_wav.h dependency (unused: Firefox only feeds PCM)
     - parakeet-stream-words.patch # typed per-word drain (timing + confidence)
     - parakeet-no-exceptions.patch # include moz-overrides.h, to build with -fno-exceptions
+    - parakeet-move-mel-batch.patch # move, don't copy, the mel buffer into the 1-item MelBatch
