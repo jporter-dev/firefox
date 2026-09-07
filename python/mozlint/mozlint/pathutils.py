@@ -2,6 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+import importlib.util
 import os
 import sys
 
@@ -237,7 +238,7 @@ def filterpaths(
     )
 
 
-def findobject(path):
+def findobject(path, definition):
     """
     Find a Python object given a path of the form <modulepath>:<objectpath>.
     Conceptually equivalent to
@@ -245,17 +246,46 @@ def findobject(path):
         def find_object(modulepath, objectpath):
             import <modulepath> as mod
             return mod.<objectpath>
+
+    except that <modulepath> is loaded from the file it names next to the
+    linter definition, so a module of the same name elsewhere on `sys.path`
+    or already in `sys.modules` is never picked up.
     """
     if path.count(":") != 1:
         raise ValueError(f'python path {path!r} does not have the form "module:object"')
 
     modulepath, objectpath = path.split(":")
-    obj = __import__(modulepath)
-    for a in modulepath.split(".")[1:]:
-        obj = getattr(obj, a)
+    obj = _load_module(modulepath, os.path.dirname(definition))
     for a in objectpath.split("."):
         obj = getattr(obj, a)
     return obj
+
+
+def _load_module(modulepath, root):
+    name = f"mozlint.linters.{modulepath}"
+    if name in sys.modules:
+        return sys.modules[name]
+
+    base = os.path.join(root, *modulepath.split("."))
+    location = f"{base}.py"
+    search_locations = None
+    if not os.path.isfile(location):
+        location = os.path.join(base, "__init__.py")
+        search_locations = [base]
+    if not os.path.isfile(location):
+        raise ModuleNotFoundError(f"No module named {modulepath!r} under {root}")
+
+    spec = importlib.util.spec_from_file_location(
+        name, location, submodule_search_locations=search_locations
+    )
+    module = importlib.util.module_from_spec(spec)
+    sys.modules[name] = module
+    try:
+        spec.loader.exec_module(module)
+    except BaseException:
+        del sys.modules[name]
+        raise
+    return module
 
 
 def ancestors(path):
