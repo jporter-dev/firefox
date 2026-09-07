@@ -17350,8 +17350,8 @@
   value: false
   mirror: always
 
-# Replace PDFs embedded with an object/embed element by a page offering to open
-# them, when the viewer is disabled. That page is only packaged on desktop, see
+# Show an open-PDF fallback for PDF loads from object, embed, frame, and iframe
+# elements when the built-in viewer is disabled. Desktop only; see
 # toolkit/components/pdfjs/jar.mn.
 - name: pdfjs.embedFallback
   type: bool

@@ -77,9 +77,8 @@ export function StreamConverterFactory() {
   if (!lazy.pdfjsDisabled) {
     return new lazy.PdfStreamConverter();
   }
-  // Even when the viewer is disabled, a converter is needed to display a
-  // fallback page in object/embed elements. That page is only packaged on
-  // desktop, see toolkit/components/pdfjs/jar.mn.
+  // The embedded-PDF fallback is desktop-only; see
+  // toolkit/components/pdfjs/jar.mn.
   if (AppConstants.platform !== "android" && lazy.embedFallbackEnabled) {
     return new lazy.PdfEmbedFallbackStreamConverter();
   }
