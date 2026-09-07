@@ -102,10 +102,10 @@
  * optionally be replaced with inline definitions when Proton is removed.
  * Naming conventions:
  *
- * - "breakout" - when `breakout-active` is set and *not* focused
- * - "breakout-focused" - when `breakout-active` is set and focused
- * - "focused" - when focused and `breakout-active` is *not* set
- * - none of the above - when `breakout-active` is not set and not focused
+ * - "breakout" - when the popover is open and *not* focused
+ * - "breakout-focused" - when the popover is open and focused
+ * - "focused" - when focused and the popover is *not* open
+ * - none of the above - when the popover is not open and not focused
  */
 .urlbar,
 #searchbar {
@@ -183,9 +183,9 @@ toolbar[inactive="true"] .urlbar,
   padding-block: var(--urlbar-container-padding-block);
   margin-inline: var(--urlbar-margin-inline);
 
-  &[breakout] {
-    min-height: var(--urlbar-container-height);
-  }
+  /* The bar measures itself into this and clears it when it can't break out,
+     so the container keeps its height while the bar is in the top layer. */
+  min-height: var(--urlbar-container-height);
 }
 
 .urlbar {
@@ -206,24 +206,21 @@ toolbar[inactive="true"] .urlbar,
   color: initial;
   background-color: initial;
 
-  &[breakout] {
+  &:popover-open {
     display: block;
-
-    &:popover-open {
-      /* UrlbarInputBase names the anchor on the container. */
-      position-anchor: --urlbar-anchor;
-      position-area: span-block-end center;
-      inset-block-start: 0;
-      width: 100%;
-      margin-block-start: var(--urlbar-margin-block-start-breakout);
-    }
+    /* UrlbarInputBase names the anchor on the container. */
+    position-anchor: --urlbar-anchor;
+    position-area: span-block-end center;
+    inset-block-start: 0;
+    width: 100%;
+    margin-block-start: var(--urlbar-margin-block-start-breakout);
   }
 
   /* In a page the viewport clips the top layer, where a chrome panel may extend
      past the window, so the element takes the space below the input and scrolls
      within it, bounded by a screenful so a long page doesn't give it one and by
      the room the background needs past the border box. */
-  &[in-page][breakout]:popover-open {
+  &[in-page]:popover-open {
     max-height: min(calc(100% - var(--urlbar-background-overhang-breakout)), 100vh);
     display: flex;
     flex-direction: column;
@@ -271,10 +268,6 @@ toolbar[inactive="true"] .urlbar,
   --urlbar-input-container-padding: 10px;
   --urlbar-basic-component-size: calc(var(--urlbar-height) - 2 * var(--urlbar-input-container-padding));
   --urlbarview-border-radius: calc(var(--urlbar-height) / 2);
-
-  &[breakout] {
-    width: 100%;
-  }
 }
 
 .urlbar-background {
@@ -329,17 +322,17 @@ toolbar[inactive="true"] .urlbar,
   border-radius: var(--urlbar-border-radius);
   overflow: clip;
 
-  .urlbar[breakout] > & {
+  .urlbar:popover-open > & {
     width: 100%;
     height: 100%;
   }
 
-  .urlbar[breakout]:popover-open:where([open], :not([in-page])) > & {
+  .urlbar:popover-open:where([open], :not([in-page])) > & {
     outline: var(--urlbar-input-container-outline-breakout);
     outline-offset: var(--urlbar-input-container-outline-offset-breakout);
   }
 
-  .urlbar[breakout][focused]:popover-open:where([open], :not([in-page])) > & {
+  .urlbar[focused]:popover-open:where([open], :not([in-page])) > & {
     outline: var(--urlbar-input-container-outline-breakout-focused);
   }
 }
@@ -519,7 +512,7 @@ toolbar[inactive="true"] .urlbar,
     border: var(--urlbar-input-container-border);
   }
 
-  .urlbar[breakout]:popover-open:where([open], :not([in-page])) {
+  .urlbar:popover-open:where([open], :not([in-page])) {
     width: calc(100% + 2 * var(--urlbar-margin-inline));
 
     > .urlbar-input-container {

@@ -3174,9 +3174,13 @@ ${
   }
 
   startLayoutExtend() {
-    if (!this.#allowBreakout || this.matches(":popover-open")) {
-      // Do not expand if the Urlbar does not support being expanded or it is
-      // already expanded.
+    if (
+      !this.#allowBreakout ||
+      this.#breakoutBlockerCount ||
+      this.matches(":popover-open")
+    ) {
+      // Do not expand if the Urlbar does not support being expanded, is
+      // blocked from expanding, or is already expanded.
       return;
     }
 
@@ -3229,7 +3233,8 @@ ${
       return;
     }
     this.togglePopover(
-      this.hasAttribute("breakout") && (this.focused || this.view.isOpen)
+      !!this.parentNode.style.getPropertyValue("--urlbar-container-height") &&
+        (this.focused || this.view.isOpen)
     );
   }
 
@@ -3535,13 +3540,10 @@ ${
   }
 
   #stopBreakout() {
-    this.removeAttribute("breakout");
-    this.parentNode.removeAttribute("breakout");
-    try {
+    if (this.matches(":popover-open")) {
       this.hidePopover();
-    } catch (ex) {
-      // No big deal if not a popover already.
     }
+    this.parentNode.style.removeProperty("--urlbar-container-height");
     this.parentNode.style.removeProperty("anchor-name");
     this.parentNode.style.removeProperty("anchor-scope");
     this._layoutBreakoutUpdateKey = {};
@@ -3577,26 +3579,25 @@ ${
           return;
         }
 
-        this.parentNode.style.setProperty(
-          "--urlbar-container-height",
-          px(getBoundsWithoutFlushing(this.parentNode).height)
-        );
-
         if (this.#breakoutBlockerCount) {
           return;
         }
 
-        this.setAttribute("breakout", "true");
-        this.parentNode.setAttribute("breakout", "true");
+        this.parentNode.style.setProperty(
+          "--urlbar-container-height",
+          px(getBoundsWithoutFlushing(this.parentNode).height)
+        );
         this.parentNode.style.setProperty("anchor-name", ANCHOR_NAME);
         // Every input gives its container the same name, so scope it there too:
         // an unscoped name resolves to whichever container comes last in the
         // document, which would anchor the address bar to the search bar's.
         this.parentNode.style.setProperty("anchor-scope", ANCHOR_NAME);
-        // #updateInPagePopover requires `breakout`, so an already-focused
-        // input enters the top layer here.
         if (this.hasAttribute("in-page")) {
+          // An input focused before the anchoring landed enters the top layer
+          // here.
           this.#updateInPagePopover();
+        } else {
+          this.updateLayoutExtend();
         }
 
         resolve();

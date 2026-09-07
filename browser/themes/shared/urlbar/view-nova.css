@@ -107,7 +107,7 @@
   text-shadow: none;
   overflow: clip;
 
-  .urlbar[breakout][open] > & {
+  .urlbar[open] > & {
     display: flex;
     flex-direction: column;
   }

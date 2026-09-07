@@ -94,7 +94,7 @@
   margin-inline: var(--urlbarView-results-padding);
   width: calc(100% - 2 * var(--urlbarView-results-padding));
 
-  .urlbar[breakout][open] > & {
+  .urlbar[open] > & {
     display: flex;
     flex-direction: column;
   }
