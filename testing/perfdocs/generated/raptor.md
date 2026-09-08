@@ -361,6 +361,7 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
 * **expected**: pass
 * **expose browser profiler**: true
 * **expose chrome trace**: true
+* **fetch path**: pgo-extended-corpus/JetStream
 * **gecko profile interval**: 1
 * **link searchfox**: {searchfox}`testing/raptor/raptor/tests/benchmarks/jetstream3-desktop.toml#17`
 * **lower is better**: false
@@ -676,6 +677,7 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
 * **apps**: chrome-m, cstm-car-m, fenix
 * **expected**: pass
 * **expose browser profiler**: true
+* **fetch path**: pgo-extended-corpus/JetStream
 * **gecko profile interval**: 1
 * **link searchfox**: {searchfox}`testing/raptor/raptor/tests/benchmarks/jetstream3-mobile.toml#22`
 * **lower is better**: false
@@ -1448,6 +1450,7 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
 * **expected**: pass
 * **expose browser profiler**: true
 * **expose chrome trace**: true
+* **fetch path**: motionmark
 * **gecko profile features**: stackwalk,js,java,processcpu,memory
 * **gecko profile interval**: 1
 * **gecko profile threads**: GeckoMain,Compositor,Renderer,SwComposite,RenderBackend,SceneBuilder,WrWorker,CanvasWorkers,TextureUpdate
@@ -1782,6 +1785,7 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
 * **cold**: true
 * **expected**: pass
 * **expose browser profiler**: true
+* **fetch path**: motionmark
 * **gecko profile features**: stackwalk,js,java,processcpu,memory
 * **gecko profile interval**: 1
 * **gecko profile threads**: GeckoMain,Compositor,Renderer,SwComposite,RenderBackend,SceneBuilder,WrWorker,CanvasWorkers,TextureUpdate
@@ -2130,11 +2134,12 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
 * **expected**: pass
 * **expose browser profiler**: true
 * **expose chrome trace**: true
+* **fetch path**: motionmark
 * **gecko profile features**: stackwalk,js,java,processcpu,memory
 * **gecko profile interval**: 1
 * **gecko profile threads**: GeckoMain,Compositor,Renderer,SwComposite,RenderBackend,SceneBuilder,WrWorker,CanvasWorkers,TextureUpdate
 * **host from parent**: false
-* **link searchfox**: {searchfox}`testing/raptor/raptor/tests/benchmarks/motionmark-1-3-desktop.toml#29`
+* **link searchfox**: {searchfox}`testing/raptor/raptor/tests/benchmarks/motionmark-1-3-desktop.toml#32`
 * **lower is better**: false
 * **page cycles**: 1
 * **page timeout**: 600000
@@ -2464,11 +2469,12 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
 * **cold**: true
 * **expected**: pass
 * **expose browser profiler**: true
+* **fetch path**: motionmark
 * **gecko profile features**: stackwalk,js,java,processcpu,memory
 * **gecko profile interval**: 1
 * **gecko profile threads**: GeckoMain,Compositor,Renderer,SwComposite,RenderBackend,SceneBuilder,WrWorker,CanvasWorkers,TextureUpdate
 * **host from parent**: false
-* **link searchfox**: {searchfox}`testing/raptor/raptor/tests/benchmarks/motionmark-1-3-mobile.toml#28`
+* **link searchfox**: {searchfox}`testing/raptor/raptor/tests/benchmarks/motionmark-1-3-mobile.toml#31`
 * **lower is better**: false
 * **page cycles**: 1
 * **page timeout**: 600000
@@ -2814,6 +2820,7 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
 * **cold**: true
 * **expected**: pass
 * **expose browser profiler**: true
+* **fetch path**: Speedometer
 * **gather cpuTime**: true
 * **gecko profile features**: stackwalk,js,processcpu,nomarkerstacks
 * **gecko profile interval**: 1
@@ -6337,6 +6344,7 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
 * **repository**: https://github.com/mozilla/perf-automation
 * **repository path**: benchmarks/unity-webgl
 * **repository revision**: 61332db584026b73e37066d717a162825408c36b
+* **sparse checkout**: true
 * **subtest lower is better**: false
 * **subtest unit**: score
 * **test url**: <http://\<host\>:\<port\>/index.html?raptor>
