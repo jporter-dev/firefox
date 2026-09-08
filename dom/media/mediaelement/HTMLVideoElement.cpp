@@ -173,13 +173,14 @@ HTMLVideoElement::~HTMLVideoElement() {
   DecoderDoctorLogger::LogDestruction(this);
 }
 
-void HTMLVideoElement::UpdateMediaSize(const nsIntSize& aSize) {
-  HTMLMediaElement::UpdateMediaSize(aSize);
+void HTMLVideoElement::UpdateMediaSize(const nsIntSize& aSize,
+                                       VideoRotation aRotation) {
+  HTMLMediaElement::UpdateMediaSize(aSize, aRotation);
   // If we have a clone target, we should update its size as well.
   if (mVisualCloneTarget) {
     Maybe<nsIntSize> newSize = Some(aSize);
     mVisualCloneTarget->Invalidate(ImageSizeChanged::Yes, newSize,
-                                   ForceInvalidate::Yes);
+                                   Some(aRotation), ForceInvalidate::Yes);
   }
 }
 
@@ -213,9 +214,10 @@ Maybe<CSSIntSize> HTMLVideoElement::GetVideoSize() const {
 
 void HTMLVideoElement::Invalidate(ImageSizeChanged aImageSizeChanged,
                                   const Maybe<nsIntSize>& aNewIntrinsicSize,
+                                  const Maybe<VideoRotation>& aNewRotation,
                                   ForceInvalidate aForceInvalidate) {
   HTMLMediaElement::Invalidate(aImageSizeChanged, aNewIntrinsicSize,
-                               aForceInvalidate);
+                               aNewRotation, aForceInvalidate);
   if (mVisualCloneTarget) {
     VideoFrameContainer* container =
         mVisualCloneTarget->GetVideoFrameContainer();

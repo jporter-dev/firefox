@@ -2177,6 +2177,11 @@ void PeerConnectionImpl::GetDefaultRtpExtensions(
         nsLiteralCString(webrtc::RtpExtension::kTransportSequenceNumberUri)};
     aRtpExtensions->AppendElement(std::move(transportSequenceNumber));
   }
+
+  RtpExtensionHeader videoOrientation = {
+      JsepMediaType::kVideo, SdpDirectionAttribute::Direction::kSendrecv,
+      nsLiteralCString(webrtc::RtpExtension::kVideoRotationUri)};
+  aRtpExtensions->AppendElement(std::move(videoOrientation));
 }
 
 /* static */

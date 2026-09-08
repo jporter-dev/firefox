@@ -121,6 +121,7 @@ void VideoSegment::AppendFrame(const VideoChunk& aChunk,
   chunk->mWebrtcCaptureTime = aChunk.mWebrtcCaptureTime;
   chunk->mWebrtcReceiveTime = aChunk.mWebrtcReceiveTime;
   chunk->mRtpTimestamp = aChunk.mRtpTimestamp;
+  chunk->mRotation = aChunk.mRotation;
   VideoFrame frame(do_AddRef(aChunk.mFrame.GetImage()),
                    aChunk.mFrame.GetIntrinsicSize());
   MOZ_ASSERT_IF(!IsNull(), !aChunk.mTimeStamp.IsNull());
@@ -152,7 +153,7 @@ void VideoSegment::AppendWebrtcRemoteFrame(
     const PrincipalHandle& aPrincipalHandle, bool aForceBlack,
     TimeStamp aTimeStamp, media::TimeUnit aProcessingDuration,
     uint32_t aRtpTimestamp, int64_t aWebrtcCaptureTimeNtp,
-    int64_t aWebrtcReceiveTimeUs) {
+    int64_t aWebrtcReceiveTimeUs, VideoRotation aRotation) {
   VideoChunk* chunk = AppendChunk(0);
   chunk->mTimeStamp = aTimeStamp;
   chunk->mProcessingDuration = aProcessingDuration;
@@ -168,6 +169,7 @@ void VideoSegment::AppendWebrtcRemoteFrame(
   frame.SetForceBlack(aForceBlack);
   frame.SetPrincipalHandle(aPrincipalHandle);
   chunk->mFrame.TakeFrom(&frame);
+  chunk->mRotation = aRotation;
 }
 
 void VideoSegment::AppendWebrtcLocalFrame(
