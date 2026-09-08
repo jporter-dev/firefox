@@ -1009,6 +1009,15 @@ pref("browser.search.totalSearches", 0);
 // Feature gate for visual search.
 pref("browser.search.visualSearch.featureGate", true);
 
+pref("browser.highlightToSearch.featureGate", false);
+
+// Whether the actions menu is shown when text is selected on a page.
+pref("browser.highlightToSearch.enabled", true);
+
+// Which actions the menu offers. Set from the menu's own settings.
+pref("browser.highlightToSearch.search.enabled", true);
+pref("browser.highlightToSearch.copy.enabled", true);
+
 // Spin the cursor while the page is loading
 pref("browser.spin_cursor_while_busy", false);
 
