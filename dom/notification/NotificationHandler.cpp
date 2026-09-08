@@ -22,7 +22,7 @@ nsresult RespondOnClick(nsIPrincipal* aPrincipal, const nsAString& aScope,
                         const IPCNotification& aNotification,
                         const nsAString& aActionName) {
   if (StaticPrefs::dom_webnotifications_navigate_enabled()) {
-    nsIURI* navigate;
+    nsIURI* navigate = nullptr;
     if (aActionName.IsEmpty()) {
       navigate = aNotification.options().navigate();
     } else {
