@@ -13,6 +13,7 @@ import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import java.util.Locale
 import mozilla.components.ExperimentalAndroidComponentsApi
 import mozilla.components.compose.base.theme.Theme
 import mozilla.components.feature.ipprotection.store.state.Country
@@ -26,6 +27,7 @@ import org.junit.runner.RunWith
 import org.mozilla.fenix.R
 import org.mozilla.fenix.theme.FirefoxTheme
 
+private val LOCALE = Locale.US
 private val JAPAN = Country(countryCode = "jp", available = true)
 private val GERMANY = Country(countryCode = "de", available = true)
 private val LOCATIONS = listOf(Recommended, GERMANY, JAPAN)
@@ -40,8 +42,8 @@ class IPProtectionLocationsScreenTest {
 
         setScreen(selectedLocation = JAPAN, isActivating = true) { selections.add(it) }
 
-        composeTestRule.onNodeWithText(JAPAN.displayName).assertHasNoClickAction()
-        composeTestRule.onNodeWithText(GERMANY.displayName).assertHasNoClickAction().performClick()
+        composeTestRule.onNodeWithText(JAPAN.displayName(LOCALE)).assertHasNoClickAction()
+        composeTestRule.onNodeWithText(GERMANY.displayName(LOCALE)).assertHasNoClickAction().performClick()
         composeTestRule
             .onNodeWithText(testContext.getString(R.string.ip_protection_location_recommended_label))
             .assertHasNoClickAction()
@@ -55,7 +57,7 @@ class IPProtectionLocationsScreenTest {
 
         setScreen(selectedLocation = JAPAN, isActivating = false) { selections.add(it) }
 
-        composeTestRule.onNodeWithText(GERMANY.displayName).assertHasClickAction().performClick()
+        composeTestRule.onNodeWithText(GERMANY.displayName(LOCALE)).assertHasClickAction().performClick()
 
         assertEquals(listOf<Location>(GERMANY), selections)
     }

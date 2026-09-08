@@ -23,10 +23,12 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalLocale
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
+import java.text.Collator
 import mozilla.components.ExperimentalAndroidComponentsApi
 import mozilla.components.compose.base.Switch
 import mozilla.components.compose.base.button.TextButton
@@ -112,12 +114,16 @@ fun IPProtectionLocationTools(store: IPProtectionStore) {
         )
     }
     val locations = state.locations
+    val locale = LocalLocale.current.platformLocale
     var options by remember { mutableStateOf(emptyList<CountryCustomizationOption>()) }
 
-    LaunchedEffect(locations) {
+    LaunchedEffect(locations, locale) {
         val countries = locations.filterIsInstance<Country>()
         knownCountries.save(countries)
-        options = knownCountries.customizationOptions(countries).sortedBy { it.country.displayName }
+        options =
+            knownCountries
+                .customizationOptions(countries)
+                .sortedWith(compareBy(Collator.getInstance(locale)) { it.country.displayName(locale) })
     }
 
     IPProtectionLocationToolsContent(
@@ -187,7 +193,7 @@ private fun IPProtectionLocationToolsContent(
 
                     SelectedLocationRow(
                         location =
-                            (selectedLocation as? Country)?.displayName
+                            (selectedLocation as? Country)?.displayName(LocalLocale.current.platformLocale)
                                 ?: stringResource(R.string.debug_drawer_ip_protection_recommended)
                     )
 
@@ -236,7 +242,7 @@ private fun CountryCustomizationRow(
     ) {
         Column(modifier = Modifier.weight(1f)) {
             Text(
-                text = option.country.displayName,
+                text = option.country.displayName(LocalLocale.current.platformLocale),
                 style = FirefoxTheme.typography.body2,
                 textDecoration = if (option.shouldHide) TextDecoration.LineThrough else null,
             )

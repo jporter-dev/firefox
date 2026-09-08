@@ -29,8 +29,10 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalLocale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
@@ -40,6 +42,7 @@ import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.tooling.preview.PreviewParameter
+import java.text.Collator
 import mozilla.components.ExperimentalAndroidComponentsApi
 import mozilla.components.compose.base.annotation.FlexibleWindowPreview
 import mozilla.components.compose.base.button.IconButton
@@ -130,9 +133,18 @@ private fun LocationList(
 
         if (countries.isNotEmpty()) {
             MenuGroup {
-                countries.forEach { country ->
+                val locale = LocalLocale.current.platformLocale
+                val sortedCountries =
+                    remember(countries, locale) {
+                        // Kotlin compares strings by code point, so that the German letter Ö will be positioned lower
+                        // than Z, as having a higher code point. To meet the international readers' expectations,
+                        // we compare here with the help of Locale comparator.
+                        countries.sortedWith(compareBy(Collator.getInstance(locale)) { it.displayName(locale) })
+                    }
+
+                sortedCountries.forEach { country ->
                     LocationOption(
-                        label = country.displayName,
+                        label = country.displayName(locale),
                         isSelected = country == selectedLocation,
                         description =
                             stringResource(R.string.ip_protection_location_unavailable_description).takeIf {
