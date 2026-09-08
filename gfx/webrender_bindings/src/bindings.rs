@@ -4777,8 +4777,7 @@ pub extern "C" fn wr_shaders_new(
     let mut options = WebRenderOptions::default();
     options.enable_dithering = static_prefs::pref!("gfx.webrender.dithering");
 
-    let gl_type = device.gl().get_type();
-    let mut shaders = match Shaders::new(&mut device, gl_type, &options) {
+    let mut shaders = match Shaders::new(&mut device, &options) {
         Ok(shaders) => shaders,
         Err(e) => {
             warn!(" Failed to create a Shaders: {:?}", e);
