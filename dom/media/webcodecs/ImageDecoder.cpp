@@ -401,7 +401,11 @@ void ImageDecoder::CheckOutstandingDecodes() {
   for (const auto& i : resolved) {
     if (!mClosed) {
       ImageDecodeResult result;
-      result.mImage = track->GetDecodedFrame(i.mFrameIndex);
+      if (auto* videoFrame = track->GetDecodedFrame(i.mFrameIndex)) {
+        result.mImage = MakeRefPtr<VideoFrame>(*videoFrame);
+      } else {
+        MOZ_ASSERT_UNREACHABLE("Should have frame if not closed");
+      }
       // TODO(aosmond): progressive images
       result.mComplete = true;
       i.mPromise->MaybeResolve(result);
