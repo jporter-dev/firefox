@@ -731,6 +731,9 @@ export class DevToolsStartup {
    * initDevTools, from onViewShowing is also calling browser-menu.
    */
   hookDeveloperToggle() {
+    if (AppConstants.MOZ_APP_NAME == "thunderbird") {
+      return;
+    }
     if (!this.developerToggle) {
       // Build the widget only once; it is reused every time the
       // toggle is re-registered after a disable/enable cycle.
@@ -786,6 +789,9 @@ export class DevToolsStartup {
    * definition so it can be re-registered later.
    */
   unhookDeveloperToggle() {
+    if (AppConstants.MOZ_APP_NAME == "thunderbird") {
+      return;
+    }
     if (!this.developerToggleRegistered) {
       return;
     }
