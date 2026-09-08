@@ -562,13 +562,6 @@ body {
   min-height: 0;
   padding-inline: var(--space-small);
 
-  @media -moz-pref("browser.nova.enabled") {
-    :root:not([lwtheme]) &:not([collapsed]) {
-      /* stylelint-disable-next-line stylelint-plugin-mozilla/use-design-tokens */
-      border-top: 1px solid var(--chrome-content-separator-color);
-    }
-  }
-
   :root[uidensity="compact"] & {
     padding-inline: var(--space-xxsmall);
   }
