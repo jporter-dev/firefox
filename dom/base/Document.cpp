@@ -21454,7 +21454,9 @@ already_AddRefed<Document> Document::ParseHTMLUnsafe(
   }
 
   // TODO: Always initialize the sanitizer.
-  bool sanitize = aOptions.mSanitizer.WasPassed();
+  const bool sanitize = aOptions.mSanitizer.WasPassed();
+  const bool sanitizeWhileParsing =
+      sanitize && StaticPrefs::dom_security_sanitizer_while_parsing();
 
   // Step 2. Let document be a new Document, whose content type is "text/html".
   // Step 3. Set document’s allow declarative shadow roots to true.
@@ -21463,39 +21465,43 @@ already_AddRefed<Document> Document::ParseHTMLUnsafe(
     return nullptr;
   }
 
-  // Step 4. Parse HTML from a string given document and compliantHTML.
+  // Step 4. Let sanitizerConfig be the result of calling get a sanitizer
+  // config from options with compliantOptions and false.
+  RefPtr<Sanitizer> sanitizer;
+  if (sanitize) {
+    sanitizer = Sanitizer::GetInstance(global, aOptions.mSanitizer.Value(),
+                                       /* aSafe */ false, aError);
+    if (aError.Failed()) {
+      return nullptr;
+    }
+  }
+
+  // Step 5. Parse HTML from a string given document, compliantHTML,
+  // sanitizerConfig and false.
   // TODO(bug 1960845): Investigate the behavior around <noscript> with
   // parseHTML
   aError = nsContentUtils::ParseDocumentHTML(
       *compliantString, doc,
-      /* aScriptingEnabledForNoscriptParsing */ sanitize);
+      /* aScriptingEnabledForNoscriptParsing */ sanitize,
+      sanitizeWhileParsing ? sanitizer.get() : nullptr, /* aSafe */ false);
   if (aError.Failed()) {
     return nullptr;
   }
 
-  if (sanitize) {
-    // Step 5. Let sanitizer be the result of calling get a sanitizer instance
-    // from options with options and false.
-    nsCOMPtr<nsIGlobalObject> global =
-        do_QueryInterface(aGlobal.GetAsSupports());
-    RefPtr<Sanitizer> sanitizer = Sanitizer::GetInstance(
-        global, aOptions.mSanitizer.Value(), /* aSafe */ false, aError);
-    if (aError.Failed()) {
-      return nullptr;
-    }
-
-    // Step 6. Call sanitize on document with sanitizer and false.
+  if (sanitize && !sanitizeWhileParsing) {
+    // (Pre sanitize-while-parsing) Call sanitize on document with sanitizer
+    // and false.
     sanitizer->Sanitize(doc, /* aSafe */ false, aError);
     if (aError.Failed()) {
       return nullptr;
     }
   }
 
-  // Step 7. Return document.
+  // Step 6. Return document.
   return doc.forget();
 }
 
-// https://wicg.github.io/sanitizer-api/#document-parsehtml
+// https://html.spec.whatwg.org/#dom-parsehtml
 /* static */
 already_AddRefed<Document> Document::ParseHTML(GlobalObject& aGlobal,
                                                const nsAString& aHTML,
@@ -21508,17 +21514,8 @@ already_AddRefed<Document> Document::ParseHTML(GlobalObject& aGlobal,
     return nullptr;
   }
 
-  // Step 3. Parse HTML from a string given document and html.
-  // TODO(bug 1960845): Investigate the behavior around <noscript> with
-  // parseHTML
-  aError = nsContentUtils::ParseDocumentHTML(
-      aHTML, doc, /* aScriptingEnabledForNoscriptParsing */ true);
-  if (aError.Failed()) {
-    return nullptr;
-  }
-
-  // Step 4. Let sanitizer be the result of calling get a sanitizer instance
-  // from options with options and true.
+  // Step 3. Let sanitizerConfig be the result of calling get a sanitizer
+  // config from options with options and true.
   nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(aGlobal.GetAsSupports());
   RefPtr<Sanitizer> sanitizer = Sanitizer::GetInstance(
       global, aOptions.mSanitizer, /* aSafe */ true, aError);
@@ -21526,13 +21523,30 @@ already_AddRefed<Document> Document::ParseHTML(GlobalObject& aGlobal,
     return nullptr;
   }
 
-  // Step 5. Call sanitize on document with sanitizer and true.
-  sanitizer->Sanitize(doc, /* aSafe */ true, aError);
+  const bool sanitizeWhileParsing =
+      StaticPrefs::dom_security_sanitizer_while_parsing();
+
+  // Step 4. Parse HTML from a string given document, html, sanitizerConfig
+  // and true.
+  // TODO(bug 1960845): Investigate the behavior around <noscript> with
+  // parseHTML
+  aError = nsContentUtils::ParseDocumentHTML(
+      aHTML, doc, /* aScriptingEnabledForNoscriptParsing */ true,
+      sanitizeWhileParsing ? sanitizer.get() : nullptr, /* aSafe */ true);
   if (aError.Failed()) {
     return nullptr;
   }
 
-  // Step 6. Return document.
+  if (!sanitizeWhileParsing) {
+    // (Pre sanitize-while-parsing) Call sanitize on document with sanitizer
+    // and true.
+    sanitizer->Sanitize(doc, /* aSafe */ true, aError);
+    if (aError.Failed()) {
+      return nullptr;
+    }
+  }
+
+  // Step 5. Return document.
   return doc.forget();
 }
 

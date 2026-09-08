@@ -4597,17 +4597,29 @@ public abstract class TreeBuilder<T> implements TokenHandler,
                 node.release(this); // release from list
                 node = newNode;
                 // } XXX AAA CHANGE
+                // When the sanitizer replaces the clone with its children,
+                // the spec does not move lastNode into it, so that lastNode
+                // keeps both its position and its identity, and redirects the
+                // content of the clone to the common ancestor instead.
+                // CPPONLY: if (!sanitizerRedirectsClone(node.node, insertionCommonAncestor)) {
                 detachFromParent(lastNode.node);
                 appendElement(lastNode.node, nodeFromStackWithBlinkCompat(nodePos));
                 lastNode = node;
+                // CPPONLY: }
             }
             // If we insert into a foster parent, for simplicity, we insert
             // accoding to the spec without Blink's depth limit.
             if (commonAncestor.isFosterParenting()) {
                 fatal();
                 detachFromParent(lastNode.node);
-                insertIntoFosterParent(lastNode.node);
+                insertIntoFosterParent(lastNode.node
+                        // CPPONLY: , furthestBlock.node
+                        );
             } else {
+                // The content of a furthest block that the sanitizer replaced
+                // with its children follows the content it already has, so it
+                // goes wherever lastNode goes.
+                // CPPONLY: sanitizerRedirectFurthestBlock(furthestBlock.node, insertionCommonAncestor);
                 detachFromParent(lastNode.node);
                 appendElement(lastNode.node, insertionCommonAncestor);
             }
@@ -4955,16 +4967,20 @@ public abstract class TreeBuilder<T> implements TokenHandler,
         return instance;
     }
 
-    private void insertIntoFosterParent(T child) throws SAXException {
+    private void insertIntoFosterParent(T child
+            // CPPONLY: , T furthestBlock
+            ) throws SAXException {
         int tablePos = findLastOrRoot(TreeBuilder.TABLE);
         int templatePos = findLastOrRoot(TreeBuilder.TEMPLATE);
 
         if (templatePos >= tablePos) {
+            // CPPONLY: sanitizerRedirectFurthestBlock(furthestBlock, stack[templatePos].node);
             appendElement(child, stack[templatePos].node);
             return;
         }
 
         StackNode<T> node = stack[tablePos];
+        // CPPONLY: sanitizerRedirectFurthestBlockToFosterParent(furthestBlock, node.node, stack[tablePos - 1].node);
         insertFosterParentedChild(child, node.node, stack[tablePos - 1].node);
     }
 
@@ -5293,6 +5309,10 @@ public abstract class TreeBuilder<T> implements TokenHandler,
         // This method can't be called for custom elements
         T currentNode = nodeFromStackWithBlinkCompat(currentPtr);
         // All accesses to `attributes` must happen before `createElement`.
+        // The sanitizer runs on the token first, so that the attributes read
+        // below are the ones the template element ends up with.
+        boolean sanitizerDropsTemplate = false;
+        // CPPONLY: sanitizerDropsTemplate = sanitizerDropsTemplateToken(attributes);
         String shadowRootMode = null;
         boolean shadowRootIsClonable = false;
         boolean shadowRootIsSerializable = false;
@@ -5300,7 +5320,7 @@ public abstract class TreeBuilder<T> implements TokenHandler,
         boolean shadowRootCustomElementRegistry = false;
         String shadowRootReferenceTarget = null;
         String shadowRootSlotAssignment = null;
-        if (isAllowDeclarativeShadowRoots()) {
+        if (isAllowDeclarativeShadowRoots() && !sanitizerDropsTemplate) {
             shadowRootMode = Portability.newStringFromString(attributes.getValue(AttributeName.SHADOWROOTMODE));
             if (shadowRootMode != null) {
                 shadowRootIsClonable = attributes.contains(AttributeName.SHADOWROOTCLONABLE);
