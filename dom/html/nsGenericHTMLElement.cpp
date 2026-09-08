@@ -1978,7 +1978,7 @@ void nsGenericHTMLFormElement::BeforeSetAttr(int32_t aNameSpaceID,
                                              bool aNotify) {
   if (aNameSpaceID == kNameSpaceID_None && IsFormAssociatedElement()) {
     nsAutoString tmp;
-    HTMLFormElement* form = GetFormInternal();
+    HTMLFormElement* form = GetFormIfRegistered();
 
     // remove the control from the hashtable as needed
 
@@ -2034,7 +2034,7 @@ void nsGenericHTMLFormElement::AfterSetAttr(
         // Ensure that empty @form value clears the form owner.
         ClearForm(true, false);
       }
-    } else if (HTMLFormElement* form = GetFormInternal()) {
+    } else if (HTMLFormElement* form = GetFormIfRegistered()) {
       // add the control to the hashtable as needed
       if (aName == nsGkAtoms::type) {
         nsAutoString tmp;
