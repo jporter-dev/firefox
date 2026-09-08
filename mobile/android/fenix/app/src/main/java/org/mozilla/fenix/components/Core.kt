@@ -40,6 +40,7 @@ import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.engine.fission.WebContentIsolationStrategy
 import mozilla.components.concept.engine.mediaquery.PreferredColorScheme
 import mozilla.components.concept.fetch.Client
+import mozilla.components.feature.automotive.CarUxRestrictionsFeature
 import mozilla.components.feature.awesomebar.provider.SessionAutocompleteProvider
 import mozilla.components.feature.customtabs.store.CustomTabsServiceStore
 import mozilla.components.feature.downloads.DefaultFileSizeFormatter
@@ -447,6 +448,11 @@ class Core(
                 )
 
                 MediaSessionFeature(context, MediaSessionService::class.java, this).start()
+                CarUxRestrictionsFeature(
+                        applicationContext = context,
+                        store = this,
+                    )
+                    .start()
             }
     }
 
