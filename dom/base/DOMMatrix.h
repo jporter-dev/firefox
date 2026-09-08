@@ -337,6 +337,7 @@ class DOMMatrix : public DOMMatrixReadOnly {
   DOMMatrix* SkewSelf(double aSx, double aSy);
   DOMMatrix* SkewXSelf(double aSx);
   DOMMatrix* SkewYSelf(double aSy);
+  DOMMatrix* PerspectiveSelf(double aDepth);
   DOMMatrix* InvertSelf();
   DOMMatrix* SetMatrixValue(const nsACString&, ErrorResult&);
 

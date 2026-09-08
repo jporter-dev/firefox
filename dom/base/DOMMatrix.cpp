@@ -1044,6 +1044,13 @@ DOMMatrix* DOMMatrix::SkewYSelf(double aSy) {
   return this;
 }
 
+DOMMatrix* DOMMatrix::PerspectiveSelf(double aDepth) {
+  Ensure3DMatrix();
+  mMatrix3D->Perspective(aDepth);
+
+  return this;
+}
+
 DOMMatrix* DOMMatrix::InvertSelf() {
   if (mMatrix3D) {
     if (!mMatrix3D->Invert()) {
