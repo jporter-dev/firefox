@@ -85,7 +85,7 @@ zip = { version = "2.1.2", default-features = false, features = ["deflate-flate2
 scopeguard = { version = "1", optional = true }
 
 [build-dependencies]
-bindgen = { version = "0.69", default-features = false, features = ["runtime"], optional = true }
+bindgen = { version = "0.73", default-features = false, features = ["runtime"], optional = true }
 cc = { version = "1.0", features = ["parallel"], optional = true }
 itertools = { version = "0.15", default-features = false, features = ["use_alloc"], optional = true }
 libc = "0.2"
