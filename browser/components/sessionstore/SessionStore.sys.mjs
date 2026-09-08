@@ -6822,12 +6822,16 @@ class _SessionStore {
         !isNaN(aTop) &&
         (aLeft != win_("screenX") || aTop != win_("screenY"))
       ) {
-        // moveTo uses CSS pixels relative to aWindow, while aLeft and aRight
-        // are on desktop pixels, undo the conversion we do in
-        // #getWindowDimension.
-        let desktopToCssScale =
-          aWindow.desktopToDeviceScale / aWindow.devicePixelRatio;
-        aWindow.moveTo(aLeft * desktopToCssScale, aTop * desktopToCssScale);
+        // aLeft and aTop are in desktop pixels. Move the widget directly rather
+        // than via window.moveTo(), which takes a WebIDL `long` count of CSS
+        // pixels: that both quantizes the position to whole CSS pixels and
+        // truncates rather than rounds, which for a window on a non-integrally
+        // scaled monitor is enough to position it incorrectly (which may
+        // break positioning constraints set by window managers).
+        getBaseWindow(aWindow).setPositionDesktopPix(
+          Math.round(aLeft),
+          Math.round(aTop)
+        );
       }
       if (
         aWidth &&
@@ -7246,16 +7250,21 @@ class _SessionStore {
       case "height":
         return aWindow.outerHeight;
       case "screenX":
-      case "screenY":
+      case "screenY": {
         // We use desktop pixels rather than CSS pixels to store window
         // positions, see bug 1247335.  This allows proper multi-monitor
         // positioning in mixed-DPI situations.
-        // screenX/Y are in CSS pixels for the current window, so, convert them
-        // to desktop pixels.
-        return (
-          (aWindow[aAttribute] * aWindow.devicePixelRatio) /
-          aWindow.desktopToDeviceScale
-        );
+        //
+        // We also ask the widget for its position rather than going via
+        // window.screenX/Y, since those are an integer count of *CSS* pixels,
+        // so they introduce roundoff error that can affect the results.
+        let baseWin = getBaseWindow(aWindow);
+        let x = {},
+          y = {};
+        baseWin.getPosition(x, y);
+        let devicePos = aAttribute == "screenX" ? x.value : y.value;
+        return devicePos / baseWin.devicePixelsPerDesktopPixel;
+      }
       default:
         return aAttribute in aWindow ? aWindow[aAttribute] : "";
     }
@@ -9188,6 +9197,19 @@ var LastSession = {
     }
   },
 };
+
+/**
+ * The nsIBaseWindow for a chrome window, which unlike window.screenX/Y and
+ * window.moveTo() deals in device and desktop pixels rather than in CSS pixels.
+ *
+ * Throws for a window whose docshell is gone, as window.screenX/Y also do.
+ *
+ * @param {Window} win
+ * @returns {nsIBaseWindow}
+ */
+function getBaseWindow(win) {
+  return win.docShell.treeOwner.QueryInterface(Ci.nsIBaseWindow);
+}
 
 /**
  * @template T
