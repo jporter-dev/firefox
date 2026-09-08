@@ -1415,7 +1415,7 @@ static DWORD WindowStylesRemovedForBorderStyle(BorderStyle aStyle) {
 }
 
 // Return nsWindow styles
-DWORD nsWindow::WindowStyle() {
+DWORD nsWindow::WindowStyle() const {
   DWORD style;
   switch (mWindowType) {
     case WindowType::Dialog:
@@ -2721,6 +2721,39 @@ LayoutDeviceIntMargin nsWindow::NormalWindowNonClientOffset() const {
  * For maximized, fullscreen, and minimized windows special processing takes
  * place.
  */
+bool nsWindow::HasCaption() const {
+  return bool(mBorderStyle & (BorderStyle::All | BorderStyle::Title |
+                              BorderStyle::Menu | BorderStyle::Default));
+}
+
+nsWindow::ResizeMargins nsWindow::DefaultResizeMargins(UINT aDpi) const {
+  const int32_t padding =
+      HasCaption() ? WinUtils::GetSystemMetricsForDpi(SM_CXPADDEDBORDER, aDpi)
+                   : 0;
+  return {WinUtils::GetSystemMetricsForDpi(SM_CXFRAME, aDpi) + padding,
+          WinUtils::GetSystemMetricsForDpi(SM_CYFRAME, aDpi) + padding};
+}
+
+// The window rect overhangs the work area by this much, so any check for a
+// window extending beyond its screen has to tolerate this overhang, or it
+// will drag the window out of position.
+LayoutDeviceIntMargin nsWindow::ResizeBorderOverhang() const {
+  // Only a sizing border is drawn outside the window's visible edges, so a
+  // window without one doesn't overhang at all.
+  if (!(WindowStyle() & WS_THICKFRAME)) {
+    return {};
+  }
+
+  // We use LogToPhysFactor instead of GetDPI nsWindow::GetDPI(), because that
+  // infers the monitor from the window's bounds.  WM_DPICHANGED may be sent
+  // before the window's bounds have been updated, but the DPI will be the
+  // right one.
+  const UINT dpi = UINT(NSToIntRound(WinUtils::LogToPhysFactor(mWnd) * 96.0));
+  const auto margins = DefaultResizeMargins(dpi);
+  return LayoutDeviceIntMargin(0, margins.mHorizontal, margins.mVertical,
+                               margins.mHorizontal);
+}
+
 bool nsWindow::UpdateNonClientMargins(bool aReflowWindow) {
   if (!mCustomNonClient) {
     return false;
@@ -2731,40 +2764,18 @@ bool nsWindow::UpdateNonClientMargins(bool aReflowWindow) {
     return false;
   }
 
-  const bool hasCaption =
-      bool(mBorderStyle & (BorderStyle::All | BorderStyle::Title |
-                           BorderStyle::Menu | BorderStyle::Default));
+  const bool hasCaption = HasCaption();
 
   float dpi = GetDPI();
 
   auto& metrics = mCustomNonClientMetrics;
 
-  // mHorResizeMargin is the size of the default NC areas on the
-  // left and right sides of our window.  It is calculated as
-  // the sum of:
-  //      SM_CXFRAME        - The thickness of the sizing border
-  //      SM_CXPADDEDBORDER - The amount of border padding
-  //                          for captioned windows
-  //
-  // If the window does not have a caption, mHorResizeMargin will be equal to
-  // `WinUtils::GetSystemMetricsForDpi(SM_CXFRAME, dpi)`
-  metrics.mHorResizeMargin =
-      WinUtils::GetSystemMetricsForDpi(SM_CXFRAME, dpi) +
-      (hasCaption ? WinUtils::GetSystemMetricsForDpi(SM_CXPADDEDBORDER, dpi)
-                  : 0);
-
-  // mVertResizeMargin is the size of the default NC area at the
-  // bottom of the window. It is calculated as the sum of:
-  //      SM_CYFRAME        - The thickness of the sizing border
-  //      SM_CXPADDEDBORDER - The amount of border padding
-  //                          for captioned windows.
-  //
-  // If the window does not have a caption, mVertResizeMargin will be equal to
-  // `WinUtils::GetSystemMetricsForDpi(SM_CYFRAME, dpi)`
-  metrics.mVertResizeMargin =
-      WinUtils::GetSystemMetricsForDpi(SM_CYFRAME, dpi) +
-      (hasCaption ? WinUtils::GetSystemMetricsForDpi(SM_CXPADDEDBORDER, dpi)
-                  : 0);
+  // mHorResizeMargin is the size of the default NC areas on the left and right
+  // sides of our window, and mVertResizeMargin the size of the one at the
+  // bottom.
+  const auto resizeMargins = DefaultResizeMargins(UINT(dpi));
+  metrics.mHorResizeMargin = resizeMargins.mHorizontal;
+  metrics.mVertResizeMargin = resizeMargins.mVertical;
 
   // mCaptionHeight is the default size of the caption. You need to include
   // mVertResizeMargin if you want the whole size of the default NC area at the
@@ -7061,12 +7072,16 @@ void nsWindow::OnDPIChanged(int32_t x, int32_t y, int32_t width,
       if (screen) {
         int32_t availLeft, availTop, availWidth, availHeight;
         screen->GetAvailRect(&availLeft, &availTop, &availWidth, &availHeight);
+        // Windows' suggested rect preserves the window's overhang past the work
+        // area. Allow for that, so that we only reposition or shrink
+        // windows which really don't fit on the destination screen.
+        const LayoutDeviceIntMargin overhang = ResizeBorderOverhang();
         if (mResizeState != MOVING) {
-          x = std::max(x, availLeft);
-          y = std::max(y, availTop);
+          x = std::max(x, availLeft - overhang.left);
+          y = std::max(y, availTop - overhang.top);
         }
-        width = std::min(width, availWidth);
-        height = std::min(height, availHeight);
+        width = std::min(width, availWidth + overhang.LeftRight());
+        height = std::min(height, availHeight + overhang.TopBottom());
       }
     }
 
