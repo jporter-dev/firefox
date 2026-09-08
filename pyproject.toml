@@ -25,7 +25,7 @@ lint.ignore = [
   "E1", "E4", "E5", "W1", "W2", "W5",
 ]
 builtins = ["gdb"]
-extend-include = ["*.configure"]
+extend-include = ["*.configure", "*.build", "*.mozbuild"]
 # Only here to override ruff's built-in defaults, which include `build`, a
 # real source directory here. But also to list things to be skipped by
 # both `ruff check` and `ruff format`.
@@ -44,6 +44,10 @@ exclude = [
 # path rather than pruned during directory traversal, so a directory MUST be
 # written as `some/dir/**`; `some/dir` silently matches nothing.
 lint.exclude = [
+  # Only `ruff format` looks at these, see `extend-include` above.
+  "*.build",
+  "*.mozbuild",
+
   # These paths should be triaged and either fixed or moved to the list below.
   "devtools/shared/**",
   "dom/bindings/Codegen.py",
