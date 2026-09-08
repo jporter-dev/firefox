@@ -2361,34 +2361,23 @@ void nsWindow::ConstrainPosition(DesktopIntPoint& aPoint) {
     screenRect = screen->GetRectDisplayPix();
   }
 
-  // Check for the case where the window was Aero Snapped to the right. (The
-  // window will extend off the right and bottom of the screen in this case by a
-  // small but DPI-dependent value.)
+  // A window's *visible* edges are what get aligned with the work area -- by
+  // the shell when it snaps a window, and by users dragging a window against a
+  // screen edge -- so the window rect itself extends off the left, right and
+  // bottom of the work area by the width of the sizing border that Windows
+  // draws outside those edges. Allow for that overhang, so that we don't nudge
+  // such a window (or one we are restoring into such a position) out of place.
   //
   // We do not check WINDOWPLACEMENT for a position mismatch. That would catch
-  // whether the window is _currently_ Aero Snapped to the right, but we may be
-  // restoring the window. (We can't guarantee a restore into a snapped state:
-  // there is no known API to do so. Fortunately, the shell seems to detect this
-  // case anyway, and treats the window as snapped.)
-  //
-  // Note that this _is_ a heuristic. False positives are possible; but they
-  // seem unlikely (it would require manually positioning a window to extend
-  // just barely offscreen to the lower right), and anyway are probably
-  // harmless: the effect will simply be that we leave the window exactly where
-  // the user put it, instead of nudging it slightly.
-  if (aPoint.y == 0) {
-    auto const xMax = aPoint.x + logWidth;
-    auto const yMax = aPoint.y + logHeight;
-    auto const deltaX = xMax - screenRect.XMost();
-    auto const deltaY = yMax - screenRect.YMost();
-    if (deltaX == deltaY) {
-      if (8 <= deltaX && deltaX <= 16) {
-        // If so, don't try to fix the position; Windows will (probably) deal
-        // with it.
-        return;
-      }
-    }
-  }
+  // whether the window is _currently_ snapped, but we may be restoring the
+  // window. (We can't guarantee a restore into a snapped state: there is no
+  // known API to do so. Fortunately, the shell seems to detect this case
+  // anyway, and treats the window as snapped.)
+  const LayoutDeviceIntMargin overhang = ResizeBorderOverhang();
+  screenRect.Inflate(DesktopIntMargin(NSToIntRound(overhang.top / dpiScale),
+                                      NSToIntRound(overhang.right / dpiScale),
+                                      NSToIntRound(overhang.bottom / dpiScale),
+                                      NSToIntRound(overhang.left / dpiScale)));
 
   aPoint = ConstrainPositionToBounds(aPoint, {logWidth, logHeight}, screenRect);
 }
