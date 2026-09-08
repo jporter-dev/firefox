@@ -1342,11 +1342,8 @@ already_AddRefed<mozilla::dom::Promise> WindowGlobalParent::DrawSnapshot(
     flags |= gfx::CrossProcessPaintFlags::ResetScrollPosition;
   }
 
-  if (!gfx::CrossProcessPaint::Start(this, aRect, (float)aScale, color, flags,
-                                     promise)) {
-    aRv = NS_ERROR_FAILURE;
-    return nullptr;
-  }
+  gfx::CrossProcessPaint::Start(this, aRect, (float)aScale, color, flags,
+                                promise);
   return promise.forget();
 }
 
