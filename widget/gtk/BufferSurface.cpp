@@ -2,8 +2,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include <gbm.h>
 #include "BufferSurface.h"
+
+#include <gbm.h>
 
 #ifdef MOZ_LOGGING
 #  include "gfxUtils.h"
@@ -11,11 +12,10 @@
 #endif
 
 #ifdef MOZ_WAYLAND
-#include "nsWaylandDisplay.h"
+#  include "nsWaylandDisplay.h"
 #endif
 #include "GLContextEGL.h"
 #include "GLContextProvider.h"
-
 
 using namespace mozilla;
 using namespace mozilla::widget;
