@@ -45,9 +45,8 @@ You can find the review identifier by inspecting the commit log with:
 
 ## Referring to code in bugs, reviews and commit messages
 
-Bug descriptions, Phabricator comments and commit messages outlive the code they describe, so reference a name rather than a position. A selector, function, class, pref or flag name survives edits and is greppable, where `path/to/file.css:1202` goes stale as soon as anything above it moves — and is often wrong on arrival, because the number came from `rg -n` against a tree with uncommitted changes. Name the file without a line, and avoid positional phrasing ("the rule above X", "the third block in Y").
-
-Where a precise location genuinely helps, use a Searchfox permalink, which is pinned to a revision: `https://searchfox.org/firefox-main/rev/<sha>/<path>#<line>`, or `searchfox-cli -q <term> -p <path> --permalink` to print one. The anchor also takes a range (`#169-176`) or separate lines (`#9,12`). The repository path is `firefox-main`, not `mozilla-central`, and the SHA must have reached `origin/main` — an autoland-only commit is not indexed. The `/source/<path>` form follows tip and rots like a bare line number.
+- **Reference a name, not a position.** This text outlives the code it describes, so cite a selector, function, class, pref or flag name; name a file without a line, and avoid positional phrasing ("the rule above X").
+- **Where a location genuinely helps, use a Searchfox permalink.** Get it from `searchfox-cli -q <term> -p <path> --permalink`, which pins the revision Searchfox has indexed. Indexing lags landing by up to a day and an unindexed revision still answers HTTP 200, so a URL built by hand from `git log` has to be verified by grepping the page for content you expect. The form is `https://searchfox.org/firefox-main/rev/<sha>/<path>#<line>`, and the anchor also takes `#169-176` or `#9,12`. The `/source/<path>` form follows tip and rots like a bare line number, so where Searchfox cannot cite the code yet, name the file and quote the lines instead.
 
 ## Code Style
 - Our style guide forbids the use of emoji.

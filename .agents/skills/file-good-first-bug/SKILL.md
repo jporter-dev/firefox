@@ -90,7 +90,7 @@ Filing as a good first bug to learn workflows.
 <optional: warning list / code snippet / current vs. desired>
 
 Link to the code:
-https://searchfox.org/firefox-main/rev/<sha>/<path>[#<line>]
+<a permalink from `searchfox-cli -q <term> -p <path> --permalink`; when it prints nothing, https://searchfox.org/firefox-main/source/<path> with no line number>
 
 To verify the fix:
 
