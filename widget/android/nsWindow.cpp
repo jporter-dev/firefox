@@ -15,7 +15,6 @@
 #include <atomic>
 #include <numbers>
 #include <queue>
-#include <type_traits>
 
 #include "AndroidBridge.h"
 #include "AndroidBridgeUtilities.h"
@@ -153,22 +152,6 @@ static const nsCString::size_type MAX_TOPLEVEL_DATA_URI_LEN = 2 * 1024 * 1024;
 static std::atomic<int32_t> sWidgetId{0};
 
 namespace {
-template <class Instance, class Impl>
-std::enable_if_t<jni::detail::NativePtrPicker<Impl>::value ==
-                     jni::detail::NativePtrType::REFPTR,
-                 void>
-CallAttachNative(Instance aInstance, Impl* aImpl) {
-  Impl::AttachNative(aInstance, RefPtr<Impl>(aImpl).get());
-}
-
-template <class Instance, class Impl>
-std::enable_if_t<jni::detail::NativePtrPicker<Impl>::value ==
-                     jni::detail::NativePtrType::OWNING,
-                 void>
-CallAttachNative(Instance aInstance, Impl* aImpl) {
-  Impl::AttachNative(aInstance, UniquePtr<Impl>(aImpl));
-}
-
 template <class Lambda>
 bool DispatchToUiThread(const char* aName, Lambda&& aLambda) {
   if (RefPtr<nsThread> uiThread = GetAndroidUiThread()) {
