@@ -36,6 +36,8 @@ exclude = [
   # the walk rather than filter paths; `lint.exclude` would not stop ruff
   # descending into them. Excluded from formatting too, as it was under `black`.
   "testing/web-platform/tests",
+  # mako files are not really python files
+  "*.mako.py",
 ]
 
 # Paths skipped by `rust check` only. `ruff format` does not use this list.
@@ -94,9 +96,6 @@ lint.exclude = [
 
   # Can be removed once remaining CI workers updated past Python 3.8
   "python/mozbuild/mozbuild/action/tooltool.py",
-
-  # mako files are not really python files
-  "*.mako.py",
 
   # These paths are intentionally excluded (not necessarily for good reason).
   "build/moz.configure/*.configure",
@@ -170,3 +169,15 @@ keep-runtime-typing = true
 # TODO: Remove preview once these features are in the stable release.
 preview = true
 docstring-code-format = true
+
+# Paths skipped by `rust format` only. `ruff check` does not use this list.
+#
+# Entries here are matched as globs against each file path rather than pruned
+# during directory traversal, so a directory MUST be written as `some/dir/**`;
+# `some/dir` silently matches nothing.
+exclude = [
+  "gfx/harfbuzz/src/meson.build",
+  "python/mozbuild/mozbuild/test/frontend/data/reader-error-syntax/moz.build",
+  "testing/mozharness/configs/test/test_malformed.py",
+  "tools/lint/python/review_context_schema.py",
+]

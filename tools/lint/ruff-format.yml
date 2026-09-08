@@ -1,13 +1,8 @@
 ---
 ruff-format:
     description: Reformat python with ruff
-    # Excludes should be added to topsrcdir/pyproject.toml
-    exclude:
-        - gfx/harfbuzz/src/meson.build
-        - '**/*.mako.py'
-        - python/mozbuild/mozbuild/test/frontend/data/reader-error-syntax/moz.build
-        - testing/mozharness/configs/test/test_malformed.py
-        - testing/web-platform/tests
+    # Excludes should be added to `format.exclude` in topsrcdir/pyproject.toml
+    exclude: []
     extensions:
         - build
         - configure
