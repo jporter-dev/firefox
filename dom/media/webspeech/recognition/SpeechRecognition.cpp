@@ -13,6 +13,7 @@
 #include "MediaEnginePrefs.h"
 #include "SpeechRecognitionAlternative.h"
 #include "SpeechRecognitionBackend.h"
+#include "SpeechRecognitionModelMapping.h"
 #include "SpeechRecognitionResult.h"
 #include "SpeechRecognitionResultList.h"
 #include "SpeechTrackListener.h"
@@ -490,6 +491,16 @@ already_AddRefed<Promise> SpeechRecognition::Available(
     return promise.forget();
   }
 
+  // Step 5.2.2.5: "Else (on-device speech recognition for language is not
+  // supported), set currentLanguageStatus to unavailable", which per step
+  // 5.2.2.6 comes last in the status ordering, so it settles the answer.
+  for (const nsCString& lang : aOptions.mLangs) {
+    if (SpeechModelFor(lang).isNothing()) {
+      promise->MaybeResolve(AvailabilityStatus::Unavailable);
+      return promise.forget();
+    }
+  }
+
   return SpeechRecognitionBackend::Available(global, aOptions.mLangs);
 }
 
@@ -592,15 +603,21 @@ already_AddRefed<Promise> SpeechRecognition::Install(
     return nullptr;
   }
 
-  // Step 4, resolving false for an unsupported on-device language pack, cannot
-  // trigger: LanguagesToSpeechModelId maps every valid tag to a model, falling
-  // back to the multilingual pack, so every valid language is supported.
-  //
-  // The spec says nothing about an empty langs here; mirror available(), which
-  // reports unavailable, and resolve false: there is nothing to install.
+  // Step 4: "If langs of options is an empty sequence, resolve promise with
+  // false, abort these steps".
   if (aOptions.mLangs.IsEmpty()) {
     promise->MaybeResolve(false);
     return promise.forget();
+  }
+
+  // Step 5: "If the on-device speech recognition language pack for any lang in
+  // langs of options is unsupported, resolve promise with false, abort these
+  // steps" -- so before downloading anything.
+  for (const nsCString& lang : aOptions.mLangs) {
+    if (SpeechModelFor(lang).isNothing()) {
+      promise->MaybeResolve(false);
+      return promise.forget();
+    }
   }
 
   bool transactionCreated = false;
@@ -732,6 +749,17 @@ void SpeechRecognition::StartImpl(MediaStreamTrack* aAudioTrack,
         }
       }
     }
+  }
+
+  // Step 4.1: "If the user agent determines that local speech recognition is
+  // not available for this.lang [...] fire an event named error [...] with its
+  // error attribute initialized to service-not-allowed".
+  if (!effectiveLang.IsEmpty() &&
+      SpeechModelFor(NS_ConvertUTF16toUTF8(effectiveLang)).isNothing()) {
+    LOGE("No on-device model recognizes this language");
+    DispatchErrorAndEnd(SpeechRecognitionErrorCode::Service_not_allowed,
+                        "No on-device model recognizes this language"_ns);
+    return;
   }
 
   // Step 5: set [[started]] to true, before the model install below: for
