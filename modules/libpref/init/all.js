@@ -1370,9 +1370,6 @@ pref("network.negotiate-auth.allow-proxies", true);
 // Path to a specific gssapi library
 pref("network.negotiate-auth.gsslib", "");
 
-// Specify if the gss lib comes standard with the OS
-pref("network.negotiate-auth.using-native-gsslib", true);
-
 #ifdef XP_WIN
   // Default to using the SSPI intead of GSSAPI on windows
   pref("network.auth.use-sspi", true);
