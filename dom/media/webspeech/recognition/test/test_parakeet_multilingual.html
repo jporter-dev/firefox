@@ -18,13 +18,12 @@
 "use strict";
 
 // End-to-end test for the multilingual streaming backend (nvidia
-// nemotron-3.5-asr-streaming-0.6b via parakeet.cpp). Selecting a non-"en-*"
-// language routes recognition to the multilingual model; "auto" makes it
-// auto-detect the spoken language. We feed the (English) Kennedy clip with
-// lang="auto" to exercise the full Firefox path for the larger prompt-
-// conditioned model. Also checks that several distinct non-"en-*" language
-// codes all report the multilingual model as available once it is
-// installed.
+// nemotron-3.5-asr-streaming-0.6b via parakeet.cpp). Non-English locales route
+// there on their own; the only clip in the tree is the English Kennedy one, so
+// the model pref below is what points en at the multilingual model, exercising
+// the full Firefox path for the larger prompt-conditioned model. Also checks
+// that several distinct non-"en-*" language codes all report the multilingual
+// model as available once it is installed.
 //
 // Heavily instrumented (see test_parakeet_e2e.html): the log shows model
 // availability, AudioContext state, real audio flow into the captured track,
@@ -50,6 +49,7 @@ SpecialPowers.pushPrefEnv({
   set: [
     ["media.webspeech.recognition.enable", true],
     ["browser.ml.modelHubRootUrl", `http://localhost:${SERVER_PORT}/`],
+    ["media.webspeech.recognition.model.en", "multilingual"],
     ["media.webspeech.recognition.model-download.prompt.testing", true],
     ["media.navigator.permission.disabled", true],
   ],
@@ -116,9 +116,8 @@ SpecialPowers.pushPrefEnv({
 
     const sr = new SpeechRecognition();
     sr.continuous = true;
-    // Non-"en-*" language selects the multilingual nemotron model; "auto" lets
-    // it detect the language itself.
-    sr.lang = "auto";
+    // Routed to the multilingual nemotron model by the model pref above.
+    sr.lang = "en-US";
 
     const {
       transcript,
