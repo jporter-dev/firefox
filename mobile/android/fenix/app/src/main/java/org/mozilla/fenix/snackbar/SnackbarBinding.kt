@@ -372,8 +372,7 @@ class SnackbarBinding(
 
                     is SnackbarState.None -> Unit
 
-                    is SnackbarState.IPProtectionDataLimitReached ->
-                        handleIPProtectionDataLimitReachedSnackbarState(state)
+                    is SnackbarState.IPProtectionShowActionSettingsSnackbar -> showActionSettingsSnackbar(state.title)
 
                     is SnackbarState.IPProtectionShowSnackbar -> showIPProtectionSnackBar(state.title)
                 }
@@ -436,12 +435,12 @@ class SnackbarBinding(
      * The state could be consumed by [IPProtectionSnackbarBinding] as well (e.g. three dot menu or trust panel opened),
      * in which case, to avoid showing snackbar twice, we only show it here if the view is active.
      */
-    private fun handleIPProtectionDataLimitReachedSnackbarState(state: SnackbarState.IPProtectionDataLimitReached) {
+    private fun showActionSettingsSnackbar(title: String) {
         if (viewHasFocus()) {
             snackbarDelegate.show(
-                text = state.title,
-                duration = Snackbar.LENGTH_LONG,
-                action = context.getString(R.string.ip_protection_data_limit_reached_snackbar_action),
+                text = title,
+                duration = context.components.settings.getSnackbarTimeout(hasAction = true).value.toInt(),
+                action = context.getString(R.string.ip_protection_open_settings_snackbar_action),
             ) {
                 navController.navigate(
                     BrowserFragmentDirections.actionGlobalIpProtectionFragment(
@@ -462,7 +461,7 @@ class SnackbarBinding(
         if (viewHasFocus()) {
             snackbarDelegate.show(
                 text = title,
-                duration = Snackbar.LENGTH_SHORT,
+                duration = context.components.settings.getSnackbarTimeout().value.toInt(),
             )
 
             appStore.dispatch(SnackbarAction.SnackbarShown)

@@ -58,10 +58,11 @@ class IPProtectionSnackbarMiddlewareTest {
     }
 
     @Test
-    fun `WHEN LocationReset is dispatched THEN ShowSnackbar action is dispatched`() {
+    fun `WHEN LocationReset is dispatched THEN ShowActionSettingsSnackbar action is dispatched`() {
         ipProtectionStore.dispatch(IPProtectionAction.LocationReset)
 
-        captureMiddleware.assertLastAction(AppAction.IPProtectionSnackbarAction.ShowSnackbar::class) { action ->
+        captureMiddleware.assertLastAction(AppAction.IPProtectionSnackbarAction.ShowActionSettingsSnackbar::class) {
+            action ->
             assertEquals(locationSelectionReset, action.title)
         }
     }
