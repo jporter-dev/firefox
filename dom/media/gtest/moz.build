@@ -83,6 +83,7 @@ UNIFIED_SOURCES += [
     "TestRemoteImageHolder.cpp",
     "TestRust.cpp",
     "TestSimpleMap.cpp",
+    "TestSpeechModelMapping.cpp",
     "TestTelemetryProbesReporter.cpp",
     "TestTimeUnit.cpp",
     "TestUnboundedMPSCQueue.cpp",
