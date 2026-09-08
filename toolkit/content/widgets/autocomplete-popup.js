@@ -644,8 +644,16 @@
     _setSecondaryActionFocused(focused) {
       this._secondaryActionFocused = focused;
       const rowItem = this._selectedRowItem;
-      if (rowItem) {
-        rowItem.subfocused = focused;
+      if (focused) {
+        if (rowItem) {
+          rowItem.subfocused = true;
+        }
+      } else {
+        for (const item of this.richlistbox.querySelectorAll(
+          "autocomplete-row-item"
+        )) {
+          item.subfocused = false;
+        }
       }
       if (focused && this.mPopupOpen && this.richlistbox.selectedItem) {
         this.richlistbox.ensureElementIsVisible(this.richlistbox.selectedItem);
@@ -682,8 +690,9 @@
         return false;
       }
       const rowItem = this._selectedRowItem;
-      rowItem?.activateSecondaryAction();
-      this._setSecondaryActionFocused(false);
+      if (!rowItem?.activateSecondaryAction()) {
+        this._setSecondaryActionFocused(false);
+      }
       return true;
     }
 
@@ -729,6 +738,7 @@
 
       this.addEventListener("popuphiding", event => {
         if (!isOwnEvent(event)) {
+          this._setSecondaryActionFocused(false);
           return;
         }
 

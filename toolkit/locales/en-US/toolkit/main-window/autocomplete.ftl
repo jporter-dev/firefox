@@ -25,12 +25,18 @@ autocomplete-import-learn-more = Learn more
 ## Gated by the browser.autocomplete.removeRecords.enabled pref.
 
 # aria-label and tooltip for the button that opens the edit/delete menu.
-autocomplete-more-actions = More actions
+# Variables:
+#   $entry (String) - The dropdown row the actions apply to, such as a username, an address, or a payment method.
+autocomplete-more-actions2 = More actions for { $entry }
+
 autocomplete-edit-password = Edit this password
 autocomplete-delete-password = Delete this password
 autocomplete-edit-address = Edit this address
 autocomplete-delete-address = Delete this address
 autocomplete-edit-payment-method = Edit this payment method
 autocomplete-delete-payment-method = Delete this payment method
+
 # aria-label and tooltip for the trash button on a form history entry.
-autocomplete-delete-form-history-entry = Delete this form history entry
+# Variables:
+#   $entry (String) - The text of the saved form history entry that would be deleted.
+autocomplete-delete-form-history-entry2 = Delete { $entry } from form history

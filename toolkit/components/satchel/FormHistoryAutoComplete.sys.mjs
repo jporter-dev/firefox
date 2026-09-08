@@ -136,7 +136,8 @@ export class FormHistoryAutoCompleteResult {
       secondaryAction: {
         type: "delete",
         label: lazy.l10n.formatValueSync(
-          "autocomplete-delete-form-history-entry"
+          "autocomplete-delete-form-history-entry2",
+          { entry: this.getLabelAt(index) }
         ),
       },
     });

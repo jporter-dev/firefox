@@ -32,6 +32,31 @@ async function selectRow(item, index) {
   );
 }
 
+function waitForFlyout(itemLabel) {
+  return TestUtils.waitForCondition(
+    () =>
+      [...document.querySelectorAll("menupopup")].find(
+        m =>
+          m.state == "open" &&
+          [...m.querySelectorAll("menuitem")].some(
+            mi => mi.getAttribute("label") === itemLabel
+          )
+      ),
+    "Wait for the flyout menu to open"
+  );
+}
+
+async function openFlyoutByKeyboard(item, rowItem) {
+  await selectRow(item, 0);
+  await EventUtils.synthesizeKey("KEY_Tab");
+  await TestUtils.waitForCondition(
+    () => rowItem.hasAttribute("subfocused"),
+    "Wait for the secondary action to become sub-focused"
+  );
+  await EventUtils.synthesizeKey("KEY_Enter");
+  return waitForFlyout(rowItem.actions.secondary.actions[0].label);
+}
+
 add_task(async function test_edit_icon_when_pref_disabled() {
   await SpecialPowers.pushPrefEnv({ set: [[PREF, false]] });
   await BrowserTestUtils.withNewTab(
@@ -345,6 +370,155 @@ add_task(async function test_flyout_closes_with_panel() {
         !rowItem.hasAttribute("menuopen"),
         "The row's open marker is cleared when the panel closes"
       );
+    }
+  );
+  await SpecialPowers.popPrefEnv();
+});
+
+add_task(async function test_activating_flyout_item_keeps_panel_open() {
+  await SpecialPowers.pushPrefEnv({ set: [[PREF, true]] });
+  await BrowserTestUtils.withNewTab(
+    { gBrowser, url: TEST_URL_PATH },
+    async function (browser) {
+      const popup = document.getElementById("PopupAutoComplete");
+      await openACPopup(popup, browser, "#form-basic-username");
+
+      const { item, rowItem } = getSecondaryAction(popup, 0);
+      const menupopup = await openFlyoutByKeyboard(item, rowItem);
+
+      const menuitems = [...menupopup.querySelectorAll("menuitem")];
+      for (const menuitem of menuitems) {
+        Assert.equal(
+          menuitem.getAttribute("closemenu"),
+          "single",
+          "Flyout items close only their own menu, not the popup chain"
+        );
+      }
+
+      const menuHidden = BrowserTestUtils.waitForEvent(
+        menupopup,
+        "popuphiding"
+      );
+      menupopup.activateItem(menuitems[0]);
+      await menuHidden;
+
+      Assert.equal(
+        popup.state,
+        "open",
+        "The autocomplete panel stays open after a flyout item is activated"
+      );
+
+      await closePopup(popup);
+    }
+  );
+  await SpecialPowers.popPrefEnv();
+});
+
+add_task(async function test_subfocus_tracks_the_flyout() {
+  await SpecialPowers.pushPrefEnv({ set: [[PREF, true]] });
+  await BrowserTestUtils.withNewTab(
+    { gBrowser, url: TEST_URL_PATH },
+    async function (browser) {
+      const popup = document.getElementById("PopupAutoComplete");
+      await openACPopup(popup, browser, "#form-basic-username");
+
+      const { item, rowItem } = getSecondaryAction(popup, 0);
+      const menupopup = await openFlyoutByKeyboard(item, rowItem);
+
+      Assert.ok(
+        rowItem.hasAttribute("subfocused"),
+        "The button keeps its focus indicator while the flyout is showing"
+      );
+      Assert.ok(
+        rowItem.hasAttribute("menuopen"),
+        "The row is marked open while the flyout is showing"
+      );
+
+      const menuHidden = BrowserTestUtils.waitForEvent(
+        menupopup,
+        "popuphiding"
+      );
+      menupopup.hidePopup();
+      await menuHidden;
+
+      await TestUtils.waitForCondition(
+        () => !rowItem.hasAttribute("subfocused"),
+        "Wait for the sub-selection to drop when the flyout closes"
+      );
+      Assert.ok(
+        !popup._secondaryActionFocused,
+        "The panel and the row agree that the sub-selection is gone"
+      );
+      Assert.equal(popup.state, "open", "The autocomplete panel stays open");
+
+      await closePopup(popup);
+    }
+  );
+  await SpecialPowers.popPrefEnv();
+});
+
+add_task(async function test_secondary_action_menu_semantics() {
+  await SpecialPowers.pushPrefEnv({ set: [[PREF, true]] });
+  await BrowserTestUtils.withNewTab(
+    { gBrowser, url: TEST_URL_PATH },
+    async function (browser) {
+      const popup = document.getElementById("PopupAutoComplete");
+      await openACPopup(popup, browser, "#form-basic-username");
+
+      const { item, rowItem, button } = getSecondaryAction(popup, 0);
+      const { label } = rowItem.actions.secondary;
+
+      Assert.ok(
+        label.includes("user1"),
+        `The button is named after the row it belongs to, got "${label}"`
+      );
+
+      const innerButton = button.shadowRoot.querySelector("#main-button");
+      Assert.equal(
+        innerButton.getAttribute("title"),
+        label,
+        "The button's accessible name comes from its title"
+      );
+      Assert.ok(
+        !innerButton.hasAttribute("aria-label"),
+        "The name is not duplicated across title and aria-label"
+      );
+      Assert.equal(
+        innerButton.getAttribute("aria-haspopup"),
+        "menu",
+        "The button advertises that it opens a menu"
+      );
+      Assert.equal(
+        innerButton.getAttribute("aria-expanded"),
+        "false",
+        "The button reports its menu as collapsed"
+      );
+
+      const menupopup = await openFlyoutByKeyboard(item, rowItem);
+
+      Assert.equal(
+        menupopup.getAttribute("aria-label"),
+        label,
+        "The flyout has an accessible name"
+      );
+      await TestUtils.waitForCondition(
+        () => innerButton.getAttribute("aria-expanded") === "true",
+        "Wait for the button to report its menu as expanded"
+      );
+
+      const menuHidden = BrowserTestUtils.waitForEvent(
+        menupopup,
+        "popuphiding"
+      );
+      menupopup.hidePopup();
+      await menuHidden;
+
+      await TestUtils.waitForCondition(
+        () => innerButton.getAttribute("aria-expanded") === "false",
+        "Wait for the button to report its menu as collapsed again"
+      );
+
+      await closePopup(popup);
     }
   );
   await SpecialPowers.popPrefEnv();

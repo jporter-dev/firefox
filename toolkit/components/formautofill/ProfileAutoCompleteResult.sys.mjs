@@ -33,10 +33,10 @@ XPCOMUtils.defineLazyPreferenceGetter(
 
 // Builds the "more actions" flyout secondaryAction for a profile row. The edit
 // and delete menu items are non-functional placeholders for now.
-function moreActionsSecondaryAction(editLabelId, deleteLabelId) {
+function moreActionsSecondaryAction(entry, editLabelId, deleteLabelId) {
   return {
     type: "menupopup",
-    label: lazy.l10n.formatValueSync("autocomplete-more-actions"),
+    label: lazy.l10n.formatValueSync("autocomplete-more-actions2", { entry }),
     actions: [
       { label: lazy.l10n.formatValueSync(editLabelId) },
       { label: lazy.l10n.formatValueSync(deleteLabelId) },
@@ -463,6 +463,7 @@ export class AddressResult extends ProfileAutoCompleteResult {
         type: "address",
         ...(lazy.removeRecordsEnabled && {
           secondaryAction: moreActionsSecondaryAction(
+            ariaLabel,
             "autocomplete-edit-address",
             "autocomplete-delete-address"
           ),
@@ -613,6 +614,7 @@ export class CreditCardResult extends ProfileAutoCompleteResult {
           type: "payment",
           ...(lazy.removeRecordsEnabled && {
             secondaryAction: moreActionsSecondaryAction(
+              ariaLabel,
               "autocomplete-edit-payment-method",
               "autocomplete-delete-payment-method"
             ),

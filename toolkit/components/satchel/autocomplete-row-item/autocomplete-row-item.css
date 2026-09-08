@@ -10,6 +10,11 @@
   --row-item-padding: var(--space-small);
   --row-item-border-radius: var(--border-radius-large);
   --row-item-label-font-size: inherit;
+
+  @media (not (forced-colors)) {
+    --button-background-color-ghost-hover: color-mix(in srgb, currentColor 15%, transparent);
+    --button-background-color-ghost-active: color-mix(in srgb, currentColor 30%, transparent);
+  }
 }
 
 .row-item {
@@ -57,8 +62,6 @@
 .secondary-action {
   visibility: hidden;
   margin-inline-start: auto;
-  --button-background-color-ghost-hover: color-mix(in srgb, currentColor 15%, transparent);
-  --button-background-color-ghost-active: color-mix(in srgb, currentColor 30%, transparent);
 }
 
 :host(:is(:hover, [selected]:not([pointerselected]), [subfocused])) .secondary-action {

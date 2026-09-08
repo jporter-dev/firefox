@@ -5,13 +5,9 @@
 import {
   html,
   when,
-  classMap,
   ifDefined,
 } from "chrome://global/content/vendor/lit.all.mjs";
 import { MozLitElement } from "chrome://global/content/lit-utils.mjs";
-
-// eslint-disable-next-line import/no-unassigned-import
-import "chrome://global/content/elements/panel-list.mjs";
 
 class AutocompleteRowItem extends MozLitElement {
   static properties = {
@@ -23,6 +19,7 @@ class AutocompleteRowItem extends MozLitElement {
     selected: { type: Boolean, reflect: true },
     pointerselected: { type: Boolean, reflect: true },
     subfocused: { type: Boolean, reflect: true },
+    menuopen: { type: Boolean, reflect: true },
     type: { type: String, reflect: true },
     // Smart Form Fill properties
     sources: { type: Array },
@@ -39,36 +36,39 @@ class AutocompleteRowItem extends MozLitElement {
   #openActionsMenu(anchor, actions) {
     const panel = this.closest("panel");
     if (!panel) {
-      return;
+      return false;
     }
 
     const XUL_NS =
       "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 
     const menupopup = document.createElementNS(XUL_NS, "menupopup");
+    menupopup.setAttribute("aria-label", this.actions.secondary.label);
 
     for (const { label, action } of actions) {
       const menuitem = document.createElementNS(XUL_NS, "menuitem");
       menuitem.setAttribute("label", label);
+      menuitem.setAttribute("closemenu", "single");
       menuitem.addEventListener("command", () => action());
       menupopup.appendChild(menuitem);
     }
 
     this.#actionsMenu = menupopup;
-    this.toggleAttribute("menuopen", true);
+    this.menuopen = true;
     menupopup.addEventListener("popuphiding", () => {
       this.#actionsMenu = null;
-      this.toggleAttribute("menuopen", false);
+      this.menuopen = false;
       menupopup.remove();
     });
 
     panel.appendChild(menupopup);
     menupopup.openPopup(anchor, "after_start");
+    return true;
   }
 
   closeActionsMenu() {
     this.#actionsMenu?.hidePopup();
-    this.toggleAttribute("menuopen", false);
+    this.menuopen = false;
   }
 
   getSecondaryActionItemIcon(type) {
@@ -88,12 +88,15 @@ class AutocompleteRowItem extends MozLitElement {
     const { action, actions } = this.actions?.secondary ?? {};
     if (action) {
       action();
-    } else if (actions) {
+      return false;
+    }
+    if (actions) {
       const button = this.shadowRoot.querySelector(
         "moz-button.secondary-action"
       );
-      this.#openActionsMenu(button, actions);
+      return this.#openActionsMenu(button, actions);
     }
+    return false;
   }
 
   renderSecondaryActionButton() {
@@ -108,6 +111,9 @@ class AutocompleteRowItem extends MozLitElement {
       // nsFormFillController close the popup.
       e.preventDefault();
       e.stopPropagation();
+    };
+    const onClick = e => {
+      e.stopPropagation();
       this.activateSecondaryAction();
     };
 
@@ -115,14 +121,13 @@ class AutocompleteRowItem extends MozLitElement {
       id="secondary-action-button"
       @mousedown=${onMouseDown}
       @mouseup=${stopMouseEvents}
+      @click=${onClick}
       type="icon ghost"
-      aria-label=${ifDefined(label)}
       title=${ifDefined(label)}
+      .ariaHasPopup=${actions ? "menu" : null}
+      .ariaExpanded=${actions ? String(!!this.menuopen) : null}
       .iconSrc=${this.getSecondaryActionItemIcon(type)}
-      class=${classMap({
-        "secondary-action": true,
-        selected: this.selected,
-      })}
+      class="secondary-action"
     ></moz-button>`;
   }
 

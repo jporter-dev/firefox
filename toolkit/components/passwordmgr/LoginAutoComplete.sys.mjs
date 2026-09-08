@@ -170,7 +170,9 @@ class LoginAutocompleteItem extends AutocompleteItem {
       secondaryAction: lazy.removeRecordsEnabled
         ? {
             type: "menupopup",
-            label: lazy.l10n.formatValueSync("autocomplete-more-actions"),
+            label: lazy.l10n.formatValueSync("autocomplete-more-actions2", {
+              entry: username,
+            }),
             actions: [
               {
                 label: lazy.l10n.formatValueSync("autocomplete-edit-password"),
