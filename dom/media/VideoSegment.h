@@ -128,7 +128,8 @@ class VideoSegment : public MediaSegmentBase<VideoSegment, VideoChunk> {
       const PrincipalHandle& aPrincipalHandle, bool aForceBlack = false,
       TimeStamp aTimeStamp = TimeStamp::Now(),
       media::TimeUnit aProcessingDuration = media::TimeUnit::Invalid(),
-      media::TimeUnit aMediaTime = media::TimeUnit::Invalid());
+      media::TimeUnit aMediaTime = media::TimeUnit::Invalid(),
+      VideoRotation aRotation = VideoRotation::kDegree_0);
   void AppendWebrtcRemoteFrame(
       already_AddRefed<Image> aImage, const IntSize& aIntrinsicSize,
       const PrincipalHandle& aPrincipalHandle, bool aForceBlack,

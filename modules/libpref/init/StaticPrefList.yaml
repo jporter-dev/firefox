@@ -13646,6 +13646,13 @@
   value: false
   mirror: always
 
+# Rotation in degrees (0/90/180/270) reported by fake video capture sources.
+# Allows mochitests to exercise camera rotation handling without real hardware.
+- name: media.getusermedia.camera.fake.rotation
+  type: RelaxedAtomicInt32
+  value: 0
+  mirror: always
+
 # Tell the audio backend to prefer a stream adapted for voice when processing is
 # enabled through constraints (possibly defaults). Whether it has any effect
 # depends on the backend.
