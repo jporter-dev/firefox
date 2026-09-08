@@ -734,55 +734,70 @@
     "dark": "{Theme$border/color/interactive/disabled}",
     "forcedColors": "{Theme$border/color/interactive/disabled}"
   },
+  "toggle/background/color": {
+    "light": "transparent",
+    "dark": "transparent",
+    "forcedColors": "{HCM Theme$SelectedItemText}"
+  },
+  "toggle/background/color/hover": {
+    "light": "transparent",
+    "dark": "transparent",
+    "forcedColors": "{HCM Theme$SelectedItemText}"
+  },
+  "toggle/background/color/active": {
+    "light": "transparent",
+    "dark": "transparent",
+    "forcedColors": "{HCM Theme$SelectedItemText}"
+  },
   "toggle/background/color/pressed": {
     "light": "{Theme$button/background/color/primary}",
     "dark": "{Theme$button/background/color/primary}",
-    "forcedColors": "{Theme$button/background/color/primary}"
+    "forcedColors": "{HCM Theme$ButtonText}"
   },
   "toggle/background/color/pressed/hover": {
     "light": "{Theme$button/background/color/primary/hover}",
     "dark": "{Theme$button/background/color/primary/hover}",
-    "forcedColors": "{Theme$button/background/color/primary/hover}"
+    "forcedColors": "{HCM Theme$SelectedItem}"
   },
   "toggle/background/color/pressed/active": {
     "light": "{Theme$button/background/color/primary/active}",
     "dark": "{Theme$button/background/color/primary/active}",
-    "forcedColors": "{Theme$button/background/color/primary/active}"
+    "forcedColors": "{HCM Theme$SelectedItem}"
   },
   "toggle/border/color": {
     "light": "{Theme$border/color/interactive}",
     "dark": "{Theme$border/color/interactive}",
-    "forcedColors": "{Theme$border/color/interactive}"
+    "forcedColors": "{HCM Theme$ButtonText}"
   },
   "toggle/border/color/hover": {
     "light": "{Theme$border/color/interactive/hover}",
     "dark": "{Theme$border/color/interactive/hover}",
-    "forcedColors": "{Theme$border/color/interactive/hover}"
+    "forcedColors": "{HCM Theme$SelectedItem}"
   },
   "toggle/border/color/active": {
     "light": "{Theme$border/color/interactive/active}",
     "dark": "{Theme$border/color/interactive/active}",
-    "forcedColors": "{Theme$border/color/interactive/active}"
+    "forcedColors": "{HCM Theme$ButtonText}"
   },
   "toggle/dot/background/color": {
-    "light": "{Theme$toggle/border/color}",
-    "dark": "{Theme$toggle/border/color}",
-    "forcedColors": "{Theme$toggle/border/color}"
+    "light": "transparent",
+    "dark": "transparent",
+    "forcedColors": "{HCM Theme$ButtonText}"
   },
   "toggle/dot/background/color/hover": {
     "light": "{Theme$toggle/border/color/hover}",
     "dark": "{Theme$toggle/border/color/hover}",
-    "forcedColors": "{Theme$toggle/border/color/hover}"
+    "forcedColors": "{HCM Theme$SelectedItem}"
   },
   "toggle/dot/background/color/active": {
     "light": "{Theme$toggle/border/color/active}",
     "dark": "{Theme$toggle/border/color/active}",
-    "forcedColors": "{Theme$toggle/border/color/active}"
+    "forcedColors": "{HCM Theme$SelectedItem}"
   },
   "toggle/dot/background/color/on-pressed": {
     "light": "{Theme$background/color/box}",
     "dark": "{Theme$background/color/box}",
-    "forcedColors": "{Theme$background/color/box}"
+    "forcedColors": "{HCM Theme$ButtonText}"
   },
   "panel-list/border/color": {
     "light": "{Theme$panel/border/color}",

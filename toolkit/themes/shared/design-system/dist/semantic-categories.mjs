@@ -739,27 +739,27 @@ export const tokensTable = {
       name: "--select-background-color-disabled",
     },
     {
-      value: "var(--button-background-color)",
+      value: { default: "var(--button-background-color)" },
       name: "--toggle-background-color",
     },
     {
-      value: "var(--button-background-color-hover)",
+      value: { default: "var(--button-background-color-hover)" },
       name: "--toggle-background-color-hover",
     },
     {
-      value: "var(--button-background-color-active)",
+      value: { default: "var(--button-background-color-active)" },
       name: "--toggle-background-color-active",
     },
     {
-      value: "var(--color-accent-primary)",
+      value: { default: "var(--color-accent-primary)" },
       name: "--toggle-background-color-pressed",
     },
     {
-      value: "var(--color-accent-primary-hover)",
+      value: { default: "var(--color-accent-primary-hover)" },
       name: "--toggle-background-color-pressed-hover",
     },
     {
-      value: "var(--color-accent-primary-active)",
+      value: { default: "var(--color-accent-primary-active)" },
       name: "--toggle-background-color-pressed-active",
     },
     {
@@ -5244,13 +5244,20 @@ export const variableLookupTable = {
   "select-text-color": "var(--button-text-color)",
   "select-text-color-hover": "var(--button-text-color-hover)",
   "select-text-color-disabled": "var(--button-text-color-disabled)",
-  "toggle-background-color": "var(--button-background-color)",
-  "toggle-background-color-hover": "var(--button-background-color-hover)",
-  "toggle-background-color-active": "var(--button-background-color-active)",
-  "toggle-background-color-pressed": "var(--color-accent-primary)",
-  "toggle-background-color-pressed-hover": "var(--color-accent-primary-hover)",
-  "toggle-background-color-pressed-active":
-    "var(--color-accent-primary-active)",
+  "toggle-background-color": { default: "var(--button-background-color)" },
+  "toggle-background-color-hover": {
+    default: "var(--button-background-color-hover)",
+  },
+  "toggle-background-color-active": {
+    default: "var(--button-background-color-active)",
+  },
+  "toggle-background-color-pressed": { default: "var(--color-accent-primary)" },
+  "toggle-background-color-pressed-hover": {
+    default: "var(--color-accent-primary-hover)",
+  },
+  "toggle-background-color-pressed-active": {
+    default: "var(--color-accent-primary-active)",
+  },
   "toggle-border-color": {
     light: "var(--color-gray-70)",
     dark: "var(--border-color-interactive)",
