@@ -1,8 +1,5 @@
 [DEFAULT]
-prefs = [
-  "apz.zoom-to-focused-input.enabled=false",
-  "gfx.font_loader.delay=0",
-]
+prefs = ["gfx.font_loader.delay=0"]
 support-files = [
   "347174transform.xsl",
   "347174transformable.xml",
