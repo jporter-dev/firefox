@@ -94,3 +94,37 @@ add_task(async function test_trash_button_when_pref_enabled() {
   });
   await SpecialPowers.popPrefEnv();
 });
+
+add_task(async function test_trash_button_shows_no_confirmation() {
+  await SpecialPowers.pushPrefEnv({ set: [[PREF, true]] });
+  let sawDialog = false;
+  const observer = () => {
+    sawDialog = true;
+  };
+  Services.obs.addObserver(observer, "common-dialog-loaded");
+
+  await withFormHistoryPopup(async (browser, autoCompletePopup, itemsBox) => {
+    const rowItem = getRowItem(itemsBox, 0);
+    const button = rowItem.shadowRoot.querySelector(
+      "moz-button.secondary-action"
+    );
+
+    await BrowserTestUtils.synthesizeKey("VK_DOWN", {}, browser);
+    await TestUtils.waitForCondition(() => rowItem.selected);
+
+    EventUtils.synthesizeMouseAtCenter(button, {});
+    await TestUtils.waitForTick();
+
+    Assert.ok(
+      !sawDialog,
+      "Form history entries are removed without a confirmation prompt"
+    );
+    Assert.ok(
+      autoCompletePopup.popupOpen,
+      "The popup stays open after the trash button is clicked"
+    );
+  });
+
+  Services.obs.removeObserver(observer, "common-dialog-loaded");
+  await SpecialPowers.popPrefEnv();
+});

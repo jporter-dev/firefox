@@ -117,6 +117,7 @@ formautofill:
       Captures the method of user interaction initiating the prompt and the result of the prompt.
       Possible triggers include:
         "autofill" when a user attempts to autofill a payment method.
+        "delete_autocomplete" when a user deletes a payment method from the form autocomplete dropdown
         "edit" when a user edits a login in about:preferences
         "toggle_pref_os_auth" when a user toggles "Autofill / Require device sign in" in about:preferences
       Possible results include:

@@ -45,11 +45,19 @@ class AutocompleteRowItem extends MozLitElement {
     const menupopup = document.createElementNS(XUL_NS, "menupopup");
     menupopup.setAttribute("aria-label", this.actions.secondary.label);
 
+    const richlistbox = panel.richlistbox;
+    const selectedIndex = richlistbox?.selectedIndex;
+
     for (const { label, action } of actions) {
       const menuitem = document.createElementNS(XUL_NS, "menuitem");
       menuitem.setAttribute("label", label);
       menuitem.setAttribute("closemenu", "single");
-      menuitem.addEventListener("command", () => action());
+      menuitem.addEventListener("command", () => {
+        if (richlistbox && richlistbox.selectedIndex != selectedIndex) {
+          richlistbox.selectedIndex = selectedIndex;
+        }
+        action();
+      });
       menupopup.appendChild(menuitem);
     }
 

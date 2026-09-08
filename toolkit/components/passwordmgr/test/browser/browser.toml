@@ -262,9 +262,6 @@ skip-if = [
 ["browser_openPasswordManager.js"]
 
 ["browser_preselect_login.js"]
-fail-if = [
-  "a11y_checks", # Bug 1854452 clicked ac-secondary-action may not be labeled
-]
 skip-if = [
   "asan",
   "os == 'linux' && os_version == '24.04' && arch == 'x86_64' && display == 'x11' && debug", # Bug 1840479

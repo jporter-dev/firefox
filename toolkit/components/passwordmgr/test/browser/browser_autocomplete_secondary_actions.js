@@ -1,6 +1,10 @@
 const TEST_ORIGIN = "https://example.org";
 const TEST_URL_PATH = `${TEST_ORIGIN}${DIRECTORY_PATH}form_basic_login.html`;
 const PREF = "browser.autocomplete.removeRecords.enabled";
+const AC_L10N = new Localization(
+  ["toolkit/main-window/autocomplete.ftl"],
+  true
+);
 
 const LOGINS_DATA = [
   { origin: TEST_ORIGIN, username: "user1", password: "pass1" },
@@ -11,6 +15,36 @@ add_setup(async () => {
   await Services.logins.addLogins(
     LOGINS_DATA.map(login => LoginTestUtils.testData.formLogin(login))
   );
+});
+
+// Every flyout delete dispatches a real reauthentication request. Stub it for
+// the whole file so no task can raise a genuine OS auth prompt and wedge the
+// browser.
+let gReauthAuthorized = false;
+let gReauthCalls = [];
+
+add_setup(async () => {
+  const { LoginHelper } = ChromeUtils.importESModule(
+    "resource://gre/modules/LoginHelper.sys.mjs"
+  );
+  const original = LoginHelper.requestReauth;
+  LoginHelper.requestReauth = async (...args) => {
+    gReauthCalls.push(args);
+    // A real prompt takes focus, which tears the dropdown down before it
+    // resolves. Do the same so callers see the ordering they see in the wild.
+    const popup = document.getElementById("PopupAutoComplete");
+    if (popup.state != "closed") {
+      popup.hidePopup();
+      await TestUtils.waitForCondition(
+        () => popup.state == "closed",
+        "Wait for the dropdown to close before reauthentication resolves"
+      );
+    }
+    return { isAuthorized: gReauthAuthorized, telemetryEvent: null };
+  };
+  registerCleanupFunction(() => {
+    LoginHelper.requestReauth = original;
+  });
 });
 
 function getSecondaryAction(popup, index) {
@@ -55,6 +89,35 @@ async function openFlyoutByKeyboard(item, rowItem) {
   );
   await EventUtils.synthesizeKey("KEY_Enter");
   return waitForFlyout(rowItem.actions.secondary.actions[0].label);
+}
+
+async function openFlyout(popup, button, label) {
+  await TestUtils.waitForCondition(
+    () => button.checkVisibility({ checkVisibilityCSS: true }),
+    "Wait for the secondary action button to be visible"
+  );
+  // The click opens the flyout on mousedown, but a stray event can dismiss it
+  // before it settles; re-click while the panel is still up (a missed click
+  // would hit the row and close it) until the flyout sticks.
+  const menupopup = await TestUtils.waitForCondition(() => {
+    const found = [...popup.querySelectorAll("menupopup")].find(m =>
+      [...m.querySelectorAll("menuitem")].some(
+        mi => mi.getAttribute("label") === label
+      )
+    );
+    if (found) {
+      return found;
+    }
+    if (popup.state == "open") {
+      EventUtils.synthesizeMouseAtCenter(button, {});
+    }
+    return false;
+  }, "Wait for the flyout menu to open");
+
+  if (menupopup.state != "open") {
+    await BrowserTestUtils.waitForEvent(menupopup, "popupshown");
+  }
+  return menupopup;
 }
 
 add_task(async function test_edit_icon_when_pref_disabled() {
@@ -104,24 +167,14 @@ add_task(async function test_flyout_when_pref_enabled() {
       );
 
       await selectRow(item, 0);
-      Assert.ok(
-        button.checkVisibility({ checkVisibilityCSS: true }),
+      await TestUtils.waitForCondition(
+        () => button.checkVisibility({ checkVisibilityCSS: true }),
         "Secondary action is visible when the row is active"
       );
 
       const [editAction, deleteAction] = rowItem.actions.secondary.actions;
 
-      EventUtils.synthesizeMouseAtCenter(button, {});
-
-      const menupopup = await TestUtils.waitForCondition(
-        () =>
-          [...document.querySelectorAll("menupopup")].find(m =>
-            [...m.querySelectorAll("menuitem")].some(
-              mi => mi.getAttribute("label") === editAction.label
-            )
-          ),
-        "Wait for the flyout menu to open"
-      );
+      const menupopup = await openFlyout(popup, button, editAction.label);
 
       const labels = [...menupopup.querySelectorAll("menuitem")].map(mi =>
         mi.getAttribute("label")
@@ -236,23 +289,7 @@ add_task(async function test_action_button_persists_while_flyout_open() {
       await selectRow(item, 0);
 
       const editLabel = rowItem.actions.secondary.actions[0].label;
-      // The button only becomes hittable once the selected row has rendered it
-      // visible, which can lag the row's "selected" attribute.
-      await TestUtils.waitForCondition(
-        () => button.checkVisibility({ checkVisibilityCSS: true }),
-        "Wait for the secondary action button to be visible"
-      );
-      EventUtils.synthesizeMouseAtCenter(button, {});
-
-      const menupopup = await TestUtils.waitForCondition(
-        () =>
-          [...document.querySelectorAll("menupopup")].find(m =>
-            [...m.querySelectorAll("menuitem")].some(
-              mi => mi.getAttribute("label") === editLabel
-            )
-          ),
-        "Wait for the flyout menu to open"
-      );
+      const menupopup = await openFlyout(popup, button, editLabel);
 
       Assert.ok(
         rowItem.hasAttribute("menuopen"),
@@ -342,23 +379,7 @@ add_task(async function test_flyout_closes_with_panel() {
       await selectRow(item, 0);
 
       const editLabel = rowItem.actions.secondary.actions[0].label;
-      // The button only becomes hittable once the selected row has rendered it
-      // visible, which can lag the row's "selected" attribute.
-      await TestUtils.waitForCondition(
-        () => button.checkVisibility({ checkVisibilityCSS: true }),
-        "Wait for the secondary action button to be visible"
-      );
-      EventUtils.synthesizeMouseAtCenter(button, {});
-
-      const menupopup = await TestUtils.waitForCondition(
-        () =>
-          [...document.querySelectorAll("menupopup")].find(m =>
-            [...m.querySelectorAll("menuitem")].some(
-              mi => mi.getAttribute("label") === editLabel
-            )
-          ),
-        "Wait for the flyout menu to open"
-      );
+      const menupopup = await openFlyout(popup, button, editLabel);
 
       await closePopup(popup);
 
@@ -521,5 +542,213 @@ add_task(async function test_secondary_action_menu_semantics() {
       await closePopup(popup);
     }
   );
+  await SpecialPowers.popPrefEnv();
+});
+
+// Moving the pointer into the flyout takes it off the row, which clears the
+// dropdown's selection. The flyout must restore it, otherwise AutoCompleteParent
+// has no entry to dispatch the delete action for.
+add_task(async function test_delete_works_after_pointer_leaves_row() {
+  await SpecialPowers.pushPrefEnv({ set: [[PREF, true]] });
+  gReauthAuthorized = true;
+  gReauthCalls = [];
+  let sawDialog = false;
+
+  await BrowserTestUtils.withNewTab(
+    { gBrowser, url: TEST_URL_PATH },
+    async function (browser) {
+      const popup = document.getElementById("PopupAutoComplete");
+      await openACPopup(popup, browser, "#form-basic-username");
+
+      const { item, rowItem, button } = getSecondaryAction(popup, 0);
+      const richlistbox = popup.richlistbox;
+
+      await TestUtils.waitForCondition(() => {
+        EventUtils.synthesizeMouseAtCenter(item, { type: "mousemove" });
+        return richlistbox.hasAttribute("pointerselected");
+      }, "Wait for the row to be selected by the pointer");
+      Assert.equal(popup.selectedIndex, 0, "The hovered row is selected");
+
+      const deleteLabel = rowItem.actions.secondary.actions[1].label;
+      const menupopup = await openFlyout(popup, button, deleteLabel);
+      const menuitem = [...menupopup.querySelectorAll("menuitem")].find(
+        mi => mi.getAttribute("label") === deleteLabel
+      );
+
+      richlistbox.dispatchEvent(
+        new MouseEvent("mouseout", { bubbles: true, relatedTarget: null })
+      );
+      Assert.equal(
+        popup.selectedIndex,
+        -1,
+        "The dropdown drops its selection once the pointer leaves the row"
+      );
+
+      const dialogClosed = BrowserTestUtils.promiseAlertDialog(
+        null,
+        undefined,
+        {
+          callback: win => {
+            sawDialog = true;
+            win.document.querySelector("dialog").getButton("cancel").click();
+          },
+        }
+      );
+
+      menupopup.activateItem(menuitem);
+      await dialogClosed;
+
+      Assert.equal(gReauthCalls.length, 1, "Reauthentication was requested");
+      Assert.ok(
+        sawDialog,
+        "The delete action still resolves to the row the flyout belongs to"
+      );
+
+      await TestUtils.waitForCondition(
+        () => popup.state == "open",
+        "Wait for the dropdown to come back after the confirmation"
+      );
+
+      await closePopup(popup);
+    }
+  );
+  gReauthAuthorized = false;
+  await SpecialPowers.popPrefEnv();
+});
+
+add_task(async function test_delete_reauthenticates_then_confirms() {
+  await SpecialPowers.pushPrefEnv({ set: [[PREF, true]] });
+  gReauthAuthorized = true;
+  gReauthCalls = [];
+  await BrowserTestUtils.withNewTab(
+    { gBrowser, url: TEST_URL_PATH },
+    async function (browser) {
+      const popup = document.getElementById("PopupAutoComplete");
+      await openACPopup(popup, browser, "#form-basic-username");
+
+      const { item, rowItem, button } = getSecondaryAction(popup, 0);
+      await selectRow(item, 0);
+
+      const deleteLabel = rowItem.actions.secondary.actions[1].label;
+      const menupopup = await openFlyout(popup, button, deleteLabel);
+      const menuitem = [...menupopup.querySelectorAll("menuitem")].find(
+        mi => mi.getAttribute("label") === deleteLabel
+      );
+
+      let dialogWin;
+      const dialogClosed = BrowserTestUtils.promiseAlertDialog(
+        null,
+        undefined,
+        {
+          callback: async win => {
+            dialogWin = win;
+            const [title, message, confirmButton] = AC_L10N.formatValuesSync([
+              { id: "autocomplete-remove-password-title" },
+              { id: "autocomplete-remove-record-message" },
+              { id: "autocomplete-remove-record-button" },
+            ]);
+            Assert.equal(
+              win.document.getElementById("infoTitle").textContent,
+              title,
+              "The confirmation asks whether to remove the password"
+            );
+            Assert.equal(
+              win.document.getElementById("infoBody").textContent,
+              message,
+              "The confirmation warns the action cannot be undone"
+            );
+            const dialog = win.document.querySelector("dialog");
+            Assert.equal(
+              dialog.getButton("accept").label,
+              confirmButton,
+              "The accept button is labelled Remove"
+            );
+            dialog.getButton("cancel").click();
+          },
+        }
+      );
+
+      menupopup.activateItem(menuitem);
+      await dialogClosed;
+
+      Assert.equal(gReauthCalls.length, 1, "Reauthentication was requested");
+      Assert.equal(
+        gReauthCalls[0][4],
+        "delete_autocomplete",
+        "Reauthentication is recorded against the autocomplete delete"
+      );
+      Assert.ok(dialogWin, "The confirmation dialog was shown");
+
+      await TestUtils.waitForCondition(
+        () => popup.state == "open",
+        "Wait for the dropdown to come back after the confirmation"
+      );
+      Assert.equal(
+        popup.state,
+        "open",
+        "The dropdown is restored once the confirmation is dismissed"
+      );
+
+      const logins = await Services.logins.getAllLogins();
+      Assert.equal(
+        logins.length,
+        LOGINS_DATA.length,
+        "Cancelling the confirmation leaves the login in place"
+      );
+
+      await closePopup(popup);
+    }
+  );
+  gReauthAuthorized = false;
+  await SpecialPowers.popPrefEnv();
+});
+
+add_task(async function test_delete_skips_confirm_when_reauth_fails() {
+  await SpecialPowers.pushPrefEnv({ set: [[PREF, true]] });
+  gReauthAuthorized = false;
+  gReauthCalls = [];
+  let sawDialog = false;
+  const observer = () => {
+    sawDialog = true;
+  };
+  Services.obs.addObserver(observer, "common-dialog-loaded");
+  await BrowserTestUtils.withNewTab(
+    { gBrowser, url: TEST_URL_PATH },
+    async function (browser) {
+      const popup = document.getElementById("PopupAutoComplete");
+      await openACPopup(popup, browser, "#form-basic-username");
+
+      const { item, rowItem, button } = getSecondaryAction(popup, 0);
+      await selectRow(item, 0);
+
+      const deleteLabel = rowItem.actions.secondary.actions[1].label;
+      const menupopup = await openFlyout(popup, button, deleteLabel);
+      const menuitem = [...menupopup.querySelectorAll("menuitem")].find(
+        mi => mi.getAttribute("label") === deleteLabel
+      );
+
+      menupopup.activateItem(menuitem);
+      await TestUtils.waitForCondition(
+        () => gReauthCalls.length,
+        "Wait for reauthentication to be requested"
+      );
+      await TestUtils.waitForTick();
+
+      Assert.ok(!sawDialog, "No confirmation is shown when reauth is declined");
+
+      await TestUtils.waitForCondition(
+        () => popup.state == "open",
+        "The dropdown comes back even when reauthentication is declined"
+      );
+      Assert.equal(
+        popup.state,
+        "open",
+        "The dropdown is restored when reauthentication is declined"
+      );
+
+      await closePopup(popup);
+    }
+  );
+  Services.obs.removeObserver(observer, "common-dialog-loaded");
   await SpecialPowers.popPrefEnv();
 });

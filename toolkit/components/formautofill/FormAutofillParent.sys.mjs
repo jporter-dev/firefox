@@ -36,6 +36,8 @@ const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
   AddressComponent: "resource://gre/modules/shared/AddressComponent.sys.mjs",
+  AutocompleteRemoveRecord:
+    "resource://gre/modules/AutocompleteRemoveRecord.sys.mjs",
   FormAutofillML: "resource://gre/modules/shared/FormAutofillML.sys.mjs",
   FormAutofillHeuristics:
     "resource://gre/modules/shared/FormAutofillHeuristics.sys.mjs",
@@ -1137,6 +1139,47 @@ export class FormAutofillParent extends JSWindowActorParent {
     return { records, externalEntries, allFieldNames: section.allFieldNames };
   }
 
+  // The dropdown is torn down when the reauthentication or confirmation prompt
+  // takes focus, so bring it back once the flow is over.
+  #reopenAutocompletePopup() {
+    if (!this.manager || this.manager.isClosed) {
+      return;
+    }
+    this.sendAsyncMessage("FormAutofill:RepopulateAutocompletePopup");
+  }
+
+  async #confirmCreditCardRemoval() {
+    const promptMessage = FormAutofillUtils.reauthOSPromptMessage(
+      "autofill-delete-payment-method-os-prompt-macos",
+      "autofill-delete-payment-method-os-prompt-windows",
+      "autofill-delete-payment-method-os-prompt-other"
+    );
+    let verified;
+    let result;
+    try {
+      verified = await FormAutofillUtils.verifyUserOSAuth(
+        FormAutofill.AUTOFILL_CREDITCARDS_OS_AUTH_LOCKED_PREF,
+        promptMessage
+      );
+      result = verified ? "success" : "fail_user_canceled";
+    } catch (ex) {
+      result = "fail_error";
+      throw ex;
+    } finally {
+      Glean.formautofill.promptShownOsReauth.record({
+        trigger: "delete_autocomplete",
+        result,
+      });
+    }
+
+    if (verified) {
+      await lazy.AutocompleteRemoveRecord.confirmRemoval(
+        this.manager.browsingContext.topChromeWindow,
+        "payment"
+      );
+    }
+  }
+
   /**
    * This function is called when an autocomplete entry that is provided by
    * formautofill is selected by the user.
@@ -1160,6 +1203,31 @@ export class FormAutofillParent extends JSWindowActorParent {
 
       case "FormAutofill:FillForm": {
         this.autofillFields(data.focusElementId, data.profile);
+        break;
+      }
+
+      case "FormAutofill:DeleteAddress": {
+        try {
+          await lazy.AutocompleteRemoveRecord.confirmRemoval(
+            this.manager.browsingContext.topChromeWindow,
+            "address"
+          );
+        } catch (ex) {
+          lazy.log.warn("Address removal flow failed:", ex);
+        } finally {
+          this.#reopenAutocompletePopup();
+        }
+        break;
+      }
+
+      case "FormAutofill:DeleteCreditCard": {
+        try {
+          await this.#confirmCreditCardRemoval();
+        } catch (ex) {
+          lazy.log.warn("Payment method removal flow failed:", ex);
+        } finally {
+          this.#reopenAutocompletePopup();
+        }
         break;
       }
 

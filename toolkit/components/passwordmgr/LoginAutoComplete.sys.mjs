@@ -181,6 +181,10 @@ class LoginAutocompleteItem extends AutocompleteItem {
                 label: lazy.l10n.formatValueSync(
                   "autocomplete-delete-password"
                 ),
+                fillMessageName: "PasswordManager:DeleteLogin",
+                fillMessageData: {
+                  loginGuid: login.guid,
+                },
               },
             ],
           }

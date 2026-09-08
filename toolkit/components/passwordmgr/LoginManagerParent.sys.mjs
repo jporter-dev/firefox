@@ -28,6 +28,8 @@ ChromeUtils.defineLazyGetter(lazy, "PasswordRulesManager", () => {
 });
 
 ChromeUtils.defineESModuleGetters(lazy, {
+  AutocompleteRemoveRecord:
+    "resource://gre/modules/AutocompleteRemoveRecord.sys.mjs",
   ChromeMigrationUtils: "resource:///modules/ChromeMigrationUtils.sys.mjs",
   FirefoxRelay: "resource://gre/modules/FirefoxRelay.sys.mjs",
   LoginHelper: "resource://gre/modules/LoginHelper.sys.mjs",
@@ -1602,11 +1604,51 @@ export class LoginManagerParent extends JSWindowActorParent {
     // Logins do not show previews
   }
 
+  // The dropdown is torn down when the reauthentication or confirmation prompt
+  // takes focus, so bring it back once the flow is over.
+  #reopenAutocompletePopup() {
+    if (!this.manager || this.manager.isClosed) {
+      return;
+    }
+    this.sendAsyncMessage("PasswordManager:repopulateAutocompletePopup");
+  }
+
+  async #confirmLoginRemoval() {
+    const browser = this.getRootBrowser();
+    const chromeWindow = this.browsingContext.topChromeWindow;
+    const osAuth = await lazy.AutocompleteRemoveRecord.passwordOSAuthStrings();
+    const { isAuthorized } = await lazy.LoginHelper.requestReauth(
+      browser,
+      null,
+      osAuth.message,
+      osAuth.caption,
+      "delete_autocomplete"
+    );
+
+    if (isAuthorized && chromeWindow) {
+      await lazy.AutocompleteRemoveRecord.confirmRemoval(
+        chromeWindow,
+        "password"
+      );
+    }
+  }
+
   async onAutoCompleteEntrySelected(message, data) {
     switch (message) {
       // Called when clicking the open preference entry in the autocomplete
       case "PasswordManager:OpenPreferences": {
         this.#onOpenPreferences(data.hostname, data.entryPoint, data.loginGuid);
+        break;
+      }
+
+      case "PasswordManager:DeleteLogin": {
+        try {
+          await this.#confirmLoginRemoval();
+        } catch (ex) {
+          lazy.log("Password removal flow failed:", ex);
+        } finally {
+          this.#reopenAutocompletePopup();
+        }
         break;
       }
 

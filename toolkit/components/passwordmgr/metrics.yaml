@@ -385,6 +385,7 @@ pwmgr:
       Possible triggers include:
         "copy_logins" when a user copies a password in about:logins
         "copy_cpm" when a user copies a password in contextual password manager
+        "delete_autocomplete" when a user deletes a password from the form autocomplete dropdown
         "edit_logins" when a user edits a login in about:logins
         "edit_cpm" when a user edits a login in contextual password manager
         "export_logins" when a user exports all passwords in about:logins
