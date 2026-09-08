@@ -4008,14 +4008,14 @@
   value: false
   mirror: always
 
-# Limit of location change caused by content scripts in a time span per
+# Limit of navigations initiated by content in a time span per
 # BrowsingContext. This includes calls to History and Location APIs.
 - name: dom.navigation.navigationRateLimit.count
   type: uint32_t
-  value: 1000
+  value: 200
   mirror: always
 
-# Time span in seconds for location change rate limit.
+# Time span in seconds for the navigation rate limit.
 - name: dom.navigation.navigationRateLimit.timespan
   type: uint32_t
   value: 10
