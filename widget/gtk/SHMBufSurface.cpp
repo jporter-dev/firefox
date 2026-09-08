@@ -9,12 +9,12 @@
 #include <string.h>
 #include <sys/mman.h>
 
+#include "GLContextEGL.h"
+#include "GLContextProvider.h"
 #include "gfxPlatform.h"
 #include "mozilla/ipc/SharedMemoryHandle.h"
 #include "nsGtkUtils.h"
 #include "nsWaylandDisplay.h"
-#include "GLContextEGL.h"
-#include "GLContextProvider.h"
 
 #undef LOGDMABUF
 #ifdef MOZ_LOGGING
