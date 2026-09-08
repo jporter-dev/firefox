@@ -2201,29 +2201,38 @@ Element* Element::GetAttrAssociatedElementForBindings(nsAtom* aAttr) const {
 
 Maybe<nsTArray<RefPtr<Element>>> Element::GetAttrAssociatedElementsInternal(
     nsAtom* aAttr, bool aForBindings) {
-  // https://whatpr.org/html/10995/common-microsyntaxes.html#attr-associated-elements
+  if (aForBindings || !StaticPrefs::dom_shadowdom_referenceTarget_enabled()) {
+    return GetUnresolvedAttributeTargetElements(aAttr);
+  } else {
+    return GetResolvedAttributeTargetElements(aAttr);
+  }
+}
+
+Maybe<nsTArray<RefPtr<Element>>> Element::GetUnresolvedAttributeTargetElements(
+    nsAtom* aAttr) {
+  // https://whatpr.org/html/10995/common-microsyntaxes.html#unresolved-attribute-target-elements
+  // note that step 1 is handled further below.
+  // 2. Let unresolvedTargets be « ».
   nsTArray<RefPtr<Element>> elements;
   auto& [explicitlySetAttrElements, _] =
       ExtendedDOMSlots()->mAttrElementsMap.LookupOrInsert(aAttr);
 
   if (explicitlySetAttrElements) {
-    // 3. If element has an explicitly set attr-elements which
+    // 3. If element has an explicitly set attr-elements:
     for (const nsWeakPtr& weakEl : *explicitlySetAttrElements) {
-      // For each attrElement in reflectedTarget's explicitly set
-      // attr-elements:
+      // 3.1. For each attrElement of element's explicitly set attr-elements:
       if (RefPtr<Element> attrEl = do_QueryReferent(weakEl)) {
-        // If attrElement is not a descendant of any of element's
+        // 3.1.1. If attrElement is not a descendant of any of element's
         // shadow-including ancestors, then continue.
         if (!HasSharedRoot(attrEl)) {
           continue;
         }
-        // Append attrElement to elements.
+        // 3.1.2. Append attrElement to unresolvedTargets.
         elements.AppendElement(std::move(attrEl));
       }
     }
   } else {
-    // 4. Otherwise
-    // 4.1. Let value be the attribute value.
+    // 4. Let value be the attribute value.
     const nsAttrValue* value = GetParsedAttr(aAttr);
     // 1. If the attribute is not specified on element, return null.
     if (!value || value->GetAtomCount() == 0) {
@@ -2233,41 +2242,49 @@ Maybe<nsTArray<RefPtr<Element>>> Element::GetAttrAssociatedElementsInternal(
     MOZ_ASSERT(value->Type() == nsAttrValue::eAtomArray ||
                    value->Type() == nsAttrValue::eAtom,
                "Attribute used for accessible relations must be parsed.");
-    // 4.2. Let tokens be value, split on ASCII whitespace.
-    // 4.3. For each id of tokens:
+    // 5. Let tokens be value, split on ASCII whitespace.
+    // 6. For each id of tokens:
     for (uint32_t i = 0; i < value->GetAtomCount(); i++) {
-      // 4.3.1 Let candidate be the first element, in tree order, that meets the
-      // following criteria:
-      // - candidate's root is the same as element's root; and
-      // - candidate's ID is id.
+      // 6.1. Let unresolvedTarget be the first element, in tree order, that
+      // meets the following criteria:
+      // - unresolvedTarget's root is the same as element's root; and
+      // - unresolvedTarget's ID is id.
       if (auto* candidate = GetElementByIdInDocOrSubtree(
               value->AtomAt(static_cast<int32_t>(i)))) {
-        // Append candidate to elements.
+        // 6.2. Append unresolvedTarget to unresolvedTargets.
         elements.AppendElement(candidate);
       }
     }
   }
-  if (!StaticPrefs::dom_shadowdom_referenceTarget_enabled()) {
-    return Some(std::move(elements));
-  }
+  // 7. Return unresolvedTargets.
+  return Some(std::move(elements));
+}
 
-  // 5. Let resolvedCandidates be an empty list.
+Maybe<nsTArray<RefPtr<Element>>> Element::GetResolvedAttributeTargetElements(
+    nsAtom* aAttr) {
+  // https://whatpr.org/html/10995/common-microsyntaxes.html#resolved-attribute-target-elements
+  // 1. Let unresolvedTargets be the unresolved attribute target elements for
+  // attribute and element.
+  Maybe<nsTArray<RefPtr<Element>>> maybeUnresolvedTargets =
+      GetUnresolvedAttributeTargetElements(aAttr);
+  if (maybeUnresolvedTargets.isNothing()) {
+    return Nothing();
+  }
+  nsTArray<RefPtr<Element>> unresolvedTargets =
+      maybeUnresolvedTargets.extract();
+  // 2. Let resolvedTargets be « ».
   nsTArray<RefPtr<Element>> resolvedElements;
-  // 6. For each candidate in candidates:
-  for (const RefPtr<Element>& element : elements) {
-    // 6.1 Let resolvedCandidate be the result of resolving the reference target
-    // on candidate.
+  // 3. For each unresolvedTarget of unresolvedTargets:
+  for (const RefPtr<Element>& element : unresolvedTargets) {
+    // 3.1. Let resolvedTarget be the result of resolving the reference target
+    // on unresolvedTarget.
     if (Element* resolvedCandidate = element->ResolveReferenceTarget()) {
-      // 6.2 If resolvedCandidate is not null:
-      if (aForBindings) {
-        // 6.2.1 If retarget is true, append candidate to resolvedCandidates
-        resolvedElements.AppendElement(element);
-      } else {
-        // 6.2.2 Otherwise, append resolvedCandidate to resolvedCandidates
-        resolvedElements.AppendElement(resolvedCandidate);
-      }
+      // 3.2. If resolvedTarget is not null, then append resolvedTarget to
+      // resolvedTargets.
+      resolvedElements.AppendElement(resolvedCandidate);
     }
   }
+  // 4. Return resolvedTargets.
   return Some(std::move(resolvedElements));
 }
 
