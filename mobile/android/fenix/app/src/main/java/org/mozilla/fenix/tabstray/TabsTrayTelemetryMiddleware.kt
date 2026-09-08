@@ -229,6 +229,14 @@ class TabsTrayTelemetryMiddleware(private val nimbusEventStore: NimbusEventStore
                 TabsTray.tabGroupClosed.record(NoExtras())
             }
 
+            is TabGroupAction.OnboardingShown -> {
+                TabsTray.tabGroupOnboardingShown.record(NoExtras())
+            }
+
+            is TabGroupAction.OnboardingDismissed -> {
+                TabsTray.tabGroupOnboardingDismissed.record(NoExtras())
+            }
+
             else -> {
                 // no-op
             }
