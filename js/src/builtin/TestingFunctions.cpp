@@ -1929,7 +1929,7 @@ static bool DisassembleNative(JSContext* cx, unsigned argc, Value* vp) {
       return false;
     }
 
-    FILE* f = fopen(fileName, "w");
+    FILE* f = fopen(fileName, "wb");
     if (!f) {
       JS_ReportErrorASCII(cx, "Could not open file for writing.");
       return false;
@@ -1937,7 +1937,7 @@ static bool DisassembleNative(JSContext* cx, unsigned argc, Value* vp) {
 
     uintptr_t expected_length = reinterpret_cast<uintptr_t>(jit_end) -
                                 reinterpret_cast<uintptr_t>(jit_begin);
-    if (expected_length != fwrite(jit_begin, jit_end - jit_begin, 1, f)) {
+    if (fwrite(jit_begin, 1, expected_length, f) != expected_length) {
       JS_ReportErrorASCII(cx, "Did not write all function bytes to the file.");
       fclose(f);
       return false;
