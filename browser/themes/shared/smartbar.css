@@ -63,6 +63,13 @@
     }
   }
 
+  /* Neutralize the UA popover rules. */
+  inset: auto;
+  border: none;
+  padding: 0;
+  overflow: visible;
+  background-color: transparent;
+
   display: flex;
   flex-direction: column;
   max-height: var(--smartbar-max-height);
