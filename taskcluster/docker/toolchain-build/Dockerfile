@@ -38,6 +38,7 @@ RUN apt-get update && \
       libtool \
       libucl-dev \
       libxml2-dev \
+      libzstd-dev \
       lld-${CLANG_VER} \
       msitools \
       ninja-build \
