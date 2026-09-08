@@ -292,64 +292,61 @@ pub mod border_image {
         let mut parsed_source = false;
         let mut parsed_repeat = false;
         loop {
-            if !parsed_slice {
-                if let Ok(value) =
+            if !parsed_slice
+                && let Ok(value) =
                     input.try_parse(|input| border_image_slice::parse(context, input))
-                {
-                    parsed_slice = true;
-                    any = true;
-                    slice = value;
-                    // Parse border image width and outset, if applicable.
-                    let maybe_width_outset: Result<_, ParseError> = input.try_parse(|input| {
-                        input.expect_delim('/')?;
+            {
+                parsed_slice = true;
+                any = true;
+                slice = value;
+                // Parse border image width and outset, if applicable.
+                let maybe_width_outset: Result<_, ParseError> = input.try_parse(|input| {
+                    input.expect_delim('/')?;
 
-                        // Parse border image width, if applicable.
-                        let w = input
-                            .try_parse(|input| border_image_width::parse(context, input))
-                            .ok();
+                    // Parse border image width, if applicable.
+                    let w = input
+                        .try_parse(|input| border_image_width::parse(context, input))
+                        .ok();
 
-                        // Parse border image outset if applicable.
-                        let o = input
-                            .try_parse(|input| {
-                                input.expect_delim('/')?;
-                                border_image_outset::parse(context, input)
-                            })
-                            .ok();
-                        if w.is_none() && o.is_none() {
-                            return Err(ParseError::custom(StyleParseErrorKind::UnspecifiedError));
-                        }
-                        Ok((w, o))
-                    });
-                    if let Ok((w, o)) = maybe_width_outset {
-                        if let Some(w) = w {
-                            width = w;
-                        }
-                        if let Some(o) = o {
-                            outset = o;
-                        }
+                    // Parse border image outset if applicable.
+                    let o = input
+                        .try_parse(|input| {
+                            input.expect_delim('/')?;
+                            border_image_outset::parse(context, input)
+                        })
+                        .ok();
+                    if w.is_none() && o.is_none() {
+                        return Err(ParseError::custom(StyleParseErrorKind::UnspecifiedError));
                     }
-                    continue;
+                    Ok((w, o))
+                });
+                if let Ok((w, o)) = maybe_width_outset {
+                    if let Some(w) = w {
+                        width = w;
+                    }
+                    if let Some(o) = o {
+                        outset = o;
+                    }
                 }
+                continue;
             }
-            if !parsed_source {
-                if let Ok(value) =
+            if !parsed_source
+                && let Ok(value) =
                     input.try_parse(|input| border_image_source::parse(context, input))
-                {
-                    source = value;
-                    parsed_source = true;
-                    any = true;
-                    continue;
-                }
+            {
+                source = value;
+                parsed_source = true;
+                any = true;
+                continue;
             }
-            if !parsed_repeat {
-                if let Ok(value) =
+            if !parsed_repeat
+                && let Ok(value) =
                     input.try_parse(|input| border_image_repeat::parse(context, input))
-                {
-                    repeat = value;
-                    parsed_repeat = true;
-                    any = true;
-                    continue;
-                }
+            {
+                repeat = value;
+                parsed_repeat = true;
+                any = true;
+                continue;
             }
             break;
         }
@@ -671,17 +668,17 @@ pub mod offset {
         // offset-distance and offset-rotate are grouped with offset-path.
         if offset_path.is_some() {
             loop {
-                if offset_distance.is_none() {
-                    if let Ok(value) = input.try_parse(|i| LengthPercentage::parse(context, i)) {
-                        offset_distance = Some(value);
-                    }
+                if offset_distance.is_none()
+                    && let Ok(value) = input.try_parse(|i| LengthPercentage::parse(context, i))
+                {
+                    offset_distance = Some(value);
                 }
 
-                if offset_rotate.is_none() {
-                    if let Ok(value) = input.try_parse(|i| OffsetRotate::parse(context, i)) {
-                        offset_rotate = Some(value);
-                        continue;
-                    }
+                if offset_rotate.is_none()
+                    && let Ok(value) = input.try_parse(|i| OffsetRotate::parse(context, i))
+                {
+                    offset_rotate = Some(value);
+                    continue;
                 }
                 break;
             }
@@ -767,18 +764,18 @@ pub mod columns {
                 continue;
             }
 
-            if column_count.is_none() {
-                if let Ok(value) = input.try_parse(|input| column_count::parse(context, input)) {
-                    column_count = Some(value);
-                    continue;
-                }
+            if column_count.is_none()
+                && let Ok(value) = input.try_parse(|input| column_count::parse(context, input))
+            {
+                column_count = Some(value);
+                continue;
             }
 
-            if column_width.is_none() {
-                if let Ok(value) = input.try_parse(|input| column_width::parse(context, input)) {
-                    column_width = Some(value);
-                    continue;
-                }
+            if column_width.is_none()
+                && let Ok(value) = input.try_parse(|input| column_width::parse(context, input))
+            {
+                column_width = Some(value);
+                continue;
             }
 
             break;
@@ -1302,20 +1299,19 @@ pub mod flex {
             });
         }
         loop {
-            if grow.is_none() {
-                if let Ok((flex_grow, flex_shrink)) =
+            if grow.is_none()
+                && let Ok((flex_grow, flex_shrink)) =
                     input.try_parse(|i| parse_flexibility(context, i))
-                {
-                    grow = Some(flex_grow);
-                    shrink = flex_shrink;
-                    continue;
-                }
+            {
+                grow = Some(flex_grow);
+                shrink = flex_shrink;
+                continue;
             }
-            if basis.is_none() {
-                if let Ok(value) = input.try_parse(|input| FlexBasis::parse(context, input)) {
-                    basis = Some(value);
-                    continue;
-                }
+            if basis.is_none()
+                && let Ok(value) = input.try_parse(|input| FlexBasis::parse(context, input))
+            {
+                basis = Some(value);
+                continue;
             }
             break;
         }
@@ -2251,21 +2247,21 @@ pub mod background {
             loop {
                 parsed += 1;
                 try_parse_one!(context, input, background_color, Color::parse);
-                if position.is_none() {
-                    if let Ok(value) = input.try_parse(|input| {
+                if position.is_none()
+                    && let Ok(value) = input.try_parse(|input| {
                         Position::parse_three_value_quirky(context, input, AllowQuirks::No)
-                    }) {
-                        position = Some(value);
+                    })
+                {
+                    position = Some(value);
 
-                        size = input
-                            .try_parse(|input| {
-                                input.expect_delim('/')?;
-                                background_size::single_value::parse(context, input)
-                            })
-                            .ok();
+                    size = input
+                        .try_parse(|input| {
+                            input.expect_delim('/')?;
+                            background_size::single_value::parse(context, input)
+                        })
+                        .ok();
 
-                        continue;
-                    }
+                    continue;
                 }
                 try_parse_one!(context, input, image, background_image::single_value::parse);
                 try_parse_one!(
@@ -2293,10 +2289,10 @@ pub mod background {
             if parsed == 0 {
                 return Err(ParseError::custom(StyleParseErrorKind::UnspecifiedError));
             }
-            if clip.is_none() {
-                if let Some(origin) = origin {
-                    clip = Some(background_clip::single_value::SpecifiedValue::from(origin));
-                }
+            if clip.is_none()
+                && let Some(origin) = origin
+            {
+                clip = Some(background_clip::single_value::SpecifiedValue::from(origin));
             }
             if let Some(position) = position {
                 background_position_x.push(position.horizontal);
@@ -3171,12 +3167,12 @@ pub mod text_decoration {
             return Err(ParseError::custom(StyleParseErrorKind::UnspecifiedError));
         }
 
-        return Ok(expanded! {
+        Ok(expanded! {
             text_decoration_line: unwrap_or_initial!(text_decoration_line, line),
             text_decoration_style: unwrap_or_initial!(text_decoration_style, style),
             text_decoration_color: unwrap_or_initial!(text_decoration_color, color),
             text_decoration_thickness: unwrap_or_initial!(text_decoration_thickness, thickness),
-        });
+        })
     }
 
     impl<'a> ToCss for LonghandsToSerialize<'a> {
@@ -3553,18 +3549,18 @@ pub mod mask {
                 parsed += 1;
 
                 try_parse_one!(context, input, image, mask_image::single_value::parse);
-                if position.is_none() {
-                    if let Ok(value) = input.try_parse(|input| Position::parse(context, input)) {
-                        position = Some(value);
-                        size = input
-                            .try_parse(|input| {
-                                input.expect_delim('/')?;
-                                mask_size::single_value::parse(context, input)
-                            })
-                            .ok();
+                if position.is_none()
+                    && let Ok(value) = input.try_parse(|input| Position::parse(context, input))
+                {
+                    position = Some(value);
+                    size = input
+                        .try_parse(|input| {
+                            input.expect_delim('/')?;
+                            mask_size::single_value::parse(context, input)
+                        })
+                        .ok();
 
-                        continue;
-                    }
+                    continue;
                 }
                 try_parse_one!(context, input, repeat, mask_repeat::single_value::parse);
                 try_parse_one!(context, input, origin, mask_origin::single_value::parse);
@@ -3580,10 +3576,10 @@ pub mod mask {
                 parsed -= 1;
                 break;
             }
-            if clip.is_none() {
-                if let Some(origin) = origin {
-                    clip = Some(mask_clip::single_value::SpecifiedValue::from(origin));
-                }
+            if clip.is_none()
+                && let Some(origin) = origin
+            {
+                clip = Some(mask_clip::single_value::SpecifiedValue::from(origin));
             }
             if parsed == 0 {
                 return Err(ParseError::custom(StyleParseErrorKind::UnspecifiedError));
@@ -3925,10 +3921,10 @@ pub mod grid_template {
 
             let template_cols = if input.try_parse(|i| i.expect_delim('/')).is_ok() {
                 let value = GridTemplateComponent::parse_without_none(context, input)?;
-                if let GenericGridTemplateComponent::TrackList(ref list) = value {
-                    if !list.is_explicit() {
-                        return Err(ParseError::custom(StyleParseErrorKind::UnspecifiedError));
-                    }
+                if let GenericGridTemplateComponent::TrackList(ref list) = value
+                    && !list.is_explicit()
+                {
+                    return Err(ParseError::custom(StyleParseErrorKind::UnspecifiedError));
                 }
 
                 value
@@ -4189,10 +4185,9 @@ pub mod grid {
                 }
 
                 if let GenericGridTemplateComponent::TrackList(ref list) = *self.grid_template_rows
+                    && !list.is_explicit()
                 {
-                    if !list.is_explicit() {
-                        return Ok(());
-                    }
+                    return Ok(());
                 }
 
                 self.grid_template_rows.to_css(dest)?;
@@ -4213,10 +4208,10 @@ pub mod grid {
                 return Ok(());
             }
 
-            if let GenericGridTemplateComponent::TrackList(ref list) = *self.grid_template_columns {
-                if !list.is_explicit() {
-                    return Ok(());
-                }
+            if let GenericGridTemplateComponent::TrackList(ref list) = *self.grid_template_columns
+                && !list.is_explicit()
+            {
+                return Ok(());
             }
 
             dest.write_str("auto-flow")?;

@@ -89,10 +89,10 @@ impl CachedConditions {
             return false;
         }
 
-        if let Some(fs) = self.font_size {
-            if style.get_font().clone_font_size().computed_size != fs {
-                return false;
-            }
+        if let Some(fs) = self.font_size
+            && style.get_font().clone_font_size().computed_size != fs
+        {
+            return false;
         }
 
         if let Some(lh) = self.line_height {

@@ -854,10 +854,10 @@ impl FontFamilyList {
     /// Return the generic ID if it is a single generic font
     pub fn single_generic(&self) -> Option<GenericFontFamily> {
         let mut iter = self.iter();
-        if let Some(SingleFontFamily::Generic(f)) = iter.next() {
-            if iter.next().is_none() {
-                return Some(*f);
-            }
+        if let Some(SingleFontFamily::Generic(f)) = iter.next()
+            && iter.next().is_none()
+        {
+            return Some(*f);
         }
         None
     }

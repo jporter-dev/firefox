@@ -392,9 +392,7 @@ pub fn parse_functional_pseudo_element_with_name<'i>(
 ) -> Result<PseudoElement, ParseError> {
     use crate::gecko::pseudo_element::PtNameAndClassSelector;
 
-    if matches!(target, Target::Selector)
-        && starts_with_ignore_ascii_case(name.as_ref(), "-moz-tree-")
-    {
+    if matches!(target, Target::Selector) && starts_with_ignore_ascii_case(name, "-moz-tree-") {
         // Tree pseudo-elements can have zero or more arguments, separated
         // by either comma or space.
         let mut args = ThinVec::new();
@@ -497,10 +495,10 @@ impl<'a, 'i> ::selectors::Parser<'i> for SelectorParser<'a> {
     }
 
     fn parse_non_ts_pseudo_class(&self, name: &str) -> Result<NonTSPseudoClass, ParseError> {
-        if let Some(pseudo_class) = NonTSPseudoClass::parse_non_functional(&name) {
-            if self.is_pseudo_class_enabled(&pseudo_class) {
-                return Ok(pseudo_class);
-            }
+        if let Some(pseudo_class) = NonTSPseudoClass::parse_non_functional(name)
+            && self.is_pseudo_class_enabled(&pseudo_class)
+        {
+            return Ok(pseudo_class);
         }
         Err(ParseError::custom(
             SelectorParseErrorKind::UnsupportedPseudoClassOrElement,
@@ -561,17 +559,17 @@ impl<'a, 'i> ::selectors::Parser<'i> for SelectorParser<'a> {
     }
 
     fn parse_pseudo_element(&self, name: &str) -> Result<PseudoElement, ParseError> {
-        if let Some(pseudo) = PseudoElement::from_slice(&name) {
-            if self.is_pseudo_element_enabled(&pseudo) {
-                return Ok(pseudo);
-            }
+        if let Some(pseudo) = PseudoElement::from_slice(name)
+            && self.is_pseudo_element_enabled(&pseudo)
+        {
+            return Ok(pseudo);
         }
 
         // @supports must report disabled/unknown `-webkit-*` pseudos as unsupported.
-        if !self.for_supports_rule {
-            if let Some(pseudo) = PseudoElement::unknown_webkit_from_name(&name) {
-                return Ok(pseudo);
-            }
+        if !self.for_supports_rule
+            && let Some(pseudo) = PseudoElement::unknown_webkit_from_name(name)
+        {
+            return Ok(pseudo);
         }
 
         Err(ParseError::custom(

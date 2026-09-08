@@ -175,12 +175,11 @@ impl<'a> Iterator for DeclarationIterator<'a> {
                     // property.  Custom properties are always allowed, but
                     // longhands are only allowed if they have our
                     // restriction flag set.
-                    if let PropertyDeclarationId::Longhand(id) = decl.id() {
-                        if !id.flags().contains(self.restriction)
-                            && self.priority.cascade_level().origin() != CascadeOrigin::UA
-                        {
-                            continue;
-                        }
+                    if let PropertyDeclarationId::Longhand(id) = decl.id()
+                        && !id.flags().contains(self.restriction)
+                        && self.priority.cascade_level().origin() != CascadeOrigin::UA
+                    {
+                        continue;
                     }
                 }
 
@@ -266,15 +265,15 @@ fn iter_declarations<'c, 'decls: 'c>(
         } else {
             let id = declaration.id().as_longhand().unwrap();
             declarations.note_declaration(declaration, priority, id);
-            if Cascade::might_have_non_custom_or_attr_dependency(id, declaration) {
-                if let Some((ref mut cascade, ref mut context)) = custom {
-                    cascade.maybe_note_non_custom_dependency(
-                        context,
-                        id,
-                        declaration,
-                        attribute_tracker,
-                    );
-                }
+            if Cascade::might_have_non_custom_or_attr_dependency(id, declaration)
+                && let Some((ref mut cascade, ref mut context)) = custom
+            {
+                cascade.maybe_note_non_custom_dependency(
+                    context,
+                    id,
+                    declaration,
+                    attribute_tracker,
+                );
             }
         }
     }
@@ -604,12 +603,11 @@ fn tweak_when_ignoring_colors(
             // That's probably fine though, as using a system color for
             // caret-color doesn't make sense (using currentColor is fine), and
             // we ignore accent-color in high-contrast-mode anyways.
-            if let Some(color) = declaration.color_value() {
-                if color
+            if let Some(color) = declaration.color_value()
+                && color
                     .honored_in_forced_colors_mode(context, /* allow_transparent = */ false)
-                {
-                    return;
-                }
+            {
+                return;
             }
         },
     }
@@ -1101,14 +1099,12 @@ impl<'a> Cascade<'a> {
             return;
         }
 
-        if self.reverted.longhands_set.contains(longhand_id) {
-            if let Some(&(reverted_priority, revert_kind)) =
+        if self.reverted.longhands_set.contains(longhand_id)
+            && let Some(&(reverted_priority, revert_kind)) =
                 self.reverted.longhands.get(&longhand_id)
-            {
-                if !reverted_priority.allows_when_reverted(&priority, revert_kind) {
-                    return;
-                }
-            }
+            && !reverted_priority.allows_when_reverted(&priority, revert_kind)
+        {
+            return;
         }
 
         let mut declaration =
@@ -1189,6 +1185,10 @@ impl<'a> Cascade<'a> {
         }
     }
 
+    // `RefCell<&mut T>::borrow_mut()` needs the explicit `&mut *` to get back
+    // to `&mut T`; clippy's needless_borrow / explicit_auto_deref both
+    // misfire on this double indirection and suggest incorrect rewrites.
+    #[allow(clippy::needless_borrow, clippy::explicit_auto_deref)]
     fn compute_visited_style_if_needed<E>(
         &self,
         context: &mut computed::Context,
@@ -1726,10 +1726,10 @@ impl<'a> Cascade<'a> {
             ref value,
         } = *declaration;
 
-        if let Some(&(reverted_priority, revert_kind)) = self.reverted.custom.get(name) {
-            if !reverted_priority.allows_when_reverted(&priority, revert_kind) {
-                return;
-            }
+        if let Some(&(reverted_priority, revert_kind)) = self.reverted.custom.get(name)
+            && !reverted_priority.allows_when_reverted(&priority, revert_kind)
+        {
+            return;
         }
 
         if !(priority.flags() - context.included_cascade_flags).is_empty() {
@@ -2284,10 +2284,8 @@ fn substitute_all(
                         .environment()
                         .get(&next.name, device, url_data)
                         .is_some();
-                    if !present {
-                        if let Some(ref fallback) = next.fallback {
-                            refs_stack.push(&fallback.references);
-                        }
+                    if !present && let Some(ref fallback) = next.fallback {
+                        refs_stack.push(&fallback.references);
                     }
                     continue;
                 }
@@ -2299,15 +2297,15 @@ fn substitute_all(
                     if !can_chain {
                         continue;
                     }
-                    if context.map().get_attr(&next.name).is_none() {
-                        if let Ok(val) = get_attr_value_for_cycle_resolution(
+                    if context.map().get_attr(&next.name).is_none()
+                        && let Ok(val) = get_attr_value_for_cycle_resolution(
                             &next.name,
                             &next.attribute_data,
                             url_data,
                             attribute_tracker,
-                        ) {
-                            context.map_mut().insert_attr(&next.name, val);
-                        }
+                        )
+                    {
+                        context.map_mut().insert_attr(&next.name, val);
                     }
                     VarType::Attr(next.name.clone())
                 } else {
@@ -2349,10 +2347,8 @@ fn substitute_all(
                     }
                 }
 
-                if !primary_valid {
-                    if let Some(ref fallback) = next.fallback {
-                        refs_stack.push(&fallback.references);
-                    }
+                if !primary_valid && let Some(ref fallback) = next.fallback {
+                    refs_stack.push(&fallback.references);
                 }
             }
         }

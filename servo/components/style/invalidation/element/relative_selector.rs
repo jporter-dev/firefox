@@ -519,16 +519,16 @@ where
                     unreachable!("Inner selector in invalidation?")
                 },
                 DependencyInvalidationKind::Relative(kind) => {
-                    if let Some(context) = self.optimization_context.as_ref() {
-                        if context.can_be_ignored(
+                    if let Some(context) = self.optimization_context.as_ref()
+                        && context.can_be_ignored(
                             invalidation.element != self.top,
                             invalidation.element,
                             invalidation.host,
                             invalidation.dependency,
                             invalidation.leftmost_collapse_offset,
-                        ) {
-                            continue;
-                        }
+                        )
+                    {
+                        continue;
                     }
                     let dependency = &invalidation.dependency.next.as_ref().unwrap().slice()[0];
                     result.invalidations.push(RelativeSelectorInvalidation {
@@ -1121,25 +1121,25 @@ where
 
                 let invalidation_kind = d.invalidation_kind();
 
-                if let DependencyInvalidationKind::Scope(scope_kind) = invalidation_kind {
-                    if d.selector.is_rightmost(d.selector_offset) {
-                        if scope_kind == ScopeDependencyInvalidationKind::ScopeEnd {
-                            let invalidations = note_scope_dependency_force_at_subject(
-                                d,
-                                self.matching_context.current_host,
-                                self.matching_context.scope_element,
-                                false,
-                            );
-                            descendant_invalidations
-                                .dom_descendants
-                                .extend(invalidations);
+                if let DependencyInvalidationKind::Scope(scope_kind) = invalidation_kind
+                    && d.selector.is_rightmost(d.selector_offset)
+                {
+                    if scope_kind == ScopeDependencyInvalidationKind::ScopeEnd {
+                        let invalidations = note_scope_dependency_force_at_subject(
+                            d,
+                            self.matching_context.current_host,
+                            self.matching_context.scope_element,
+                            false,
+                        );
+                        descendant_invalidations
+                            .dom_descendants
+                            .extend(invalidations);
 
-                            invalidated |= true;
-                        } else if let Some(ref next) = d.next {
-                            dependencies_to_invalidate.extend(next.as_ref().slice());
-                        }
-                        continue;
+                        invalidated |= true;
+                    } else if let Some(ref next) = d.next {
+                        dependencies_to_invalidate.extend(next.as_ref().slice());
                     }
+                    continue;
                 }
 
                 if matches!(

@@ -200,12 +200,11 @@ pub fn parse_color_with(
             let name = name.clone();
             return input.parse_nested_block(|arguments| {
                 let color_function = parse_color_function(context, name, arguments)?;
-                if !color_function.has_origin_color() {
-                    if let Ok(ComputedColor::Absolute(resolved)) =
+                if !color_function.has_origin_color()
+                    && let Ok(ComputedColor::Absolute(resolved)) =
                         color_function.to_computed_color(None)
-                    {
-                        return Ok(SpecifiedColor::from_absolute_color(resolved));
-                    }
+                {
+                    return Ok(SpecifiedColor::from_absolute_color(resolved));
                 }
                 // Preserve the color as it was parsed.
                 Ok(SpecifiedColor::ColorFunction(Box::new(color_function)))

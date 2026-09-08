@@ -1336,15 +1336,15 @@ impl CalcNode {
                             return InPlaceDivisionResult::Unchanged;
                         }
 
-                        if let Ok(resolved) = right.resolve() {
-                            if let Some(number) = resolved.as_number() {
-                                if number != 1.0 && left.is_product_distributive() {
-                                    if left.map(|l| l / number).is_err() {
-                                        return InPlaceDivisionResult::Invalid;
-                                    }
-                                    return InPlaceDivisionResult::Merged;
-                                }
+                        if let Ok(resolved) = right.resolve()
+                            && let Some(number) = resolved.as_number()
+                            && number != 1.0
+                            && left.is_product_distributive()
+                        {
+                            if left.map(|l| l / number).is_err() {
+                                return InPlaceDivisionResult::Invalid;
                             }
+                            return InPlaceDivisionResult::Merged;
                         }
                         InPlaceDivisionResult::Unchanged
                     }

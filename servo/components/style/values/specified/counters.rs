@@ -164,11 +164,11 @@ impl Parse for Content {
         let mut items = thin_vec::ThinVec::new();
         let mut alt_start = None;
         loop {
-            if alt_start.is_none() {
-                if let Ok(image) = input.try_parse(|i| Image::parse_forbid_none(context, i)) {
-                    items.push(generics::ContentItem::Image(image));
-                    continue;
-                }
+            if alt_start.is_none()
+                && let Ok(image) = input.try_parse(|i| Image::parse_forbid_none(context, i))
+            {
+                items.push(generics::ContentItem::Image(image));
+                continue;
             }
             let Ok(t) = input.next() else { break };
             match *t {

@@ -151,11 +151,11 @@ impl Parse for BoxShadow {
                     continue;
                 }
             }
-            if color.is_none() {
-                if let Ok(value) = input.try_parse(|i| Color::parse(context, i)) {
-                    color = Some(value);
-                    continue;
-                }
+            if color.is_none()
+                && let Ok(value) = input.try_parse(|i| Color::parse(context, i))
+            {
+                color = Some(value);
+                continue;
             }
             break;
         }
@@ -298,9 +298,9 @@ impl Parse for Filter {
                 return Ok(GenericFilter::Url(url));
             }
         }
-        let function = match input.expect_function() {
-            Ok(f) => f.clone(),
-            Err(e) => return Err(e.into()),
+        let function = {
+            let f = input.expect_function()?;
+            f.clone()
         };
         input.parse_nested_block(|i| {
             match_ignore_ascii_case! { &*function,

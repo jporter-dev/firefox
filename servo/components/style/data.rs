@@ -100,7 +100,7 @@ impl fmt::Debug for EagerPseudoArray {
                     f,
                     "{:?}: {:?}, ",
                     PseudoElement::from_eager_index(i),
-                    &values.rules
+                    values.rules
                 )?;
             }
         }

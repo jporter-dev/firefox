@@ -37,6 +37,7 @@ use style_traits::{CssWriter, ToCss};
     ToTyped,
 )]
 #[repr(u8)]
+#[derive(Default)]
 pub enum ShapeGeometryBox {
     /// Depending on which kind of element this style value applied on, the
     /// default value of the reference-box can be different.  For an HTML
@@ -45,17 +46,12 @@ pub enum ShapeGeometryBox {
     /// default value at parsing time, we keep this value to make a decision on
     /// it.
     #[css(skip)]
+    #[default]
     ElementDependent,
     FillBox,
     StrokeBox,
     ViewBox,
     ShapeBox(ShapeBox),
-}
-
-impl Default for ShapeGeometryBox {
-    fn default() -> Self {
-        Self::ElementDependent
-    }
 }
 
 /// Skip the serialization if the author omits the box or specifies border-box.

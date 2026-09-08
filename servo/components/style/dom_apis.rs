@@ -727,10 +727,11 @@ where
 
                         return Ok(());
                     }
-                    if combinator.is_none() && simple_filter.is_none() {
-                        if let Some(attr_name) = get_attr_name(other) {
-                            simple_filter = Some(SimpleFilter::Attr(attr_name));
-                        }
+                    if combinator.is_none()
+                        && simple_filter.is_none()
+                        && let Some(attr_name) = get_attr_name(other)
+                    {
+                        simple_filter = Some(SimpleFilter::Attr(attr_name));
                     }
                 },
             }

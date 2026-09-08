@@ -873,7 +873,7 @@ impl<'le> GeckoElement<'le> {
         use crate::gecko_bindings::bindings::Gecko_ElementTransitions_EndValueAt;
         use crate::gecko_bindings::bindings::Gecko_ElementTransitions_Length;
 
-        let collection_length = unsafe { Gecko_ElementTransitions_Length(self.0) } as usize;
+        let collection_length = unsafe { Gecko_ElementTransitions_Length(self.0) };
         let mut map = FxHashMap::with_capacity_and_hasher(collection_length, Default::default());
 
         for i in 0..collection_length {
@@ -1035,10 +1035,10 @@ impl<'le> TElement for GeckoElement<'le> {
     }
 
     fn inheritance_parent(&self) -> Option<Self> {
-        if let Some(pseudo) = self.implemented_pseudo_element() {
-            if !pseudo.is_element_backed() {
-                return self.pseudo_element_originating_element();
-            }
+        if let Some(pseudo) = self.implemented_pseudo_element()
+            && !pseudo.is_element_backed()
+        {
+            return self.pseudo_element_originating_element();
         }
 
         self.as_node()
@@ -1461,15 +1461,15 @@ impl<'le> TElement for GeckoElement<'le> {
 
     #[inline]
     fn may_have_animations(&self) -> bool {
-        if let Some(pseudo) = self.implemented_pseudo_element() {
-            if pseudo.animations_stored_in_parent() {
-                // FIXME(emilio): When would the parent of a ::before / ::after
-                // pseudo-element be null?
-                return self.parent_element().is_some_and(|p| {
-                    p.as_node()
-                        .get_bool_flag(nsINode_BooleanFlag::ElementHasAnimations)
-                });
-            }
+        if let Some(pseudo) = self.implemented_pseudo_element()
+            && pseudo.animations_stored_in_parent()
+        {
+            // FIXME(emilio): When would the parent of a ::before / ::after
+            // pseudo-element be null?
+            return self.parent_element().is_some_and(|p| {
+                p.as_node()
+                    .get_bool_flag(nsINode_BooleanFlag::ElementHasAnimations)
+            });
         }
         self.as_node()
             .get_bool_flag(nsINode_BooleanFlag::ElementHasAnimations)
@@ -1748,12 +1748,11 @@ impl<'le> TElement for GeckoElement<'le> {
             let active = self
                 .state()
                 .intersects(NonTSPseudoClass::Active.state_flag());
-            if active {
-                if let Some(hint) =
+            if active
+                && let Some(hint) =
                     unsafe { pres_hint_from_raw(Gecko_GetActiveLinkAttrDeclarationBlock(self.0)) }
-                {
-                    hints.push(hint);
-                }
+            {
+                hints.push(hint);
             }
         }
 
@@ -1921,12 +1920,11 @@ impl<'le> ::selectors::Element for GeckoElement<'le> {
 
         // Handle flags that apply to the parent.
         let parent_flags = flags.for_parent();
-        if !parent_flags.is_empty() {
-            if let Some(p) = self.as_node().parent_node() {
-                if p.is_element() || p.is_shadow_root() {
-                    p.set_selector_flags(selector_flags_to_node_flags(parent_flags));
-                }
-            }
+        if !parent_flags.is_empty()
+            && let Some(p) = self.as_node().parent_node()
+            && (p.is_element() || p.is_shadow_root())
+        {
+            p.set_selector_flags(selector_flags_to_node_flags(parent_flags));
         }
     }
 

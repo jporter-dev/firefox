@@ -77,10 +77,10 @@ impl<'a> InsertRuleContext<'a> {
                 let next_non_layer_statement_rule = self.rule_list[index + 1..]
                     .iter()
                     .find(|r| !matches!(*r, CssRule::LayerStatement(..)));
-                if let Some(non_layer) = next_non_layer_statement_rule {
-                    if matches!(*non_layer, CssRule::Import(..) | CssRule::Namespace(..)) {
-                        return State::EarlyLayers;
-                    }
+                if let Some(non_layer) = next_non_layer_statement_rule
+                    && matches!(*non_layer, CssRule::Import(..) | CssRule::Namespace(..))
+                {
+                    return State::EarlyLayers;
                 }
                 State::Body
             },
@@ -300,11 +300,10 @@ impl AtRuleType {
             "view-transition" if crate::pref!("dom.viewTransitions.cross-document.enabled") => Self::ViewTransition,
             _ => {
                 // The margin at-rules supported within @page.
-                if cfg!(feature = "gecko") && crate::pref!("layout.css.margin-rules.enabled") {
-                    if let Some(rule_type) = MarginRuleType::from_name(name) {
+                if cfg!(feature = "gecko") && crate::pref!("layout.css.margin-rules.enabled")
+                    && let Some(rule_type) = MarginRuleType::from_name(name) {
                         return Some(Self::Margin(rule_type));
                     }
-                }
 
                 // The font feature value at-rules supported within @font-feature-values.
                 if cfg!(feature = "gecko") && FontFeatureValuesBlockType::from_name(name).is_some() {

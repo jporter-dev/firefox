@@ -247,11 +247,11 @@ impl ToCssWithGuard for ImportRule {
             dest.write_char(')')?;
         }
 
-        if let Some(media) = self.stylesheet.media(guard) {
-            if !media.is_empty() {
-                dest.write_char(' ')?;
-                media.to_css(&mut CssWriter::new(dest))?;
-            }
+        if let Some(media) = self.stylesheet.media(guard)
+            && !media.is_empty()
+        {
+            dest.write_char(' ')?;
+            media.to_css(&mut CssWriter::new(dest))?;
         }
 
         dest.write_char(';')

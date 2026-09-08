@@ -1202,21 +1202,19 @@ fn parse_declaration_value_block(
                     let mut input_end_position = None;
                     let fallback = input.parse_nested_block(|input| {
                         let mut namespace = ParsedNamespace::Known(Namespace::default());
-                        if substitution_kind == SubstitutionFunctionKind::Attr {
-                            if let Some(namespaces) = namespaces {
-                                if let Ok(ns) = input
-                                    .try_parse(|input| ParsedNamespace::parse(namespaces, input))
-                                {
-                                    namespace = ns;
-                                    let prev = input.state();
-                                    let next = match *input.next_including_whitespace()? {
-                                        Token::Ident(_) => Ok(()),
-                                        _ => Err(ParseError::unexpected_token()),
-                                    };
-                                    input.reset(&prev);
-                                    next?;
-                                }
-                            }
+                        if substitution_kind == SubstitutionFunctionKind::Attr
+                            && let Some(namespaces) = namespaces
+                            && let Ok(ns) =
+                                input.try_parse(|input| ParsedNamespace::parse(namespaces, input))
+                        {
+                            namespace = ns;
+                            let prev = input.state();
+                            let next = match *input.next_including_whitespace()? {
+                                Token::Ident(_) => Ok(()),
+                                _ => Err(ParseError::unexpected_token()),
+                            };
+                            input.reset(&prev);
+                            next?;
                         }
                         // TODO(emilio): For env() this should be <custom-ident> per spec, but no other browser does
                         // that, see https://github.com/w3c/csswg-drafts/issues/3262.
@@ -1434,21 +1432,20 @@ pub fn handle_invalid_at_computed_value_time(
                 );
                 return;
             }
-        } else if let Some(ref initial_value) = registration.initial_value {
-            if let Ok(initial_value) = compute_value(
+        } else if let Some(ref initial_value) = registration.initial_value
+            && let Ok(initial_value) = compute_value(
                 &initial_value.css,
                 &initial_value.url_data,
                 registration,
                 context,
                 AttrTaint::default(),
-            ) {
-                context.builder.substitution_functions.insert_var(
-                    registration,
-                    name,
-                    initial_value,
-                );
-                return;
-            }
+            )
+        {
+            context
+                .builder
+                .substitution_functions
+                .insert_var(registration, name, initial_value);
+            return;
         }
     }
     context

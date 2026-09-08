@@ -120,10 +120,8 @@ impl ColorFunction<SpecifiedColor> {
         let resolvable = origin.as_ref().is_none_or(|o| o.is_absolute());
 
         let computed = self.to_computed_value(context, origin);
-        if resolvable {
-            if let Ok(absolute) = computed.to_absolute_color() {
-                return Ok(ComputedColor::Absolute(absolute));
-            }
+        if resolvable && let Ok(absolute) = computed.to_absolute_color() {
+            return Ok(ComputedColor::Absolute(absolute));
         }
 
         Ok(ComputedColor::ColorFunction(Box::new(computed)))

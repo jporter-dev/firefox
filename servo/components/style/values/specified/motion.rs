@@ -149,10 +149,10 @@ impl Parse for OffsetPathFunction {
             return Ok(OffsetPathFunction::Ray(ray));
         }
 
-        if crate::pref!("layout.css.motion-path-url.enabled") {
-            if let Ok(url) = input.try_parse(|i| SpecifiedUrl::parse(context, i)) {
-                return Ok(OffsetPathFunction::Url(url));
-            }
+        if crate::pref!("layout.css.motion-path-url.enabled")
+            && let Ok(url) = input.try_parse(|i| SpecifiedUrl::parse(context, i))
+        {
+            return Ok(OffsetPathFunction::Url(url));
         }
 
         BasicShape::parse(context, input, AllowedBasicShapes::ALL, ShapeType::Outline)

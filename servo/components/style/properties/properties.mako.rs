@@ -412,6 +412,7 @@ impl NonCustomPropertyId {
             "Given rule type does not allow declarations."
         );
 
+        #[allow(clippy::identity_op)]
         static MAP: [u32; property_counts::NON_CUSTOM] = [
             % for property in data.longhands + data.shorthands + data.all_aliases():
             % for name in RULE_VALUES:
@@ -1010,6 +1011,7 @@ impl ShorthandId {
     /// Returns PropertyFlags for the given shorthand property.
     #[inline]
     pub fn flags(self) -> PropertyFlags {
+        #[allow(clippy::identity_op)]
         const FLAGS: [u16; property_counts::SHORTHANDS] = [
             % for property in data.shorthands:
                 % for flag in property.flags:
@@ -1352,7 +1354,7 @@ pub mod style_structs {
                         ///
                         /// Same as `set_display` above.
                         /// Thus, we need to special-case this.
-                        #[allow(non_snake_case)]
+                        #[allow(non_snake_case, clippy::clone_on_copy)]
                         #[inline]
                         pub fn copy_display_from(&mut self, other: &Self) {
                             self.display = other.display.clone();
@@ -1360,7 +1362,7 @@ pub mod style_structs {
                         }
                     % else:
                         /// Set ${longhand.name} from other struct.
-                        #[allow(non_snake_case)]
+                        #[allow(non_snake_case, clippy::clone_on_copy)]
                         #[inline]
                         pub fn copy_${longhand.ident}_from(&mut self, other: &Self) {
                             self.${longhand.ident} = other.${longhand.ident}.clone();
@@ -1374,7 +1376,7 @@ pub mod style_structs {
                     }
 
                     /// Get the computed value for ${longhand.name}.
-                    #[allow(non_snake_case)]
+                    #[allow(non_snake_case, clippy::clone_on_copy)]
                     #[inline]
                     pub fn clone_${longhand.ident}(&self) -> longhands::${longhand.ident}::computed_value::T {
                         self.${longhand.ident}.clone()

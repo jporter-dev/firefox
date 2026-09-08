@@ -407,10 +407,10 @@ impl<L: ToCss> ToCss for TrackSize<L> {
             TrackSize::Minmax(ref min, ref max) => {
                 // According to gecko minmax(auto, <flex>) is equivalent to <flex>,
                 // and both are serialized as <flex>.
-                if let TrackBreadth::Auto = *min {
-                    if let TrackBreadth::Flex(_) = *max {
-                        return max.to_css(dest);
-                    }
+                if let TrackBreadth::Auto = *min
+                    && let TrackBreadth::Flex(_) = *max
+                {
+                    return max.to_css(dest);
                 }
 
                 dest.write_str("minmax(")?;

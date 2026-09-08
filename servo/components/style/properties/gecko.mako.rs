@@ -307,7 +307,7 @@ impl ComputedValuesInner {
 }
 
 <%def name="impl_simple_setter(ident, gecko_ffi_name)">
-    #[allow(non_snake_case)]
+    #[allow(non_snake_case, clippy::useless_conversion)]
     pub fn set_${ident}(&mut self, v: longhands::${ident}::computed_value::T) {
         ${set_gecko_property(gecko_ffi_name, "From::from(v)")}
     }
@@ -329,7 +329,7 @@ impl ComputedValuesInner {
 </%def>
 
 <%def name="impl_simple_clone(ident, gecko_ffi_name)">
-    #[allow(non_snake_case)]
+    #[allow(non_snake_case, clippy::useless_conversion, clippy::clone_on_copy)]
     pub fn clone_${ident}(&self) -> longhands::${ident}::computed_value::T {
         From::from(self.${gecko_ffi_name}.clone())
     }
@@ -355,7 +355,7 @@ impl ComputedValuesInner {
 </%def>
 
 <%def name="impl_simple_copy(ident, gecko_ffi_name, *kwargs)">
-    #[allow(non_snake_case)]
+    #[allow(non_snake_case, clippy::clone_on_copy)]
     pub fn copy_${ident}_from(&mut self, other: &Self) {
         self.${gecko_ffi_name} = other.${gecko_ffi_name}.clone();
     }
@@ -375,7 +375,11 @@ def set_gecko_property(ffi_name, expr):
 %>
 
 <%def name="impl_keyword_setter(ident, gecko_ffi_name, keyword, cast_type='u8')">
-    #[allow(non_snake_case)]
+    // The `as` cast below normalizes the keyword's underlying gecko
+    // constants (which can be a mix of differently-typed `#define`
+    // macros) to a common type, so it's a no-op for some values in the
+    // set even though it's needed for others.
+    #[allow(non_snake_case, clippy::unnecessary_cast)]
     pub fn set_${ident}(&mut self, v: longhands::${ident}::computed_value::T) {
         use crate::properties::longhands::${ident}::computed_value::T as Keyword;
         // FIXME(bholley): Align binary representations and ditch |match| for cast + static_asserts
@@ -390,7 +394,11 @@ def set_gecko_property(ffi_name, expr):
 </%def>
 
 <%def name="impl_keyword_clone(ident, gecko_ffi_name, keyword, cast_type='u8')">
-    #[allow(non_snake_case)]
+    // The `as` casts below normalize this keyword's underlying gecko
+    // constants to one common type (see the comment below on mixed
+    // signedness), so some individual casts are no-ops even though the
+    // group as a whole needs them.
+    #[allow(non_snake_case, clippy::unnecessary_cast)]
     pub fn clone_${ident}(&self) -> longhands::${ident}::computed_value::T {
         use crate::properties::longhands::${ident}::computed_value::T as Keyword;
         // FIXME(bholley): Align binary representations and ditch |match| for cast + static_asserts
@@ -956,6 +964,9 @@ fn static_assert() {
 
     <% copy_simple_image_array_property(name, shorthand, layer_field_name, field_name) %>
 
+    // See impl_keyword_setter above: this normalizes mixed-type gecko
+    // constants to `u8`, so it's a no-op for some keywords' values.
+    #[allow(clippy::unnecessary_cast)]
     pub fn set_${ident}<I>(&mut self, v: I)
     where
         I: IntoIterator<Item=longhands::${ident}::computed_value::single_value::T>,

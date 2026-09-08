@@ -987,13 +987,12 @@ impl Parse for TextIndent {
         // The length-percentage and the two possible keywords can occur in any order.
         while !input.is_exhausted() {
             // If we haven't seen a length yet, try to parse one.
-            if length.is_none() {
-                if let Ok(len) = input
+            if length.is_none()
+                && let Ok(len) = input
                     .try_parse(|i| LengthPercentage::parse_quirky(context, i, AllowQuirks::Yes))
-                {
-                    length = Some(len);
-                    continue;
-                }
+            {
+                length = Some(len);
+                continue;
             }
 
             // Servo doesn't support the keywords, so just break and let the caller deal with it.

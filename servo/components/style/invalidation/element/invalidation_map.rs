@@ -1169,14 +1169,14 @@ impl<'a, 'b, 'c> SelectorVisitor for SelectorDependencyCollector<'a, 'b, 'c> {
     fn visit_simple_selector(&mut self, s: &Component<SelectorImpl>) -> bool {
         match on_simple_selector(s, self.quirks_mode, self) {
             Ok(result) => {
-                if let ComponentVisitResult::Handled(state) = result {
-                    if let Some(inner_collector_state) = self.relative_inner_collector.as_mut() {
-                        inner_collector_state.relative_compound_state.added_entry = true;
-                        inner_collector_state
-                            .relative_compound_state
-                            .ts_state
-                            .insert(state);
-                    }
+                if let ComponentVisitResult::Handled(state) = result
+                    && let Some(inner_collector_state) = self.relative_inner_collector.as_mut()
+                {
+                    inner_collector_state.relative_compound_state.added_entry = true;
+                    inner_collector_state
+                        .relative_compound_state
+                        .ts_state
+                        .insert(state);
                 }
                 true
             },

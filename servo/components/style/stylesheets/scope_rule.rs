@@ -195,10 +195,10 @@ impl ImplicitScopeRoot {
                 ImplicitScopeTarget::Element(*e)
             },
             Self::Constructed | Self::DocumentElement => {
-                if matches!(self, Self::Constructed) {
-                    if let Some(host) = current_host {
-                        return ImplicitScopeTarget::Element(host);
-                    }
+                if matches!(self, Self::Constructed)
+                    && let Some(host) = current_host
+                {
+                    return ImplicitScopeTarget::Element(host);
                 }
                 ImplicitScopeTarget::DocumentElement
             },
@@ -348,11 +348,12 @@ where
                 break;
             }
             parent = p.parent_element();
-            if parent.is_none() && root_may_be_shadow_host {
-                if let Some(host) = p.containing_shadow_host() {
-                    // Pretty much an edge case where user specified scope-start and -end of :host
-                    return host.opaque() == root;
-                }
+            if parent.is_none()
+                && root_may_be_shadow_host
+                && let Some(host) = p.containing_shadow_host()
+            {
+                // Pretty much an edge case where user specified scope-start and -end of :host
+                return host.opaque() == root;
             }
         }
         false
@@ -441,10 +442,10 @@ impl ScopeSubjectMap {
             return false;
         }
 
-        if let Some(id) = element.id() {
-            if self.buckets.ids.get(id, quirks_mode).is_some() {
-                return false;
-            }
+        if let Some(id) = element.id()
+            && self.buckets.ids.get(id, quirks_mode).is_some()
+        {
+            return false;
         }
 
         let mut found = false;
@@ -482,10 +483,10 @@ pub fn scope_selector_list_is_trivial(list: &SelectorList<SelectorImpl>) -> bool
                     | Component::Nth(_)
                     | Component::NthOf(_)
                     | Component::Has(_) => return false,
-                    Component::Is(list) | Component::Where(list) | Component::Negation(list) => {
-                        if !scope_selector_list_is_trivial(list) {
-                            return false;
-                        }
+                    Component::Is(list) | Component::Where(list) | Component::Negation(list)
+                        if !scope_selector_list_is_trivial(list) =>
+                    {
+                        return false;
                     },
                     _ => (),
                 }

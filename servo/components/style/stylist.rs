@@ -680,17 +680,12 @@ impl From<StyleRuleInclusion> for RuleInclusion {
 /// If used outside of `@scope`, it cannot possibly match the host.
 /// Even when inside of `@scope`, it's conditional if the selector will
 /// match the shadow host.
-#[derive(Clone, Copy, Eq, PartialEq)]
+#[derive(Clone, Copy, Eq, PartialEq, Default)]
 enum ScopeMatchesShadowHost {
+    #[default]
     NotApplicable,
     No,
     Yes,
-}
-
-impl Default for ScopeMatchesShadowHost {
-    fn default() -> Self {
-        Self::NotApplicable
-    }
 }
 
 impl ScopeMatchesShadowHost {
@@ -2220,13 +2215,13 @@ impl<T: 'static> LayerOrderedMap<T> {
     ) -> Result<(), AllocErr> {
         self.0.try_reserve(1)?;
         let vec = self.0.entry_ref(name).or_default();
-        if let Some(&mut (ref mut val, ref last_id)) = vec.last_mut() {
-            if *last_id == id {
-                if cmp(val, &v) != Ordering::Greater {
-                    *val = v;
-                }
-                return Ok(());
+        if let Some(&mut (ref mut val, ref last_id)) = vec.last_mut()
+            && *last_id == id
+        {
+            if cmp(val, &v) != Ordering::Greater {
+                *val = v;
             }
+            return Ok(());
         }
         vec.push((v, id));
         Ok(())
@@ -3178,11 +3173,11 @@ where
                 .zip(end.hashes.iter())
                 .all(|(selector, hashes)| {
                     // Like checking for scope-start, use the bloom filter here.
-                    if let Some(filter) = context.bloom_filter {
-                        if !selector_may_match(hashes, filter) {
-                            // Selector this hash belongs to won't cause us to be out of this scope.
-                            return true;
-                        }
+                    if let Some(filter) = context.bloom_filter
+                        && !selector_may_match(hashes, filter)
+                    {
+                        // Selector this hash belongs to won't cause us to be out of this scope.
+                        return true;
                     }
 
                     !element_is_outside_of_scope(

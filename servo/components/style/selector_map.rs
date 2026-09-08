@@ -240,18 +240,18 @@ impl SelectorMap<Rule> {
             );
         }
 
-        if let Some(id) = rule_hash_target.id() {
-            if let Some(rules) = self.id_hash.get(id, quirks_mode) {
-                SelectorMap::get_matching_rules(
-                    element,
-                    rules,
-                    matching_rules_list,
-                    matching_context,
-                    cascade_level,
-                    cascade_data,
-                    stylist,
-                )
-            }
+        if let Some(id) = rule_hash_target.id()
+            && let Some(rules) = self.id_hash.get(id, quirks_mode)
+        {
+            SelectorMap::get_matching_rules(
+                element,
+                rules,
+                matching_rules_list,
+                matching_context,
+                cascade_level,
+                cascade_data,
+                stylist,
+            )
         }
 
         rule_hash_target.each_class(|class| {
@@ -540,12 +540,12 @@ impl<T: SelectorMapEntry> SelectorMap<T> {
             }
         }
 
-        if let Some(id) = element.id() {
-            if let Some(v) = self.id_hash.get(id, quirks_mode) {
-                for entry in v.iter() {
-                    if !f(entry) {
-                        return false;
-                    }
+        if let Some(id) = element.id()
+            && let Some(v) = self.id_hash.get(id, quirks_mode)
+        {
+            for entry in v.iter() {
+                if !f(entry) {
+                    return false;
                 }
             }
         }
@@ -656,12 +656,12 @@ impl<T: SelectorMapEntry> SelectorMap<T> {
         }
 
         // Check the additional id.
-        if let Some(id) = additional_id {
-            if let Some(v) = self.id_hash.get(id, quirks_mode) {
-                for entry in v.iter() {
-                    if !f(entry) {
-                        return false;
-                    }
+        if let Some(id) = additional_id
+            && let Some(v) = self.id_hash.get(id, quirks_mode)
+        {
+            for entry in v.iter() {
+                if !f(entry) {
+                    return false;
                 }
             }
         }

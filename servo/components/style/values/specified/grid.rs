@@ -210,8 +210,7 @@ impl Parse for TrackList<LengthPercentage, Integer> {
         // assume that everything is <fixed-size>. This flag is useful when we encounter <auto-repeat>
         let mut at_least_one_not_fixed = false;
         loop {
-            current_names
-                .extend_from_slice(&mut input.try_parse(parse_line_names).unwrap_or_default());
+            current_names.extend_from_slice(&input.try_parse(parse_line_names).unwrap_or_default());
             if let Ok(track_size) = input.try_parse(|i| TrackSize::parse(context, i)) {
                 if !track_size.is_fixed() {
                     at_least_one_not_fixed = true;
@@ -296,10 +295,10 @@ impl GridTemplateComponent<LengthPercentage, Integer> {
         context: &ParserContext,
         input: &mut Parser,
     ) -> Result<Self, ParseError> {
-        if allow_grid_template_subgrids() {
-            if let Ok(t) = input.try_parse(|i| LineNameList::parse(context, i)) {
-                return Ok(GridTemplateComponent::Subgrid(Box::new(t)));
-            }
+        if allow_grid_template_subgrids()
+            && let Ok(t) = input.try_parse(|i| LineNameList::parse(context, i))
+        {
+            return Ok(GridTemplateComponent::Subgrid(Box::new(t)));
         }
         if allow_grid_template_masonry()
             && input

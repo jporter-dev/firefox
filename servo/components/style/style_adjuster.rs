@@ -1030,18 +1030,17 @@ impl<'a, 'b: 'a> StyleAdjuster<'a, 'b> {
     ) where
         E: TElement,
     {
-        if cfg!(debug_assertions) {
-            if let Some(e) = element {
-                if let Some(p) = e.implemented_pseudo_element() {
-                    // It'd be nice to assert `self.style.pseudo == Some(&pseudo)`,
-                    // but we do resolve ::-moz-list pseudos on ::before / ::after
-                    // content, sigh.
-                    debug_assert!(
-                        self.style.pseudo.is_some(),
-                        "Someone really messed up (no pseudo style for {e:?}, {p:?})"
-                    );
-                }
-            }
+        if cfg!(debug_assertions)
+            && let Some(e) = element
+            && let Some(p) = e.implemented_pseudo_element()
+        {
+            // It'd be nice to assert `self.style.pseudo == Some(&pseudo)`,
+            // but we do resolve ::-moz-list pseudos on ::before / ::after
+            // content, sigh.
+            debug_assert!(
+                self.style.pseudo.is_some(),
+                "Someone really messed up (no pseudo style for {e:?}, {p:?})"
+            );
         }
         // FIXME(emilio): The apply_declarations callsite in Servo's
         // animation, and the font stuff for Gecko

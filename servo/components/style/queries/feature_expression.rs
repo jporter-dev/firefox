@@ -901,17 +901,17 @@ impl QueryStyleRange {
         let op1 = Operator::parse(input)?;
         let value2 = QueryExpressionValue::parse_for_style_range(context, input)?;
 
-        if let Ok(op2) = input.try_parse(|i| Operator::parse(i)) {
-            if op1.is_compatible_with(op2) {
-                let value3 = QueryExpressionValue::parse_for_style_range(context, input)?;
-                return Ok(Self::StyleRange3 {
-                    value1,
-                    op1,
-                    value2,
-                    op2,
-                    value3,
-                });
-            }
+        if let Ok(op2) = input.try_parse(|i| Operator::parse(i))
+            && op1.is_compatible_with(op2)
+        {
+            let value3 = QueryExpressionValue::parse_for_style_range(context, input)?;
+            return Ok(Self::StyleRange3 {
+                value1,
+                op1,
+                value2,
+                op2,
+                value3,
+            });
         }
 
         Ok(Self::StyleRange2 {

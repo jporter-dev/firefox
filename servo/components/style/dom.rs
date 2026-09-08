@@ -859,49 +859,49 @@ pub trait TElement:
             }
         }
 
-        if let Some(shadow) = target.shadow_root() {
-            if let Some(data) = shadow.style_data() {
-                f(data, shadow.host());
-            }
+        if let Some(shadow) = target.shadow_root()
+            && let Some(data) = shadow.style_data()
+        {
+            f(data, shadow.host());
         }
 
         let mut current = target.assigned_slot();
         while let Some(slot) = current {
             // Slots can only have assigned nodes when in a shadow tree.
             let shadow = slot.containing_shadow().unwrap();
-            if let Some(data) = shadow.style_data() {
-                if data.any_slotted_rule() {
-                    f(data, shadow.host());
-                }
+            if let Some(data) = shadow.style_data()
+                && data.any_slotted_rule()
+            {
+                f(data, shadow.host());
             }
             current = slot.assigned_slot();
         }
 
-        if target.has_part_attr() {
-            if let Some(mut inner_shadow) = target.containing_shadow() {
-                loop {
-                    let inner_shadow_host = inner_shadow.host();
-                    match inner_shadow_host.containing_shadow() {
-                        Some(shadow) => {
-                            if let Some(data) = shadow.style_data() {
-                                if data.any_part_rule() {
-                                    f(data, shadow.host())
-                                }
-                            }
-                            // TODO: Could be more granular.
-                            if !inner_shadow_host.exports_any_part() {
-                                break;
-                            }
-                            inner_shadow = shadow;
-                        },
-                        None => {
-                            // TODO(emilio): Should probably distinguish with
-                            // MatchesDocumentRules::{No,Yes,IfPart} or something so that we could
-                            // skip some work.
-                            doc_rules_apply = matches_user_and_content_rules;
+        if target.has_part_attr()
+            && let Some(mut inner_shadow) = target.containing_shadow()
+        {
+            loop {
+                let inner_shadow_host = inner_shadow.host();
+                match inner_shadow_host.containing_shadow() {
+                    Some(shadow) => {
+                        if let Some(data) = shadow.style_data()
+                            && data.any_part_rule()
+                        {
+                            f(data, shadow.host())
+                        }
+                        // TODO: Could be more granular.
+                        if !inner_shadow_host.exports_any_part() {
                             break;
-                        },
-                    }
+                        }
+                        inner_shadow = shadow;
+                    },
+                    None => {
+                        // TODO(emilio): Should probably distinguish with
+                        // MatchesDocumentRules::{No,Yes,IfPart} or something so that we could
+                        // skip some work.
+                        doc_rules_apply = matches_user_and_content_rules;
+                        break;
+                    },
                 }
             }
         }

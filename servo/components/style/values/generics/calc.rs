@@ -977,35 +977,35 @@ impl<L: CalcNodeLeaf> CalcNode<L> {
 
     /// Tries to merge one node into another using the product, that is, perform `x` * `y`.
     pub fn try_product_in_place(&mut self, other: &mut Self) -> bool {
-        if let Ok(resolved) = other.resolve() {
-            if let Some(number) = resolved.as_number() {
-                if number == 1.0 {
-                    return true;
-                }
+        if let Ok(resolved) = other.resolve()
+            && let Some(number) = resolved.as_number()
+        {
+            if number == 1.0 {
+                return true;
+            }
 
-                if self.is_product_distributive() {
-                    if self.map(|v| v * number).is_err() {
-                        return false;
-                    }
-                    return true;
+            if self.is_product_distributive() {
+                if self.map(|v| v * number).is_err() {
+                    return false;
                 }
+                return true;
             }
         }
 
-        if let Ok(resolved) = self.resolve() {
-            if let Some(number) = resolved.as_number() {
-                if number == 1.0 {
-                    std::mem::swap(self, other);
-                    return true;
-                }
+        if let Ok(resolved) = self.resolve()
+            && let Some(number) = resolved.as_number()
+        {
+            if number == 1.0 {
+                std::mem::swap(self, other);
+                return true;
+            }
 
-                if other.is_product_distributive() {
-                    if other.map(|v| v * number).is_err() {
-                        return false;
-                    }
-                    std::mem::swap(self, other);
-                    return true;
+            if other.is_product_distributive() {
+                if other.map(|v| v * number).is_err() {
+                    return false;
                 }
+                std::mem::swap(self, other);
+                return true;
             }
         }
 
@@ -2187,97 +2187,93 @@ impl<L: CalcNodeLeaf> CalcNode<L> {
                 SimplificationResult::Unchanged
             },
             Self::Sin(ref mut child) => {
-                if let CalcNode::Leaf(ref leaf) = **child {
-                    if let Some(radians) = leaf.as_number_or_angle_radians() {
-                        let mut result = Self::Leaf(L::new_number(radians.sin()));
-                        replace_self_with!(&mut result);
-                        return SimplificationResult::Simplified;
-                    }
+                if let CalcNode::Leaf(ref leaf) = **child
+                    && let Some(radians) = leaf.as_number_or_angle_radians()
+                {
+                    let mut result = Self::Leaf(L::new_number(radians.sin()));
+                    replace_self_with!(&mut result);
+                    return SimplificationResult::Simplified;
                 }
                 SimplificationResult::Unchanged
             },
             Self::Cos(ref mut child) => {
-                if let CalcNode::Leaf(ref leaf) = **child {
-                    if let Some(radians) = leaf.as_number_or_angle_radians() {
-                        let mut result = Self::Leaf(L::new_number(radians.cos()));
-                        replace_self_with!(&mut result);
-                        return SimplificationResult::Simplified;
-                    }
+                if let CalcNode::Leaf(ref leaf) = **child
+                    && let Some(radians) = leaf.as_number_or_angle_radians()
+                {
+                    let mut result = Self::Leaf(L::new_number(radians.cos()));
+                    replace_self_with!(&mut result);
+                    return SimplificationResult::Simplified;
                 }
                 SimplificationResult::Unchanged
             },
             Self::Tan(ref mut child) => {
-                if let CalcNode::Leaf(ref leaf) = **child {
-                    if let Some(radians) = leaf.as_number_or_angle_radians() {
-                        let mut result = Self::Leaf(L::new_number(radians.tan()));
-                        replace_self_with!(&mut result);
-                        return SimplificationResult::Simplified;
-                    }
+                if let CalcNode::Leaf(ref leaf) = **child
+                    && let Some(radians) = leaf.as_number_or_angle_radians()
+                {
+                    let mut result = Self::Leaf(L::new_number(radians.tan()));
+                    replace_self_with!(&mut result);
+                    return SimplificationResult::Simplified;
                 }
                 SimplificationResult::Unchanged
             },
             Self::Asin(ref mut child) => {
-                if let CalcNode::Leaf(ref leaf) = **child {
-                    if let Some(value) = leaf.as_number() {
-                        let mut result = Self::Leaf(L::new_angle_from_radians(value.asin()));
-                        replace_self_with!(&mut result);
-                        return SimplificationResult::Simplified;
-                    }
+                if let CalcNode::Leaf(ref leaf) = **child
+                    && let Some(value) = leaf.as_number()
+                {
+                    let mut result = Self::Leaf(L::new_angle_from_radians(value.asin()));
+                    replace_self_with!(&mut result);
+                    return SimplificationResult::Simplified;
                 }
                 SimplificationResult::Unchanged
             },
             Self::Acos(ref mut child) => {
-                if let CalcNode::Leaf(ref leaf) = **child {
-                    if let Some(value) = leaf.as_number() {
-                        let mut result = Self::Leaf(L::new_angle_from_radians(value.acos()));
-                        replace_self_with!(&mut result);
-                        return SimplificationResult::Simplified;
-                    }
+                if let CalcNode::Leaf(ref leaf) = **child
+                    && let Some(value) = leaf.as_number()
+                {
+                    let mut result = Self::Leaf(L::new_angle_from_radians(value.acos()));
+                    replace_self_with!(&mut result);
+                    return SimplificationResult::Simplified;
                 }
                 SimplificationResult::Unchanged
             },
             Self::Atan(ref mut child) => {
-                if let CalcNode::Leaf(ref leaf) = **child {
-                    if let Some(value) = leaf.as_number() {
-                        let mut result = Self::Leaf(L::new_angle_from_radians(value.atan()));
-                        replace_self_with!(&mut result);
-                        return SimplificationResult::Simplified;
-                    }
+                if let CalcNode::Leaf(ref leaf) = **child
+                    && let Some(value) = leaf.as_number()
+                {
+                    let mut result = Self::Leaf(L::new_angle_from_radians(value.atan()));
+                    replace_self_with!(&mut result);
+                    return SimplificationResult::Simplified;
                 }
                 SimplificationResult::Unchanged
             },
             Self::Atan2(ref mut a, ref mut b) => {
-                if let (CalcNode::Leaf(la), CalcNode::Leaf(lb)) = (&**a, &**b) {
-                    if la.is_same_unit_as(lb) {
-                        if let (Some(a_val), Some(b_val)) =
-                            (la.unitless_value(), lb.unitless_value())
-                        {
-                            let mut result =
-                                Self::Leaf(L::new_angle_from_radians(a_val.atan2(b_val)));
-                            replace_self_with!(&mut result);
-                            return SimplificationResult::Simplified;
-                        }
-                    }
+                if let (CalcNode::Leaf(la), CalcNode::Leaf(lb)) = (&**a, &**b)
+                    && la.is_same_unit_as(lb)
+                    && let (Some(a_val), Some(b_val)) = (la.unitless_value(), lb.unitless_value())
+                {
+                    let mut result = Self::Leaf(L::new_angle_from_radians(a_val.atan2(b_val)));
+                    replace_self_with!(&mut result);
+                    return SimplificationResult::Simplified;
                 }
                 SimplificationResult::Unchanged
             },
             Self::Pow(ref mut a, ref mut b) => {
-                if let (CalcNode::Leaf(la), CalcNode::Leaf(lb)) = (&**a, &**b) {
-                    if let (Some(a_val), Some(b_val)) = (la.as_number(), lb.as_number()) {
-                        let mut result = Self::Leaf(L::new_number(a_val.powf(b_val)));
-                        replace_self_with!(&mut result);
-                        return SimplificationResult::Simplified;
-                    }
+                if let (CalcNode::Leaf(la), CalcNode::Leaf(lb)) = (&**a, &**b)
+                    && let (Some(a_val), Some(b_val)) = (la.as_number(), lb.as_number())
+                {
+                    let mut result = Self::Leaf(L::new_number(a_val.powf(b_val)));
+                    replace_self_with!(&mut result);
+                    return SimplificationResult::Simplified;
                 }
                 SimplificationResult::Unchanged
             },
             Self::Sqrt(ref mut child) => {
-                if let CalcNode::Leaf(ref leaf) = **child {
-                    if let Some(value) = leaf.as_number() {
-                        let mut result = Self::Leaf(L::new_number(value.sqrt()));
-                        replace_self_with!(&mut result);
-                        return SimplificationResult::Simplified;
-                    }
+                if let CalcNode::Leaf(ref leaf) = **child
+                    && let Some(value) = leaf.as_number()
+                {
+                    let mut result = Self::Leaf(L::new_number(value.sqrt()));
+                    replace_self_with!(&mut result);
+                    return SimplificationResult::Simplified;
                 }
                 SimplificationResult::Unchanged
             },
@@ -2295,34 +2291,34 @@ impl<L: CalcNodeLeaf> CalcNode<L> {
                 SimplificationResult::Simplified
             },
             Self::Log(ref mut a, ref mut b) => {
-                if let CalcNode::Leaf(ref la) = **a {
-                    if let Some(a_val) = la.as_number() {
-                        let folded = match b {
-                            &mut Optional::Some(ref b) => {
-                                if let CalcNode::Leaf(ref lb) = **b {
-                                    lb.as_number().map(|b_val| a_val.log(b_val))
-                                } else {
-                                    None
-                                }
-                            },
-                            Optional::None => Some(a_val.ln()),
-                        };
-                        if let Some(number) = folded {
-                            let mut result = Self::Leaf(L::new_number(number));
-                            replace_self_with!(&mut result);
-                            return SimplificationResult::Simplified;
-                        }
+                if let CalcNode::Leaf(ref la) = **a
+                    && let Some(a_val) = la.as_number()
+                {
+                    let folded = match b {
+                        &mut Optional::Some(ref b) => {
+                            if let CalcNode::Leaf(ref lb) = **b {
+                                lb.as_number().map(|b_val| a_val.log(b_val))
+                            } else {
+                                None
+                            }
+                        },
+                        Optional::None => Some(a_val.ln()),
+                    };
+                    if let Some(number) = folded {
+                        let mut result = Self::Leaf(L::new_number(number));
+                        replace_self_with!(&mut result);
+                        return SimplificationResult::Simplified;
                     }
                 }
                 SimplificationResult::Unchanged
             },
             Self::Exp(ref mut child) => {
-                if let CalcNode::Leaf(ref leaf) = **child {
-                    if let Some(value) = leaf.as_number() {
-                        let mut result = Self::Leaf(L::new_number(value.exp()));
-                        replace_self_with!(&mut result);
-                        return SimplificationResult::Simplified;
-                    }
+                if let CalcNode::Leaf(ref leaf) = **child
+                    && let Some(value) = leaf.as_number()
+                {
+                    let mut result = Self::Leaf(L::new_number(value.exp()));
+                    replace_self_with!(&mut result);
+                    return SimplificationResult::Simplified;
                 }
                 SimplificationResult::Unchanged
             },
@@ -2395,20 +2391,18 @@ impl<L: CalcNodeLeaf> CalcNode<L> {
             } => {
                 if let (CalcNode::Leaf(value), CalcNode::Leaf(start), CalcNode::Leaf(end)) =
                     (&**value, &**start, &**end)
+                    && value.is_same_unit_as(start)
+                    && value.is_same_unit_as(end)
+                    && let (Some(value), Some(start), Some(end)) = (
+                        value.unitless_value(),
+                        start.unitless_value(),
+                        end.unitless_value(),
+                    )
                 {
-                    if value.is_same_unit_as(start) && value.is_same_unit_as(end) {
-                        if let (Some(value), Some(start), Some(end)) = (
-                            value.unitless_value(),
-                            start.unitless_value(),
-                            end.unitless_value(),
-                        ) {
-                            let mut result = Self::Leaf(L::new_number(
-                                clamping_mode.evaluate(value, start, end),
-                            ));
-                            replace_self_with!(&mut result);
-                            return SimplificationResult::Simplified;
-                        }
-                    }
+                    let mut result =
+                        Self::Leaf(L::new_number(clamping_mode.evaluate(value, start, end)));
+                    replace_self_with!(&mut result);
+                    return SimplificationResult::Simplified;
                 }
                 SimplificationResult::Unchanged
             },

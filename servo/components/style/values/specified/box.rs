@@ -1424,11 +1424,11 @@ impl Parse for MaxLines<PositiveInteger> {
         let mut auto = false;
 
         loop {
-            if lines.is_none() {
-                if let Ok(value) = input.try_parse(|i| PositiveInteger::parse(context, i)) {
-                    lines = Some(value);
-                    continue;
-                }
+            if lines.is_none()
+                && let Ok(value) = input.try_parse(|i| PositiveInteger::parse(context, i))
+            {
+                lines = Some(value);
+                continue;
             }
 
             if !auto && input.try_parse(|i| i.expect_ident_matching("auto")).is_ok() {
@@ -1458,17 +1458,17 @@ impl Parse for LineClamp {
         let mut block_ellipsis = None;
 
         loop {
-            if max_lines.is_none() {
-                if let Ok(value) = input.try_parse(|i| MaxLines::parse(context, i)) {
-                    max_lines = Some(value);
-                    continue;
-                }
+            if max_lines.is_none()
+                && let Ok(value) = input.try_parse(|i| MaxLines::parse(context, i))
+            {
+                max_lines = Some(value);
+                continue;
             }
-            if block_ellipsis.is_none() {
-                if let Ok(value) = input.try_parse(|i| BlockEllipsis::parse(context, i)) {
-                    block_ellipsis = Some(value);
-                    continue;
-                }
+            if block_ellipsis.is_none()
+                && let Ok(value) = input.try_parse(|i| BlockEllipsis::parse(context, i))
+            {
+                block_ellipsis = Some(value);
+                continue;
             }
 
             break;
