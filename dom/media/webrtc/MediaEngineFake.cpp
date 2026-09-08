@@ -16,7 +16,6 @@
 #include "Tracing.h"
 #include "VideoSegment.h"
 #include "mozilla/MediaManager.h"
-#include "mozilla/StaticPrefs_media.h"
 #include "mozilla/SyncRunnable.h"
 #include "mozilla/UniquePtr.h"
 #include "nsCOMPtr.h"
