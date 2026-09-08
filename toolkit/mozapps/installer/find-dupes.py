@@ -24,7 +24,7 @@ def normalize_osx_path(p):
     """
     Strips the first 3 elements of an OSX app path
 
-    >>> normalize_osx_path('Nightly.app/foo/bar/baz')
+    >>> normalize_osx_path("Nightly.app/foo/bar/baz")
     'baz'
     """
     bits = p.split("/")
@@ -98,7 +98,9 @@ def find_dupes(source, allowed_dupes, bail=True):
             num_dupes += 1
 
             for p in paths:
-                if not is_l10n_file(p) and not allowed_dupes.is_allowed(normalize_path(p)):
+                if not is_l10n_file(p) and not allowed_dupes.is_allowed(
+                    normalize_path(p)
+                ):
                     unexpected_dupes.append(p)
 
     if num_dupes:

@@ -162,8 +162,7 @@ def remove_dangling_links(ui, path):
             b"U",
             b"noupdate",
             False,
-            b"the clone will include an empty working directory\n"
-            b"(only a repository)",
+            b"the clone will include an empty working directory\n(only a repository)",
         ),
     ],
     b"[OPTION]... URL DEST",
@@ -357,18 +356,16 @@ def robustcheckout(
                 "suites": [],
             }
             for op, duration in optimes:
-                perfherder["suites"].append(
-                    {
-                        "name": op,
-                        "value": duration,
-                        "lowerIsBetter": True,
-                        "shouldAlert": False,
-                        "serverUrl": server_url.decode("utf-8"),
-                        "hgVersion": util.version().decode("utf-8"),
-                        "extraOptions": [os.environ["TASKCLUSTER_INSTANCE_TYPE"]],
-                        "subtests": [],
-                    }
-                )
+                perfherder["suites"].append({
+                    "name": op,
+                    "value": duration,
+                    "lowerIsBetter": True,
+                    "shouldAlert": False,
+                    "serverUrl": server_url.decode("utf-8"),
+                    "hgVersion": util.version().decode("utf-8"),
+                    "extraOptions": [os.environ["TASKCLUSTER_INSTANCE_TYPE"]],
+                    "subtests": [],
+                })
             ui.write(
                 b"PERFHERDER_DATA: %s\n"
                 % pycompat.bytestr(json.dumps(perfherder, sort_keys=True))
@@ -761,9 +758,9 @@ def _docheckout(
         else:
             ui.write(b"(applying bundle %s)\n" % bundle)
             try:
-                with timeit("unbundle_artifact", "unbundle"), repo.lock(), repo.transaction(
-                    b"robustcheckout-bundle"
-                ) as tr:
+                with timeit(
+                    "unbundle_artifact", "unbundle"
+                ), repo.lock(), repo.transaction(b"robustcheckout-bundle") as tr:
                     with open(bundle, "rb") as fp:
                         gen = exchange.readbundle(ui, fp, bundle)
                         bundle2.applybundle(
@@ -881,7 +878,7 @@ def _docheckout(
                     abort_on_err=True,
                     # The function expects all arguments to be
                     # defined.
-                    **{"print": None, "print0": None, "dirs": None, "files": None}
+                    **{"print": None, "print0": None, "dirs": None, "files": None},
                 ):
                     raise error.Abort(b"error purging")
         finally:

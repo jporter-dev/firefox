@@ -639,6 +639,7 @@ set_define("MOZ_ENABLE_VAAPI", True, when=toolkit_gtk)
 set_config("MOZ_ENABLE_VULKAN_VIDEO", True, when=toolkit_gtk)
 set_define("MOZ_ENABLE_VULKAN_VIDEO", True, when=toolkit_gtk)
 
+
 @depends(target, toolkit_gtk)
 def v4l2(target, toolkit_gtk):
     # V4L2 decode is only used in GTK/Linux and generally only appears on
@@ -798,6 +799,7 @@ def applemedia(toolkit):
 set_config("MOZ_APPLEMEDIA", applemedia)
 set_define("MOZ_APPLEMEDIA", applemedia)
 
+
 # Windows Media Foundation support
 # ==============================================================
 @depends(target)
@@ -817,6 +819,7 @@ set_define("MOZ_WMF", True, when=wmf)
 
 set_config("MOZ_WMF_MEDIA_ENGINE", True, when=wmfmediaengine)
 set_define("MOZ_WMF_MEDIA_ENGINE", True, when=wmfmediaengine)
+
 
 # FFmpeg H264/AAC Decoding Support
 # ==============================================================
@@ -2997,12 +3000,14 @@ with only_when(compile_environment & wasm_sandboxing.hunspell):
         body="clock();",
         check_msg="for emulated clock() in wasi sysroot",
         flags=depends(wasi_sysroot_flags)(
-            lambda sysroot_flags: [
-                "-Werror",
-                "-D_WASI_EMULATED_PROCESS_CLOCKS",
-                "-lwasi-emulated-process-clocks",
-            ]
-            + sysroot_flags
+            lambda sysroot_flags: (
+                [
+                    "-Werror",
+                    "-D_WASI_EMULATED_PROCESS_CLOCKS",
+                    "-lwasi-emulated-process-clocks",
+                ]
+                + sysroot_flags
+            )
         ),
         when=depends(clock_in_wasi_sysroot)(lambda x: not x),
         onerror=lambda: die("Can't find clock() in wasi sysroot."),
@@ -3763,6 +3768,7 @@ def pkg_suffix(pkg_format):
 
 set_config("PKG_SUFFIX", pkg_suffix)
 
+
 @depends(build_project, moz_app_name)
 def moz_pkg_dir_default(build_project, moz_app_name):
     if build_project == "mobile/android":
@@ -3822,9 +3828,7 @@ def package_toolkit_defines(dll_prefix, dll_suffix, bin_suffix, toolkit, fold_li
 
 set_config("PACKAGE_TOOLKIT_DEFINES", package_toolkit_defines)
 
-set_config(
-    "JAR_COMPRESSION", "none", when=depends(toolkit)(lambda t: t != "android")
-)
+set_config("JAR_COMPRESSION", "none", when=depends(toolkit)(lambda t: t != "android"))
 
 
 @depends("MOZ_DEV_EDITION")
@@ -4052,10 +4056,14 @@ def moz_package_extra_args(
     if pkg_format == "DMG" and branding_dir:
         brand = join(topsrcdir, branding_dir)
         args += [
-            "--dsstore", join(brand, "dsstore"),
-            "--background", join(brand, "background.png"),
-            "--icon", join(brand, "disk.icns"),
-            "--volume-name", app_displayname,
+            "--dsstore",
+            join(brand, "dsstore"),
+            "--background",
+            join(brand, "background.png"),
+            "--icon",
+            join(brand, "disk.icns"),
+            "--volume-name",
+            app_displayname,
         ]
     return " ".join(shlex.quote(a) for a in args)
 
