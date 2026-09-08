@@ -724,8 +724,10 @@ class MWasmBoundsCheck : public MBinaryInstruction, public NoTypePolicy::Data {
     // If using the following options, `targetIndex` must be specified.
     Memory,
     Table,
-    // Everything else. Currently used for arrays in the GC proposal. If using
-    // this, targetIndex should not be used.
+    // Arrays in the GC proposal. `targetIndex` should not be used; the
+    // bounds check limit is a load of the array's numElements field.
+    Array,
+    // Everything else. If using this, targetIndex should not be used.
     Other,
   };
 
@@ -744,7 +746,8 @@ class MWasmBoundsCheck : public MBinaryInstruction, public NoTypePolicy::Data {
     MOZ_ASSERT(index->type() == boundsCheckLimit->type());
     MOZ_ASSERT_IF(target == Memory || target == Table,
                   targetIndex != UINT32_MAX);
-    MOZ_ASSERT_IF(target == Other, targetIndex == UINT32_MAX);
+    MOZ_ASSERT_IF(target == Array || target == Other,
+                  targetIndex == UINT32_MAX);
 
     // Bounds check is effectful: it throws for OOB.
     setGuard();

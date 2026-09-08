@@ -5269,10 +5269,11 @@ class FunctionCompiler {
       return nullptr;
     }
 
-    // Create a bounds check.
+    // Create a bounds check. The BCE pass eliminates it when the array was
+    // created with a constant length and the index is a constant in range.
     auto* boundsCheck =
         MWasmBoundsCheck::New(alloc(), index, numElements, trapSiteDesc(),
-                              MWasmBoundsCheck::Target::Other);
+                              MWasmBoundsCheck::Target::Array);
     if (!boundsCheck) {
       return nullptr;
     }
