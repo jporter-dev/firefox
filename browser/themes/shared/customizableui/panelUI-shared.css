@@ -895,6 +895,15 @@ toolbarbutton[constrain-size="true"][cui-areatype="panel"] > .toolbarbutton-badg
   & .fxa-menu-sign-in-promo-message {
     margin: 0;
     font-size: var(--font-size-small);
+
+    :root[uidensity="compact"] & {
+      display: none;
+    }
+  }
+
+  :root[uidensity="compact"] & {
+    /* stylelint-disable-next-line stylelint-plugin-mozilla/use-design-tokens */
+    padding: 6px;
   }
 }
 
