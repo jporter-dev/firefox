@@ -980,18 +980,6 @@ TEST(TArray, test_indexof)
 
 //----
 
-template <class Array>
-static bool is_heap(const Array& ary, size_t len) {
-  size_t index = 1;
-  while (index < len) {
-    if (ary[index] > ary[(index - 1) >> 1]) return false;
-    index++;
-  }
-  return true;
-}
-
-//----
-
 // An array |arr| is using its auto buffer if |&arr < arr.Elements()| and
 // |arr.Elements() - &arr| is small.
 
