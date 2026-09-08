@@ -1,11 +1,6 @@
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
-#
-# Bug 2045109:
-# This duplicates macosx.yml (x64) for the aarch64 migration. Both run in
-# parallel for a 2-week regression-detection window.
-# Delete macosx.yml once the aarch64 has enough data.
 ---
 task-defaults:
     worker-type: t-osx-1500-m4
