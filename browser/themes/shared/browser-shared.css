@@ -173,24 +173,18 @@ body {
     color: var(--lwt-text-color);
   }
 
-  @media -moz-pref("browser.nova.enabled") {
-    --chrome-block-radius: 10px;
-
-    @media (-moz-platform: linux) {
-      --chrome-block-radius: env(-moz-gtk-csd-titlebar-radius);
-    }
-
-    @media (-moz-platform: windows) {
-      --chrome-block-radius: 4px;
-    }
-
-    @media (-moz-windows-mica) {
-      --chrome-block-radius: 8px;
-    }
-
-    @media (-moz-mac-tahoe-theme) {
-      --chrome-block-radius: 16px;
-    }
+  --window-border-radius: 10px;
+  @media (-moz-platform: linux) {
+    --window-border-radius: env(-moz-gtk-csd-titlebar-radius);
+  }
+  @media (-moz-platform: windows) {
+    --window-border-radius: 4px;
+  }
+  @media (-moz-windows-mica) {
+    --window-border-radius: 8px;
+  }
+  @media (-moz-mac-tahoe-theme) {
+    --window-border-radius: 16px;
   }
 }
 

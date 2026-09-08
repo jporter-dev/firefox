@@ -488,13 +488,13 @@
 }
 
 @media -moz-pref("browser.nova.enabled") {
-  /* Match the corner radius and separator border of unsplit panels.
-   * Skip the border on the active panel so its focus outline can sit flush
-   * against the content without a visible gap. */
+  /* Match the corner radius and separator border of unsplit panels. */
   #tabbrowser-tabpanels[splitview] .split-view-panel > .browserContainer {
-    border-radius: var(--chrome-block-radius);
+    border-radius: var(--border-radius-medium);
   }
 
+  /* Skip the border on the active panel so its focus outline can sit flush
+   * against the content without a visible gap. */
   #tabbrowser-tabpanels[splitview] .split-view-panel:not(.deck-selected) > .browserContainer {
     border: var(--border-width) solid var(--chrome-content-separator-color);
   }
@@ -650,7 +650,7 @@ split-view-footer {
   padding-block-start: 2px;
   /* Avoid clipping by a large window corner radius by adding proportional
      bottom padding */
-  padding-block-end: max(2px, calc(var(--chrome-block-radius, 0px) / 5));
+  padding-block-end: max(2px, var(--window-border-radius) / 5);
 
   border-width: 1px;
   border-style: none;
@@ -660,7 +660,7 @@ split-view-footer {
     border-right-style: solid;
     /* When the label is on the left, avoid clipping from a large window corner radius
        by adding proportional left padding */
-    padding-left: max(4px, calc(var(--chrome-block-radius, 0px) / 2));
+    padding-left: max(4px, var(--window-border-radius) / 2);
     padding-right: 4px;
 
     /* disabled on Windows for triggering grayscale AA (bug 659213): */
@@ -676,7 +676,7 @@ split-view-footer {
     /* When the label is on the right, avoid clipping from a large window corner radius
        by adding proportional right padding */
     padding-left: 4px;
-    padding-right: max(4px, calc(var(--chrome-block-radius, 0px) / 2));
+    padding-right: max(4px, var(--window-border-radius) / 2);
 
     /* disabled on Windows for triggering grayscale AA (bug 659213): */
     @media not (-moz-platform: windows) {
