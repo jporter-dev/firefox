@@ -592,9 +592,9 @@ add_task(async function test_fallback_hidden_when_embed_is_too_short() {
 
   await SpecialPowers.spawn(embedContext, [], async () => {
     const container = content.document.getElementById("fallbackContainer");
-    is(
-      content.getComputedStyle(container).display,
-      "none",
+    // The subdocument's viewport may update after its load event.
+    await ContentTaskUtils.waitForCondition(
+      () => content.getComputedStyle(container).display === "none",
       "The fallback must be hidden when its complete UI cannot be shown"
     );
   });
