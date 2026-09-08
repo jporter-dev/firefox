@@ -230,6 +230,10 @@ ReadableByteStreamControllerGetBYOBRequest(
     // Step 1.2:
     aRv.MightThrowJSException();
     JS::Rooted<JSObject*> buffer(aCx, firstDescriptor->Buffer());
+    if (!JS_WrapObject(aCx, &buffer)) {
+      aRv.StealExceptionFromJSContext(aCx);
+      return nullptr;
+    }
     JS::Rooted<JSObject*> view(
         aCx, JS_NewUint8ArrayWithBuffer(
                  aCx, buffer,
