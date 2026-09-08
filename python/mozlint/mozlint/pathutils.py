@@ -339,7 +339,7 @@ def expand_exclusions(paths, config, root):
     Returns:
         Generator which generates list of paths that weren't excluded.
     """
-    extensions = [e.lstrip(".") for e in config.get("extensions", [])]
+    extensions = {f".{e}" for e in config.get("extensions", [])}
     exclude_extensions = [e.lstrip(".") for e in config.get("exclude_extensions", [])]
     if extensions and exclude_extensions:
         raise ValueError("Can't specify both extensions and exclude_extensions.")
@@ -389,8 +389,8 @@ def expand_exclusions(paths, config, root):
 
         finder = FileFinder(path, ignore=ignore, find_dotfiles=find_dotfiles)
         if extensions:
-            for ext in extensions:
-                for p, f in finder.find(f"**/*.{ext}"):
+            for p, f in finder.find("**"):
+                if os.path.splitext(p)[1] in extensions:
                     yield os.path.join(path, p)
         else:
             for p, f in finder.find("**/*.*"):
