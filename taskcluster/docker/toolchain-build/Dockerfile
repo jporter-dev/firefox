@@ -28,7 +28,6 @@ RUN apt-get update && \
       gcc-multilib \
       git \
       gnupg \
-      gpgv \
       jq \
       libbz2-dev \
       libexpat1-dev \

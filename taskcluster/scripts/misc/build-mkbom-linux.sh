@@ -7,13 +7,8 @@ mkdir -p $UPLOAD_DIR
 export PATH=$PATH:$MOZ_FETCHES_DIR/clang/bin
 cd $MOZ_FETCHES_DIR/bomutils
 
-# bomutils hardcodes CXXFLAGS/LDFLAGS in its Makefile, so the sysroot flags go
-# into CXX to avoid overriding them.
-CXX="$MOZ_FETCHES_DIR/clang/bin/clang++ --sysroot=$MOZ_FETCHES_DIR/sysroot"
-CXX="$CXX -fuse-ld=lld -Wno-unused-command-line-argument"
-
 make_flags="-j$(nproc)"
-make "$make_flags" CXX="$CXX"
+make "$make_flags"
 
 cd $(mktemp -d)
 mkdir mkbom
