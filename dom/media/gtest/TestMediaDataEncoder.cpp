@@ -1360,37 +1360,82 @@ TEST_F(MediaDataEncoderTest, SmallDownsampledInput) {
   WaitForShutdown(e);
 }
 
-static void SetFrameColor(MediaDataEncoderTest::FrameSource& aSource,
-                          gfx::ColorRange aRange, gfx::YUVColorSpace aMatrix,
-                          gfx::ColorSpace2 aPrimaries,
-                          gfx::TransferFunction aTransfer) {
-  aSource.mYUV.mColorRange = aRange;
-  aSource.mYUV.mYUVColorSpace = aMatrix;
-  aSource.mYUV.mColorPrimaries = aPrimaries;
-  aSource.mYUV.mTransferFunction = aTransfer;
+static already_AddRefed<MediaDataEncoder> CreateAV1Encoder(
+    Usage aUsage = Usage::Realtime,
+    EncoderConfig::SampleFormat aFormat =
+        EncoderConfig::SampleFormat(dom::ImageBitmapFormat::YUV420P),
+    gfx::IntSize aSize = kImageSize, BitrateMode aBitrateMode = BIT_RATE_MODE,
+    HardwarePreference aHardwarePreference = HardwarePreference::None,
+    ScalabilityMode aScalabilityMode = ScalabilityMode::None) {
+  return CreateVideoEncoder(CodecType::AV1, aUsage, aFormat, aSize,
+                            aBitrateMode, aHardwarePreference, aScalabilityMode,
+                            AsVariant(void_t{}));
 }
 
-static void ExpectAV1Color(const MediaRawData& aPacket, gfx::ColorRange aRange,
-                           gfx::CICP::MatrixCoefficients aMatrix,
-                           gfx::CICP::ColourPrimaries aPrimaries,
-                           gfx::CICP::TransferCharacteristics aTransfer) {
+struct AV1ColorTestData {
+  gfx::ColorRange mRange;
+  gfx::YUVColorSpace mMatrix;
+  gfx::ColorSpace2 mPrimaries;
+  gfx::TransferFunction mTransfer;
+  gfx::CICP::ColourPrimaries mExpectedPrimaries;
+  gfx::CICP::TransferCharacteristics mExpectedTransfer;
+  gfx::CICP::MatrixCoefficients mExpectedMatrix;
+};
+
+static constexpr AV1ColorTestData kBT2020PQFull{
+    gfx::ColorRange::FULL,    gfx::YUVColorSpace::BT2020,
+    gfx::ColorSpace2::BT2020, gfx::TransferFunction::PQ,
+    gfx::CICP::CP_BT2020,     gfx::CICP::TC_SMPTE2084,
+    gfx::CICP::MC_BT2020_NCL,
+};
+
+static constexpr AV1ColorTestData kBT709Limited{
+    gfx::ColorRange::LIMITED, gfx::YUVColorSpace::BT709,
+    gfx::ColorSpace2::BT709,  gfx::TransferFunction::BT709,
+    gfx::CICP::CP_BT709,      gfx::CICP::TC_BT709,
+    gfx::CICP::MC_BT709,
+};
+
+static constexpr AV1ColorTestData kUnspecifiedPrimaries{
+    gfx::ColorRange::LIMITED,  gfx::YUVColorSpace::BT709,
+    gfx::ColorSpace2::UNKNOWN, gfx::TransferFunction::BT709,
+    gfx::CICP::CP_UNSPECIFIED, gfx::CICP::TC_BT709,
+    gfx::CICP::MC_BT709,
+};
+
+static void SetFrameColor(MediaDataEncoderTest::FrameSource& aSource,
+                          const AV1ColorTestData& aColor) {
+  aSource.mYUV.mColorRange = aColor.mRange;
+  aSource.mYUV.mYUVColorSpace = aColor.mMatrix;
+  aSource.mYUV.mColorPrimaries = aColor.mPrimaries;
+  aSource.mYUV.mTransferFunction = aColor.mTransfer;
+}
+
+static EncoderConfig::SampleFormat AV1ColorFormat(
+    const AV1ColorTestData& aColor) {
+  return EncoderConfig::SampleFormat(
+      dom::ImageBitmapFormat::YUV420P,
+      EncoderConfig::VideoColorSpace(aColor.mRange, aColor.mMatrix,
+                                     aColor.mPrimaries, aColor.mTransfer));
+}
+
+static void ExpectAV1Color(const MediaRawData& aPacket,
+                           const AV1ColorTestData& aExpected) {
   AOMDecoder::AV1SequenceInfo info;
   MediaResult result = AOMDecoder::ReadSequenceHeaderInfo(
       Span(aPacket.Data(), aPacket.Size()), info);
   ASSERT_EQ(result.Code(), NS_OK) << "packet must contain the sequence header";
-  EXPECT_EQ(info.mColorSpace.mPrimaries, aPrimaries);
-  EXPECT_EQ(info.mColorSpace.mTransfer, aTransfer);
-  EXPECT_EQ(info.mColorSpace.mMatrix, aMatrix);
-  EXPECT_EQ(info.mColorSpace.mRange, aRange);
+  EXPECT_EQ(info.mColorSpace.mPrimaries, aExpected.mExpectedPrimaries);
+  EXPECT_EQ(info.mColorSpace.mTransfer, aExpected.mExpectedTransfer);
+  EXPECT_EQ(info.mColorSpace.mMatrix, aExpected.mExpectedMatrix);
+  EXPECT_EQ(info.mColorSpace.mRange, aExpected.mRange);
 }
 
 static Result<bool, MediaResult> EncodeAV1ColorFrame(
     const RefPtr<MediaDataEncoder>& aEncoder,
     MediaDataEncoderTest::FrameSource& aSource, size_t aIndex,
-    gfx::ColorRange aRange, gfx::YUVColorSpace aMatrix,
-    gfx::ColorSpace2 aPrimaries, gfx::TransferFunction aTransfer,
-    MediaDataEncoder::EncodedData& aOutput) {
-  SetFrameColor(aSource, aRange, aMatrix, aPrimaries, aTransfer);
+    const AV1ColorTestData& aColor, MediaDataEncoder::EncodedData& aOutput) {
+  SetFrameColor(aSource, aColor);
   RefPtr<MediaData> frame = aSource.GetFrame(aIndex);
   bool requestedKeyframe = frame->mKeyframe;
   aOutput.AppendElements(MOZ_TRY(WaitFor(aEncoder->Encode(frame))));
@@ -1399,37 +1444,17 @@ static Result<bool, MediaResult> EncodeAV1ColorFrame(
 
 TEST_F(MediaDataEncoderTest, AV1SignalsColorConfigInSequenceHeader) {
   RUN_IF_SUPPORTED(CodecType::AV1, [this]() {
-    // Different from the CICP defaults, so the assertions fail unless the
-    // values were signaled.
-    mData.mYUV.mYUVColorSpace = gfx::YUVColorSpace::BT2020;
-    mData.mYUV.mColorPrimaries = gfx::ColorSpace2::BT2020;
-    mData.mYUV.mTransferFunction = gfx::TransferFunction::PQ;
-    mData.mYUV.mColorRange = gfx::ColorRange::FULL;
+    SetFrameColor(mData, kBT2020PQFull);
 
-    RefPtr<MediaDataEncoder> e = CreateVideoEncoder(
-        CodecType::AV1, Usage::Record,
-        EncoderConfig::SampleFormat(
-            dom::ImageBitmapFormat::YUV420P,
-            EncoderConfig::VideoColorSpace(
-                gfx::ColorRange::FULL, gfx::YUVColorSpace::BT2020,
-                gfx::ColorSpace2::BT2020, gfx::TransferFunction::PQ)),
-        kImageSize, BIT_RATE_MODE, HardwarePreference::None,
-        ScalabilityMode::None, AsVariant(void_t{}));
+    RefPtr<MediaDataEncoder> e =
+        CreateAV1Encoder(Usage::Record, AV1ColorFormat(kBT2020PQFull));
     EXPECT_TRUE(EnsureInit(e));
 
     MediaDataEncoder::EncodedData output =
         GET_OR_RETURN_ON_ERROR(Encode(e, 1UL, mData));
     EXPECT_EQ(output.Length(), 1UL);
 
-    AOMDecoder::AV1SequenceInfo info;
-    MediaResult seq = AOMDecoder::ReadSequenceHeaderInfo(
-        Span(output[0]->Data(), output[0]->Size()), info);
-    ASSERT_EQ(seq.Code(), NS_OK)
-        << "first packet must contain the sequence header";
-    EXPECT_EQ(info.mColorSpace.mPrimaries, gfx::CICP::CP_BT2020);
-    EXPECT_EQ(info.mColorSpace.mTransfer, gfx::CICP::TC_SMPTE2084);
-    EXPECT_EQ(info.mColorSpace.mMatrix, gfx::CICP::MC_BT2020_NCL);
-    EXPECT_EQ(info.mColorSpace.mRange, gfx::ColorRange::FULL);
+    ExpectAV1Color(*output[0], kBT2020PQFull);
 
     WaitForShutdown(e);
   });
@@ -1437,36 +1462,17 @@ TEST_F(MediaDataEncoderTest, AV1SignalsColorConfigInSequenceHeader) {
 
 TEST_F(MediaDataEncoderTest, AV1FrameColorOverridesConfig) {
   RUN_IF_SUPPORTED(CodecType::AV1, [this]() {
-    mData.mYUV.mYUVColorSpace = gfx::YUVColorSpace::BT2020;
-    mData.mYUV.mColorPrimaries = gfx::ColorSpace2::BT2020;
-    mData.mYUV.mTransferFunction = gfx::TransferFunction::PQ;
-    mData.mYUV.mColorRange = gfx::ColorRange::FULL;
-
-    RefPtr<MediaDataEncoder> e = CreateVideoEncoder(
-        CodecType::AV1, Usage::Record,
-        EncoderConfig::SampleFormat(
-            dom::ImageBitmapFormat::YUV420P,
-            EncoderConfig::VideoColorSpace(
-                gfx::ColorRange::LIMITED, gfx::YUVColorSpace::BT709,
-                gfx::ColorSpace2::BT709, gfx::TransferFunction::BT709)),
-        kImageSize, BIT_RATE_MODE, HardwarePreference::RequireSoftware,
-        ScalabilityMode::None, AsVariant(void_t{}));
+    SetFrameColor(mData, kBT2020PQFull);
+    RefPtr<MediaDataEncoder> e = CreateAV1Encoder(
+        Usage::Record, AV1ColorFormat(kBT709Limited), kImageSize, BIT_RATE_MODE,
+        HardwarePreference::RequireSoftware);
     ASSERT_TRUE(EnsureInit(e));
 
     auto r = Encode(e, 1U, mData);
     ASSERT_TRUE(r.isOk());
     MediaDataEncoder::EncodedData output = r.unwrap();
     ASSERT_EQ(output.Length(), 1u);
-
-    AOMDecoder::AV1SequenceInfo info;
-    MediaResult seq = AOMDecoder::ReadSequenceHeaderInfo(
-        Span(output[0]->Data(), output[0]->Size()), info);
-    ASSERT_EQ(seq.Code(), NS_OK)
-        << "first packet must contain the sequence header";
-    EXPECT_EQ(info.mColorSpace.mPrimaries, gfx::CICP::CP_BT2020);
-    EXPECT_EQ(info.mColorSpace.mTransfer, gfx::CICP::TC_SMPTE2084);
-    EXPECT_EQ(info.mColorSpace.mMatrix, gfx::CICP::MC_BT2020_NCL);
-    EXPECT_EQ(info.mColorSpace.mRange, gfx::ColorRange::FULL);
+    ExpectAV1Color(*output[0], kBT2020PQFull);
 
     WaitForShutdown(e);
   });
@@ -1487,11 +1493,11 @@ static Maybe<uint8_t> GetAV1FrameTemporalId(const MediaRawData& aPacket) {
 
 TEST_F(MediaDataEncoderTest, AV1SVCTemporalIdsMatchBitstream) {
   RUN_IF_SUPPORTED(CodecType::AV1, [this]() {
-    RefPtr<MediaDataEncoder> e = CreateVideoEncoder(
-        CodecType::AV1, Usage::Record,
+    RefPtr<MediaDataEncoder> e = CreateAV1Encoder(
+        Usage::Record,
         EncoderConfig::SampleFormat(dom::ImageBitmapFormat::YUV420P),
         kImageSize, BitrateMode::Constant, HardwarePreference::RequireSoftware,
-        ScalabilityMode::L1T3, AsVariant(void_t{}));
+        ScalabilityMode::L1T3);
     ASSERT_TRUE(EnsureInit(e));
 
     MediaDataEncoder::EncodedData output;
@@ -1520,33 +1526,22 @@ TEST_F(MediaDataEncoderTest, AV1SVCTemporalIdsMatchBitstream) {
 
 TEST_F(MediaDataEncoderTest, AV1ColorChangeForcesKeyframe) {
   RUN_IF_SUPPORTED(CodecType::AV1, [this]() {
-    RefPtr<MediaDataEncoder> e = CreateVideoEncoder(
-        CodecType::AV1, Usage::Realtime,
-        EncoderConfig::SampleFormat(
-            dom::ImageBitmapFormat::YUV420P,
-            EncoderConfig::VideoColorSpace(
-                gfx::ColorRange::LIMITED, gfx::YUVColorSpace::BT709,
-                gfx::ColorSpace2::BT709, gfx::TransferFunction::BT709)),
-        kImageSize, BIT_RATE_MODE, HardwarePreference::RequireSoftware,
-        ScalabilityMode::None, AsVariant(void_t{}));
+    RefPtr<MediaDataEncoder> e = CreateAV1Encoder(
+        Usage::Realtime, AV1ColorFormat(kBT709Limited), kImageSize,
+        BIT_RATE_MODE, HardwarePreference::RequireSoftware);
     ASSERT_TRUE(EnsureInit(e));
 
     MediaDataEncoder::EncodedData output;
-    auto firstResult = EncodeAV1ColorFrame(
-        e, mData, 0, gfx::ColorRange::LIMITED, gfx::YUVColorSpace::BT709,
-        gfx::ColorSpace2::BT709, gfx::TransferFunction::BT709, output);
+    auto firstResult = EncodeAV1ColorFrame(e, mData, 0, kBT709Limited, output);
     ASSERT_TRUE(firstResult.isOk());
     EXPECT_TRUE(firstResult.unwrap());
 
-    auto secondResult = EncodeAV1ColorFrame(
-        e, mData, 1, gfx::ColorRange::FULL, gfx::YUVColorSpace::BT2020,
-        gfx::ColorSpace2::BT2020, gfx::TransferFunction::PQ, output);
+    auto secondResult = EncodeAV1ColorFrame(e, mData, 1, kBT2020PQFull, output);
     ASSERT_TRUE(secondResult.isOk());
     EXPECT_FALSE(secondResult.unwrap());
 
-    auto thirdResult = EncodeAV1ColorFrame(
-        e, mData, 2, gfx::ColorRange::LIMITED, gfx::YUVColorSpace::BT709,
-        gfx::ColorSpace2::UNKNOWN, gfx::TransferFunction::BT709, output);
+    auto thirdResult =
+        EncodeAV1ColorFrame(e, mData, 2, kUnspecifiedPrimaries, output);
     ASSERT_TRUE(thirdResult.isOk());
     EXPECT_FALSE(thirdResult.unwrap());
 
@@ -1558,12 +1553,9 @@ TEST_F(MediaDataEncoderTest, AV1ColorChangeForcesKeyframe) {
     EXPECT_TRUE(output[0]->mKeyframe);
     EXPECT_TRUE(output[1]->mKeyframe);
     EXPECT_TRUE(output[2]->mKeyframe);
-    ExpectAV1Color(*output[0], gfx::ColorRange::LIMITED, gfx::CICP::MC_BT709,
-                   gfx::CICP::CP_BT709, gfx::CICP::TC_BT709);
-    ExpectAV1Color(*output[1], gfx::ColorRange::FULL, gfx::CICP::MC_BT2020_NCL,
-                   gfx::CICP::CP_BT2020, gfx::CICP::TC_SMPTE2084);
-    ExpectAV1Color(*output[2], gfx::ColorRange::LIMITED, gfx::CICP::MC_BT709,
-                   gfx::CICP::CP_UNSPECIFIED, gfx::CICP::TC_BT709);
+    ExpectAV1Color(*output[0], kBT709Limited);
+    ExpectAV1Color(*output[1], kBT2020PQFull);
+    ExpectAV1Color(*output[2], kUnspecifiedPrimaries);
 
     WaitForShutdown(e);
   });
@@ -1571,39 +1563,28 @@ TEST_F(MediaDataEncoderTest, AV1ColorChangeForcesKeyframe) {
 
 TEST_F(MediaDataEncoderTest, AV1SVCColorChangeResetsTemporalLayer) {
   RUN_IF_SUPPORTED(CodecType::AV1, [this]() {
-    RefPtr<MediaDataEncoder> e = CreateVideoEncoder(
-        CodecType::AV1, Usage::Record,
-        EncoderConfig::SampleFormat(
-            dom::ImageBitmapFormat::YUV420P,
-            EncoderConfig::VideoColorSpace(
-                gfx::ColorRange::LIMITED, gfx::YUVColorSpace::BT709,
-                gfx::ColorSpace2::BT709, gfx::TransferFunction::BT709)),
-        kImageSize, BitrateMode::Constant, HardwarePreference::RequireSoftware,
-        ScalabilityMode::L1T2, AsVariant(void_t{}));
+    RefPtr<MediaDataEncoder> e = CreateAV1Encoder(
+        Usage::Record, AV1ColorFormat(kBT709Limited), kImageSize,
+        BitrateMode::Constant, HardwarePreference::RequireSoftware,
+        ScalabilityMode::L1T2);
     ASSERT_TRUE(EnsureInit(e));
 
     MediaDataEncoder::EncodedData output;
-    auto firstResult = EncodeAV1ColorFrame(
-        e, mData, 0, gfx::ColorRange::LIMITED, gfx::YUVColorSpace::BT709,
-        gfx::ColorSpace2::BT709, gfx::TransferFunction::BT709, output);
+    auto firstResult = EncodeAV1ColorFrame(e, mData, 0, kBT709Limited, output);
     ASSERT_TRUE(firstResult.isOk());
     EXPECT_TRUE(firstResult.unwrap());
 
-    auto secondResult = EncodeAV1ColorFrame(
-        e, mData, 1, gfx::ColorRange::FULL, gfx::YUVColorSpace::BT2020,
-        gfx::ColorSpace2::BT2020, gfx::TransferFunction::PQ, output);
+    auto secondResult = EncodeAV1ColorFrame(e, mData, 1, kBT2020PQFull, output);
     ASSERT_TRUE(secondResult.isOk());
     EXPECT_FALSE(secondResult.unwrap());
 
-    auto thirdResult = EncodeAV1ColorFrame(
-        e, mData, 2, gfx::ColorRange::LIMITED, gfx::YUVColorSpace::BT709,
-        gfx::ColorSpace2::UNKNOWN, gfx::TransferFunction::BT709, output);
+    auto thirdResult =
+        EncodeAV1ColorFrame(e, mData, 2, kUnspecifiedPrimaries, output);
     ASSERT_TRUE(thirdResult.isOk());
     EXPECT_FALSE(thirdResult.unwrap());
 
-    auto fourthResult = EncodeAV1ColorFrame(
-        e, mData, 3, gfx::ColorRange::LIMITED, gfx::YUVColorSpace::BT709,
-        gfx::ColorSpace2::UNKNOWN, gfx::TransferFunction::BT709, output);
+    auto fourthResult =
+        EncodeAV1ColorFrame(e, mData, 3, kUnspecifiedPrimaries, output);
     ASSERT_TRUE(fourthResult.isOk());
     EXPECT_FALSE(fourthResult.unwrap());
 
