@@ -301,13 +301,6 @@ body {
   background-size: var(--toolbox-background-size);
 }
 
-@media -moz-pref("browser.nova.enabled") {
-  /* XXX is this still needed? */
-  :root[lwtheme]:not([theme-image-in-toolbox]) .chrome-block {
-    overflow: clip;
-  }
-}
-
 .browser-toolbar {
   appearance: none;
   /* Reset linux padding */

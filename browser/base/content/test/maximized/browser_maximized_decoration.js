@@ -38,7 +38,8 @@ function getContentCornerRadius(win) {
 function getChromeBlocks(win, extraSelectors = "") {
   // although deeply nested inside #browser, the .browserContainer elements
   // are where borders and corners live, so we measure those.
-  let selector = ".chrome-block, .browserContainer";
+  let selector =
+    "#navigator-toolbox, #sidebar-box, #sidebar-container, .browserContainer";
   if (extraSelectors) {
     selector += ", " + extraSelectors;
   }
