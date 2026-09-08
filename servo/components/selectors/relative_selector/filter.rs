@@ -33,10 +33,8 @@ fn add_to_filter<E: Element>(element: E, filter: &mut BloomFilter, kind: Travers
         if !e.add_element_unique_hashes(filter) {
             return false;
         }
-        if kind == TraversalKind::Descendants {
-            if !add_to_filter(e, filter, kind) {
-                return false;
-            }
+        if kind == TraversalKind::Descendants && !add_to_filter(e, filter, kind) {
+            return false;
         }
         child = e.next_sibling_element();
     }
@@ -74,8 +72,8 @@ fn fast_reject<Impl: SelectorImpl>(
         &mut len,
         |s| s.iter(),
     );
-    for i in 0..len {
-        if !filter.might_contain_hash(hashes[i]) {
+    for hash in &hashes[0..len] {
+        if !filter.might_contain_hash(*hash) {
             // Definitely rejected.
             return true;
         }
@@ -153,7 +151,7 @@ impl RelativeSelectorFilterMap {
             })
         } else {
             self.get_filter(element, kind)
-                .map_or(false, |filter| fast_reject(selector, quirks_mode, filter))
+                .is_some_and(|filter| fast_reject(selector, quirks_mode, filter))
         }
     }
 }

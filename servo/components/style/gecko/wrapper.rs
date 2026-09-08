@@ -1029,14 +1029,7 @@ impl<'le> TElement for GeckoElement<'le> {
     ) -> Option<ImplicitScopeRoot> {
         // As long as this "unopaqued" element does not escape this function, we're not leaking
         // potentially-mutable elements from opaque elements.
-        let e = unsafe {
-            Self(
-                opaque_host
-                    .as_const_ptr::<RawGeckoElement>()
-                    .as_ref()
-                    .unwrap(),
-            )
-        };
+        let e = unsafe { Self(opaque_host.to_ptr().cast::<RawGeckoElement>().as_ref()) };
         let shadow_root = e.shadow_root()?;
         shadow_root.implicit_scope_for_sheet(sheet_index)
     }

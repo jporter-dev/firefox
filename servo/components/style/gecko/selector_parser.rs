@@ -13,7 +13,7 @@ use crate::str::starts_with_ignore_ascii_case;
 use crate::string_cache::{Atom, Namespace, WeakAtom, WeakNamespace};
 use crate::values::{AtomIdent, AtomString, CSSInteger, CustomIdent};
 use cssparser::{BasicParseError, BasicParseErrorKind, Parser};
-use cssparser::{CowRcStr, ToCss, Token, match_ignore_ascii_case};
+use cssparser::{ToCss, Token, match_ignore_ascii_case};
 use dom::{DocumentState, ElementState, HEADING_LEVEL_OFFSET};
 use selectors::parser::SelectorParseErrorKind;
 use std::fmt;
@@ -386,7 +386,7 @@ impl<'a> SelectorParser<'a> {
 
 /// Parse the functional pseudo-element with the function name.
 pub fn parse_functional_pseudo_element_with_name<'i>(
-    name: &CowRcStr<'i>,
+    name: &str,
     parser: &mut Parser<'i>,
     target: Target,
 ) -> Result<PseudoElement, ParseError> {
@@ -410,12 +410,12 @@ pub fn parse_functional_pseudo_element_with_name<'i>(
                 _ => unreachable!("Parser::next() shouldn't return any other error"),
             }
         }
-        return PseudoElement::tree_pseudo_element(name.as_ref(), args).ok_or(ParseError::custom(
+        return PseudoElement::tree_pseudo_element(name, args).ok_or(ParseError::custom(
             SelectorParseErrorKind::UnsupportedPseudoClassOrElement,
         ));
     }
 
-    Ok(match_ignore_ascii_case! { &name,
+    Ok(match_ignore_ascii_case! { name,
         "highlight" => PseudoElement::Highlight(AtomIdent::from(parser.expect_ident()?.as_ref())),
         "picker" => {
             let picker_element = parser.expect_ident()?.as_ref();
@@ -496,10 +496,7 @@ impl<'a, 'i> ::selectors::Parser<'i> for SelectorParser<'a> {
         !self.for_supports_rule
     }
 
-    fn parse_non_ts_pseudo_class(
-        &self,
-        name: CowRcStr<'i>,
-    ) -> Result<NonTSPseudoClass, ParseError> {
+    fn parse_non_ts_pseudo_class(&self, name: &str) -> Result<NonTSPseudoClass, ParseError> {
         if let Some(pseudo_class) = NonTSPseudoClass::parse_non_functional(&name) {
             if self.is_pseudo_class_enabled(&pseudo_class) {
                 return Ok(pseudo_class);
@@ -512,7 +509,7 @@ impl<'a, 'i> ::selectors::Parser<'i> for SelectorParser<'a> {
 
     fn parse_non_ts_functional_pseudo_class(
         &self,
-        name: CowRcStr<'i>,
+        name: &str,
         parser: &mut Parser<'i>,
         _after_part: bool,
     ) -> Result<NonTSPseudoClass, ParseError> {
@@ -563,7 +560,7 @@ impl<'a, 'i> ::selectors::Parser<'i> for SelectorParser<'a> {
         }
     }
 
-    fn parse_pseudo_element(&self, name: CowRcStr<'i>) -> Result<PseudoElement, ParseError> {
+    fn parse_pseudo_element(&self, name: &str) -> Result<PseudoElement, ParseError> {
         if let Some(pseudo) = PseudoElement::from_slice(&name) {
             if self.is_pseudo_element_enabled(&pseudo) {
                 return Ok(pseudo);
@@ -584,10 +581,10 @@ impl<'a, 'i> ::selectors::Parser<'i> for SelectorParser<'a> {
 
     fn parse_functional_pseudo_element(
         &self,
-        name: CowRcStr<'i>,
+        name: &str,
         parser: &mut Parser<'i>,
     ) -> Result<PseudoElement, ParseError> {
-        let pseudo = parse_functional_pseudo_element_with_name(&name, parser, Target::Selector)?;
+        let pseudo = parse_functional_pseudo_element_with_name(name, parser, Target::Selector)?;
         if self.is_pseudo_element_enabled(&pseudo) {
             return Ok(pseudo);
         }

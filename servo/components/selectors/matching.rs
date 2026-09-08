@@ -151,14 +151,13 @@ pub fn selector_may_match(hashes: &AncestorHashes, bf: &BloomFilter) -> bool {
     // because we usually don't.
     //
     // To be clear: this is all extremely hot.
-    for i in 0..3 {
-        let packed = hashes.packed_hashes[i];
-        if packed == 0 {
+    for packed in &hashes.packed_hashes {
+        if *packed == 0 {
             // No more hashes left - unable to fast-reject.
             return true;
         }
 
-        if !bf.might_contain_hash(packed & BLOOM_HASH_MASK) {
+        if !bf.might_contain_hash(*packed & BLOOM_HASH_MASK) {
             // Hooray! We fast-rejected on this hash.
             return false;
         }
@@ -292,12 +291,11 @@ where
     E: Element,
 {
     // Use the bloom filter to fast-reject.
-    if let Some(hashes) = hashes {
-        if let Some(filter) = context.bloom_filter {
-            if !selector_may_match(hashes, filter) {
-                return KleeneValue::False;
-            }
-        }
+    if let Some(hashes) = hashes
+        && let Some(filter) = context.bloom_filter
+        && !selector_may_match(hashes, filter)
+    {
+        return KleeneValue::False;
     }
     matches_complex_selector(
         selector.iter_from(offset),
@@ -460,10 +458,10 @@ where
         // Consume the pseudo.
         match *iter.next().unwrap() {
             Component::PseudoElement(ref pseudo) => {
-                if let Some(ref f) = context.pseudo_element_matching_fn {
-                    if !f(pseudo) {
-                        return KleeneValue::False;
-                    }
+                if let Some(ref f) = context.pseudo_element_matching_fn
+                    && !f(pseudo)
+                {
+                    return KleeneValue::False;
                 }
             },
             ref other => {
@@ -486,14 +484,7 @@ where
         debug_assert_eq!(next_sequence, Combinator::PseudoElement);
     }
 
-    matches_complex_selector_internal(
-        iter,
-        element,
-        context,
-        rightmost,
-        SubjectOrPseudoElement::Yes,
-    )
-    .into()
+    matches_complex_selector_internal(iter, element, context, rightmost).into()
 }
 
 /// Matches each selector of a list as a complex selector
@@ -591,7 +582,7 @@ fn matches_relative_selector<E: Element>(
             next_element = el.next_sibling_element();
         }
     }
-    return false;
+    false
 }
 
 fn relative_selector_match_early<E: Element>(
@@ -791,7 +782,7 @@ where
     debug_assert!(
         element
             .assigned_slot()
-            .map_or(true, |s| s.is_html_slot_element())
+            .is_none_or(|s| s.is_html_slot_element())
     );
     let scope = context.current_host?;
     let mut current_slot = element.assigned_slot()?;
@@ -854,7 +845,6 @@ fn matches_complex_selector_internal<E>(
     mut element: E,
     context: &mut MatchingContext<E::Impl>,
     mut rightmost: SubjectOrPseudoElement,
-    mut first_subject_compound: SubjectOrPseudoElement,
 ) -> SelectorMatchingResult
 where
     E: Element,
@@ -898,7 +888,6 @@ where
 
     if !is_pseudo_combinator {
         rightmost = SubjectOrPseudoElement::No;
-        first_subject_compound = SubjectOrPseudoElement::No;
     }
 
     // Stop matching :visited as soon as we find a link, or a combinator for
@@ -936,7 +925,6 @@ where
                     element,
                     context,
                     rightmost,
-                    first_subject_compound,
                 )
             })
         });
@@ -1267,31 +1255,30 @@ where
         Component::AttributeOther(ref attr_sel) => {
             matches_rare_attribute_selector(element, attr_sel)
         },
-        Component::Part(ref parts) => matches_part(element, parts, &mut context.shared),
+        Component::Part(ref parts) => matches_part(element, parts, context.shared),
         Component::Slotted(ref selector) => {
-            return matches_slotted(element, selector, &mut context.shared, rightmost);
+            return matches_slotted(element, selector, context.shared, rightmost);
         },
         Component::PseudoElement(ref pseudo) => {
             element.match_pseudo_element(pseudo, context.shared)
         },
         Component::ExplicitUniversalType | Component::ExplicitAnyNamespace => true,
         Component::Namespace(_, ref url) | Component::DefaultNamespace(ref url) => {
-            element.has_namespace(&url.borrow())
+            element.has_namespace(url.borrow())
         },
         Component::ExplicitNoNamespace => {
             let ns = crate::parser::namespace_empty_string::<E::Impl>();
-            element.has_namespace(&ns.borrow())
+            element.has_namespace(ns.borrow())
         },
         Component::NonTSPseudoClass(ref pc) => {
-            if let Some(ref iter) = context.quirks_data {
-                if pc.is_active_or_hover()
-                    && !element.is_link()
-                    && hover_and_active_quirk_applies(iter, context.shared, context.rightmost)
-                {
-                    return KleeneValue::False;
-                }
+            if let Some(ref iter) = context.quirks_data
+                && pc.is_active_or_hover()
+                && !element.is_link()
+                && hover_and_active_quirk_applies(iter, context.shared, context.rightmost)
+            {
+                return KleeneValue::False;
             }
-            element.match_non_ts_pseudo_class(pc, &mut context.shared)
+            element.match_non_ts_pseudo_class(pc, context.shared)
         },
         Component::Root => element.is_root(),
         Component::Empty => {
@@ -1301,7 +1288,7 @@ where
             element.is_empty()
         },
         Component::Host(ref selector) => {
-            return matches_host(element, selector.as_ref(), &mut context.shared, rightmost);
+            return matches_host(element, selector.as_ref(), context.shared, rightmost);
         },
         Component::ParentSelector => match context.shared.scope_element {
             Some(ref scope_element) => element.opaque() == *scope_element,
@@ -1360,7 +1347,7 @@ where
         Component::RelativeSelectorAnchor => {
             let anchor = context.shared.relative_selector_anchor();
             // We may match inner relative selectors, in which case we want to always match.
-            anchor.map_or(true, |a| a == element.opaque())
+            anchor.is_none_or(|a| a == element.opaque())
         },
         Component::Invalid(..) => false,
     })
@@ -1380,7 +1367,7 @@ pub fn select_name<'a, E: Element, T: PartialEq>(
 }
 
 #[inline(always)]
-pub fn to_unconditional_case_sensitivity<'a, E: Element>(
+pub fn to_unconditional_case_sensitivity<E: Element>(
     parsed: ParsedCaseSensitivity,
     element: E,
 ) -> CaseSensitivity {
@@ -1600,13 +1587,13 @@ where
         // If we're computing indices from the left, check each element in the
         // cache. We handle the indices-from-the-right case at the top of this
         // function.
-        if !is_from_end && check_cache {
-            if let Some(i) = context
+        if !is_from_end
+            && check_cache
+            && let Some(i) = context
                 .nth_index_cache(is_of_type, is_from_end, selectors)
                 .lookup(curr.opaque())
-            {
-                return i + index;
-            }
+        {
+            return i + index;
         }
         index += 1;
     }
