@@ -3258,7 +3258,19 @@ const EmbeddedMigrationWizard = ({
 const EmbeddedThemePicker = ({
   installSource
 }) => {
+  const themePickerRef = (0,external_React_namespaceObject.useRef)(null);
+  (0,external_React_namespaceObject.useEffect)(() => {
+    if (installSource !== "about:welcome") {
+      return;
+    }
+    // The widget may not be upgraded from a plain element yet when this
+    // mounts, so wait for its class definition before calling `shown()`.
+    customElements.whenDefined("theme-picker").then(() => {
+      themePickerRef.current?.shown();
+    });
+  }, [installSource]);
   return /*#__PURE__*/external_React_default().createElement("theme-picker", {
+    ref: themePickerRef,
     installsource: installSource
   });
 };
