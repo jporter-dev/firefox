@@ -2,6 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 import os
+import platform
 
 import filters
 from cmdline import FIREFOX_APPS
@@ -29,6 +30,7 @@ class BasePythonSupport:
         self.app = None
         self.raw_result = []
         self.bt_result = []
+        self.platform = platform.system()
         self.task_label = os.environ.get("RAPTOR_TASK_LABEL", "")
         self.test_platform = test_platform_from_label(self.task_label)
 
