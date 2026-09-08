@@ -1495,16 +1495,22 @@ void CodeGenerator::testValueTruthy(const ValueOperand& value,
 }
 
 void CodeGenerator::visitTestIAndBranch(LTestIAndBranch* test) {
-  Register input = ToRegister(test->input());
+  const LAllocation* input = test->input();
   MBasicBlock* ifTrue = test->ifTrue();
   MBasicBlock* ifFalse = test->ifFalse();
 
-  if (isNextBlock(ifFalse->lir())) {
-    masm.branchTest32(Assembler::NonZero, input, input,
-                      getJumpLabelForBranch(ifTrue));
+  bool fallThroughFalse = isNextBlock(ifFalse->lir());
+  Label* label = fallThroughFalse ? getJumpLabelForBranch(ifTrue)
+                                  : getJumpLabelForBranch(ifFalse);
+  if (input->isGeneralReg()) {
+    Register reg = ToRegister(input);
+    masm.branchTest32(fallThroughFalse ? Assembler::NonZero : Assembler::Zero,
+                      reg, reg, label);
   } else {
-    masm.branchTest32(Assembler::Zero, input, input,
-                      getJumpLabelForBranch(ifFalse));
+    masm.branch32(fallThroughFalse ? Assembler::NotEqual : Assembler::Equal,
+                  ToAddress(input), Imm32(0), label);
+  }
+  if (!fallThroughFalse) {
     jumpToBlock(ifTrue);
   }
 }
@@ -1585,7 +1591,7 @@ static Assembler::Condition ReverseCondition(Assembler::Condition condition) {
 void CodeGenerator::visitCompare(LCompare* comp) {
   MCompare::CompareType compareType = comp->mir()->compareType();
   Assembler::Condition cond = JSOpToCondition(compareType, comp->jsop());
-  Register left = ToRegister(comp->left());
+  const LAllocation* left = comp->left();
   const LAllocation* right = comp->right();
   Register output = ToRegister(comp->output());
 
@@ -1597,11 +1603,12 @@ void CodeGenerator::visitCompare(LCompare* comp) {
     if (right->isConstant()) {
       MOZ_ASSERT(compareType == MCompare::Compare_IntPtr ||
                  compareType == MCompare::Compare_UIntPtr);
-      masm.cmpPtrSet(cond, left, ImmWord(ToInt32(right)), output);
+      masm.cmpPtrSet(cond, ToRegister(left), ImmWord(ToInt32(right)), output);
     } else if (right->isGeneralReg()) {
-      masm.cmpPtrSet(cond, left, ToRegister(right), output);
+      masm.cmpPtrSet(cond, ToRegister(left), ToRegister(right), output);
     } else {
-      masm.cmpPtrSet(ReverseCondition(cond), ToAddress(right), left, output);
+      masm.cmpPtrSet(ReverseCondition(cond), ToAddress(right), ToRegister(left),
+                     output);
     }
     return;
   }
@@ -1610,11 +1617,16 @@ void CodeGenerator::visitCompare(LCompare* comp) {
              compareType == MCompare::Compare_UInt32);
 
   if (right->isConstant()) {
-    masm.cmp32Set(cond, left, Imm32(ToInt32(right)), output);
+    if (left->isGeneralReg()) {
+      masm.cmp32Set(cond, ToRegister(left), Imm32(ToInt32(right)), output);
+    } else {
+      masm.cmp32Set(cond, ToAddress(left), Imm32(ToInt32(right)), output);
+    }
   } else if (right->isGeneralReg()) {
-    masm.cmp32Set(cond, left, ToRegister(right), output);
+    masm.cmp32Set(cond, ToRegister(left), ToRegister(right), output);
   } else {
-    masm.cmp32Set(ReverseCondition(cond), ToAddress(right), left, output);
+    masm.cmp32Set(ReverseCondition(cond), ToAddress(right), ToRegister(left),
+                  output);
   }
 }
 
@@ -1736,7 +1748,7 @@ void CodeGenerator::visitStrictConstantCompareBooleanAndBranch(
 void CodeGenerator::visitCompareAndBranch(LCompareAndBranch* comp) {
   MCompare::CompareType compareType = comp->cmpMir()->compareType();
   Assembler::Condition cond = JSOpToCondition(compareType, comp->jsop());
-  Register left = ToRegister(comp->left());
+  const LAllocation* left = comp->left();
   const LAllocation* right = comp->right();
 
   MBasicBlock* ifTrue = comp->ifTrue();
@@ -1759,22 +1771,28 @@ void CodeGenerator::visitCompareAndBranch(LCompareAndBranch* comp) {
     if (right->isConstant()) {
       MOZ_ASSERT(compareType == MCompare::Compare_IntPtr ||
                  compareType == MCompare::Compare_UIntPtr);
-      masm.branchPtr(cond, left, ImmWord(ToInt32(right)), label);
+      masm.branchPtr(cond, ToRegister(left), ImmWord(ToInt32(right)), label);
     } else if (right->isGeneralReg()) {
-      masm.branchPtr(cond, left, ToRegister(right), label);
+      masm.branchPtr(cond, ToRegister(left), ToRegister(right), label);
     } else {
-      masm.branchPtr(ReverseCondition(cond), ToAddress(right), left, label);
+      masm.branchPtr(ReverseCondition(cond), ToAddress(right), ToRegister(left),
+                     label);
     }
   } else {
     MOZ_ASSERT(compareType == MCompare::Compare_Int32 ||
                compareType == MCompare::Compare_UInt32);
 
     if (right->isConstant()) {
-      masm.branch32(cond, left, Imm32(ToInt32(right)), label);
+      if (left->isGeneralReg()) {
+        masm.branch32(cond, ToRegister(left), Imm32(ToInt32(right)), label);
+      } else {
+        masm.branch32(cond, ToAddress(left), Imm32(ToInt32(right)), label);
+      }
     } else if (right->isGeneralReg()) {
-      masm.branch32(cond, left, ToRegister(right), label);
+      masm.branch32(cond, ToRegister(left), ToRegister(right), label);
     } else {
-      masm.branch32(ReverseCondition(cond), ToAddress(right), left, label);
+      masm.branch32(ReverseCondition(cond), ToAddress(right), ToRegister(left),
+                    label);
     }
   }
 

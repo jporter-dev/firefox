@@ -1102,7 +1102,6 @@ void LIRGenerator::visitTest(MTest* test) {
         comp->compareType() == MCompare::Compare_Symbol ||
         comp->compareType() == MCompare::Compare_WasmAnyRef) {
       JSOp op = ReorderComparison(comp->jsop(), &left, &right);
-      LAllocation lhs = useRegister(left);
       LAllocation rhs;
       if (comp->isInt32Comparison() ||
           comp->compareType() == MCompare::Compare_UInt32 ||
@@ -1111,6 +1110,16 @@ void LIRGenerator::visitTest(MTest* test) {
         rhs = useAnyOrInt32Constant(right);
       } else {
         rhs = useAny(right);
+      }
+      // A memory lhs needs a non-memory rhs to stay encodable in one
+      // instruction.
+      LAllocation lhs;
+      if (rhs.isConstant() &&
+          (comp->isInt32Comparison() ||
+           comp->compareType() == MCompare::Compare_UInt32)) {
+        lhs = useAny(left);
+      } else {
+        lhs = useRegister(left);
       }
       auto* lir =
           new (alloc()) LCompareAndBranch(ifTrue, ifFalse, lhs, rhs, comp, op);
@@ -1334,7 +1343,7 @@ void LIRGenerator::visitTest(MTest* test) {
       break;
     case MIRType::Int32:
     case MIRType::Boolean:
-      add(new (alloc()) LTestIAndBranch(ifTrue, ifFalse, useRegister(opd)));
+      add(new (alloc()) LTestIAndBranch(ifTrue, ifFalse, useAny(opd)));
       break;
     case MIRType::IntPtr:
       add(new (alloc()) LTestIPtrAndBranch(ifTrue, ifFalse, useRegister(opd)));
@@ -1509,7 +1518,6 @@ void LIRGenerator::visitCompare(MCompare* comp) {
       comp->compareType() == MCompare::Compare_Symbol ||
       comp->compareType() == MCompare::Compare_WasmAnyRef) {
     JSOp op = ReorderComparison(comp->jsop(), &left, &right);
-    LAllocation lhs = useRegisterAtStart(left);
     LAllocation rhs;
     if (comp->isInt32Comparison() ||
         comp->compareType() == MCompare::Compare_UInt32 ||
@@ -1518,6 +1526,15 @@ void LIRGenerator::visitCompare(MCompare* comp) {
       rhs = useAnyOrInt32ConstantAtStart(right);
     } else {
       rhs = useAnyAtStart(right);
+    }
+    // A memory lhs needs a non-memory rhs to stay encodable in one
+    // instruction.
+    LAllocation lhs;
+    if (rhs.isConstant() && (comp->isInt32Comparison() ||
+                             comp->compareType() == MCompare::Compare_UInt32)) {
+      lhs = useAnyAtStart(left);
+    } else {
+      lhs = useRegisterAtStart(left);
     }
     define(new (alloc()) LCompare(lhs, rhs, op), comp);
     return;
