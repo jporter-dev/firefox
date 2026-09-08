@@ -12,5 +12,10 @@ start_newssite_server
 
 # Run the Python script
 $PYTHON_PATH_SHELL_SCRIPT $SCRIPT_PATH $APP cold_view_nav_end $TEST_URL
+TEST_STATUS=$?
 
 stop_newssite_server
+
+# Propagate the test status so the harness reports the script failure instead
+# of a missing metrics error.
+exit $TEST_STATUS
