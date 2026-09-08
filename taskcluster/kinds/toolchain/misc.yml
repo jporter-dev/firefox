@@ -462,6 +462,9 @@ linux64-winchecksec:
     fetches:
         fetch:
             - winchecksec
+        toolchain:
+            - linux64-clang-toolchain
+            - linux64-toolchain-sysroot
 
 win64-winchecksec:
     description: "winchecksec"
