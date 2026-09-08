@@ -10,7 +10,7 @@ import os
 import re
 import string
 import traceback
-from collections import OrderedDict, defaultdict
+from collections import defaultdict
 from itertools import chain
 
 from ply import lex, yacc
