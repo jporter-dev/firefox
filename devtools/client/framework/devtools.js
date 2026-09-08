@@ -531,7 +531,8 @@ class DevTools extends EventEmitter {
    *        Whether we need to raise the toolbox or not.
    *
    * @return {Toolbox} toolbox
-   *        The toolbox that was opened
+   *        The toolbox that was opened, or null if the toolbox was destroyed
+   *        while it was still initializing.
    */
   async showToolbox(
     commands,
@@ -578,6 +579,12 @@ class DevTools extends EventEmitter {
       this.#creatingToolboxes.set(commands, toolboxPromise);
       toolbox = await toolboxPromise;
       this.#creatingToolboxes.delete(commands);
+
+      // Return early if the toolbox already started destroying, e.g. if the
+      // user closed the window during initialization (Bug 2044027).
+      if (toolbox.isDestroying()) {
+        return null;
+      }
 
       if (startTime) {
         this.logToolboxOpenTime(toolbox, startTime);
