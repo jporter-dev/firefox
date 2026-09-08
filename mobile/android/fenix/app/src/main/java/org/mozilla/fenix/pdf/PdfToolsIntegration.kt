@@ -132,18 +132,26 @@ class PdfToolsIntegration(
 
     /** Adds the typed signature to the PDF and closes the dialog. */
     internal fun handleSignAddClick() {
-        isSigning = false
-        signature.clearText()
         PdfViewer.signDialogAddTapped.record(
             PdfViewer.SignDialogAddTappedExtra(signatureType = SignatureType.Typed.telemetryName)
         )
-        // Bug 2061298 will make the behavior available.
+
+        val engineSession = browserStore.state.selectedTab?.engineState?.engineSession
+        if (engineSession == null) {
+            dismissSignatureDialog()
+            return
+        }
+
+        engineSession.addSignatureToPdf(
+            text = signature.text.toString(),
+            onResult = ::dismissSignatureDialog,
+            onException = { dismissSignatureDialog() },
+        )
     }
 
     /** Closes the dialog and discards the signature. */
     internal fun handleSignCloseClick() {
-        isSigning = false
-        signature.clearText()
+        dismissSignatureDialog()
         PdfViewer.signDialogCloseTapped.record(
             PdfViewer.SignDialogCloseTappedExtra(signatureType = SignatureType.Typed.telemetryName)
         )
@@ -151,6 +159,10 @@ class PdfToolsIntegration(
 
     /** Clears out the state if the user navigates away. */
     internal fun handlePdfGone() {
+        dismissSignatureDialog()
+    }
+
+    private fun dismissSignatureDialog() {
         isSigning = false
         signature.clearText()
     }
