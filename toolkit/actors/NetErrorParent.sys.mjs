@@ -255,14 +255,14 @@ export class NetErrorParent extends EscapablePageParent {
   /**
    * Resolve the data the online dnsNotFound Search CTA needs from the failed
    * URL: the derived search action/query/reason (from the query-derivation
-   * module), the registrable domain shown in the page intro, and whether a
-   * usable default search engine exists. Content-free and computed locally.
+   * module) and whether a usable default search engine exists. The host shown
+   * in the page intro is not part of this. Content-free and computed locally.
    * Nothing is sent to the network here.
    *
    * A document inside a frame stops here, before any of that work happens.
    *
    * @param {string} failedURL The address that failed to resolve.
-   * @returns {Promise<object>} { action, query, reason, domain, hasEngine }
+   * @returns {Promise<object>} { action, query, reason, hasEngine }
    */
   async getSearchCTAInfo(failedURL) {
     // Most eligible dnsNotFound loads sit in frames the user never sees. Check
@@ -278,24 +278,11 @@ export class NetErrorParent extends EscapablePageParent {
         action: lazy.SEARCH_CTA_ACTIONS.NONE,
         query: "",
         reason: DECISION_REASONS.NOT_TOP_LEVEL,
-        domain: null,
         hasEngine: false,
       };
     }
 
     const { action, query, reason } = lazy.analyzeURL(failedURL);
-
-    // The intro names the registrable domain, so "xyz.example.com" is shown as
-    // "example.com", even when the derived query is keyword-based.
-    let domain = null;
-    try {
-      domain = Services.eTLD.getBaseDomain(Services.io.newURI(failedURL));
-    } catch (e) {
-      // Unparseable URL, IP literal, single-label host, and so on. Content
-      // falls back to the hostname it already has, and the analyzer blocks the
-      // CTA for these hosts anyway.
-      domain = null;
-    }
 
     // Connectivity freshness guard (bug 2055712): a stale "online" reading can
     // show the CTA while the user is actually offline. When the CTA would
@@ -315,7 +302,6 @@ export class NetErrorParent extends EscapablePageParent {
         action: lazy.SEARCH_CTA_ACTIONS.NONE,
         query: "",
         reason: DECISION_REASONS.CONNECTIVITY_UNCONFIRMED,
-        domain,
         hasEngine: false,
       };
     }
@@ -337,7 +323,7 @@ export class NetErrorParent extends EscapablePageParent {
 
     this.recordSearchCTADecision(action, reason, hasEngine, engineUnsupported);
 
-    return { action, query, reason, domain, hasEngine };
+    return { action, query, reason, hasEngine };
   }
 
   /**

@@ -63,7 +63,6 @@ export class NetErrorCard extends MozLitElement {
     showTrrSettingsButton: { type: Boolean },
     searchCTAResolved: { type: Boolean },
     searchCTAHasEngine: { type: Boolean },
-    searchCTADomain: { type: String },
     searchCTAQuery: { type: String },
     searchCTAAction: { type: String },
     searchCTAOfflineAborted: { type: Boolean },
@@ -148,7 +147,6 @@ export class NetErrorCard extends MozLitElement {
     this.trrTelemetryData = null;
     this.searchCTAResolved = false;
     this.searchCTAHasEngine = false;
-    this.searchCTADomain = "";
     this.searchCTAQuery = "";
     this.searchCTAAction = "";
     this.searchCTAOfflineAborted = false;
@@ -314,7 +312,6 @@ export class NetErrorCard extends MozLitElement {
     // Eligibility rather than shouldShowSearchCTA(): a frame still asks, so its
     // decision is still recorded, and only the layout is suppressed.
     if (this.isSearchCTAEligible()) {
-      this.searchCTADomain = this.hostname;
       this.searchCTAInfoPromise = this.requestSearchCTAInfo();
     }
   }
@@ -363,7 +360,6 @@ export class NetErrorCard extends MozLitElement {
     const failedURL = searchParams.get("u");
     try {
       const info = await RPMSendQuery("SearchCTA:GetInfo", { url: failedURL });
-      this.searchCTADomain = info.domain ?? this.hostname;
       this.searchCTAQuery = info.query ?? "";
       this.searchCTAAction = info.action ?? SEARCH_CTA_ACTION_NONE;
       this.searchCTAHasEngine = !!info.hasEngine;
@@ -927,8 +923,8 @@ export class NetErrorCard extends MozLitElement {
       ></h1>
       <p
         id="error-intro"
-        data-l10n-id="neterror-search-cta-intro"
-        data-l10n-args=${JSON.stringify({ domain: this.searchCTADomain })}
+        data-l10n-id="neterror-search-cta-intro2"
+        data-l10n-args=${JSON.stringify({ hostname: this.hostname })}
       ></p>
       <div>
         <h2

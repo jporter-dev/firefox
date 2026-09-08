@@ -18,6 +18,18 @@ const FAILED_HOST = "www.doesnotexist-searchcta.com";
 const REGISTRABLE_DOMAIN = "doesnotexist-searchcta.com";
 const SEARCH_URL = `https://example.com/?q=${REGISTRABLE_DOMAIN}`;
 const BAD_CERT = "https://expired.example.com/";
+// A subdomain of the same registrable domain, for the failed load in
+// test_introNamesFailedSubdomain.
+const SUBDOMAIN_HOST = `bogus.${REGISTRABLE_DOMAIN}`;
+
+const lazy = {};
+
+XPCOMUtils.defineLazyServiceGetter(
+  lazy,
+  "gDNSOverride",
+  "@mozilla.org/network/native-dns-override;1",
+  Ci.nsINativeDNSResolverOverride
+);
 
 add_setup(async function () {
   stubSearchCTASupportedEngine();
@@ -100,10 +112,27 @@ add_task(async function test_ctaRendersWhenEnabled() {
           "Search button uses the unbranded fallback icon"
         );
 
+        // The intro shows the same display host as every other error page
+        // string, rather than a separately derived one (bug 2067835).
         is(
           card.errorIntro.getAttribute("data-l10n-args"),
-          JSON.stringify({ domain: registrableDomain }),
-          "Intro names the registrable domain, not the full host"
+          JSON.stringify({ hostname: card.hostname }),
+          "Intro is given the page's display host"
+        );
+
+        const emphasizedHost = await ContentTaskUtils.waitForCondition(
+          () => card.errorIntro.querySelector("strong"),
+          "Fluent's DOM overlay renders the emphasized host"
+        );
+        is(
+          emphasizedHost.textContent,
+          card.hostname,
+          "Only the host is emphasized, not the whole sentence"
+        );
+        Assert.greater(
+          parseInt(content.getComputedStyle(emphasizedHost).fontWeight, 10),
+          parseInt(content.getComputedStyle(card.errorIntro).fontWeight, 10),
+          "The host renders heavier than the sentence around it"
         );
 
         const hint = card.shadowRoot.querySelector(
@@ -115,9 +144,6 @@ add_task(async function test_ctaRendersWhenEnabled() {
           JSON.stringify({ query: registrableDomain }),
           "The hint names the exact query Search will submit"
         );
-        // The one wait left in this task: Fluent applies its DOM overlay after
-        // the card has already finished rendering, so the emphasized query
-        // appears later than the attributes asserted above.
         const emphasized = await ContentTaskUtils.waitForCondition(
           () => hint.querySelector("strong"),
           "Fluent's DOM overlay renders the emphasized query"
@@ -160,6 +186,51 @@ add_task(async function test_ctaRendersWhenEnabled() {
   });
 });
 
+// The intro has to name the host that actually failed, subdomain included, so
+// "bogus.example.com" is never reported as "example.com" (bug 2067835).
+add_task(async function test_introNamesFailedSubdomain() {
+  lazy.gDNSOverride.addIPOverride(SUBDOMAIN_HOST, "N/A");
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      [CTA_PREF, true],
+      [FRESHNESS_PREF, ALWAYS_FRESH],
+      // Keep the dnsNotFound "did you mean www.<host>?" suggestion from firing
+      // a second DNS lookup that no override covers.
+      ["browser.fixup.alternate.enabled", false],
+    ],
+  });
+
+  const tab = BrowserTestUtils.addTab(gBrowser, `https://${SUBDOMAIN_HOST}/`);
+  gBrowser.selectedTab = tab;
+  const browser = tab.linkedBrowser;
+  try {
+    await BrowserTestUtils.waitForErrorPage(browser);
+    await waitForSettledNetErrorCard(browser);
+    await SpecialPowers.spawn(browser, [SUBDOMAIN_HOST], async host => {
+      const card =
+        content.document.querySelector("net-error-card").wrappedJSObject;
+      is(
+        card.errorIntro.getAttribute("data-l10n-id"),
+        "neterror-search-cta-intro2",
+        "The failed load lands on the search CTA intro"
+      );
+      const emphasized = await ContentTaskUtils.waitForCondition(
+        () => card.errorIntro.querySelector("strong"),
+        "Fluent's DOM overlay renders the emphasized host"
+      );
+      is(
+        emphasized.textContent,
+        host,
+        "The intro names the host that failed, subdomain included"
+      );
+    });
+  } finally {
+    BrowserTestUtils.removeTab(tab);
+    await SpecialPowers.popPrefEnv();
+    lazy.gDNSOverride.clearHostOverride(SUBDOMAIN_HOST);
+  }
+});
+
 add_task(async function test_searchClickOpensNewTab() {
   await withDnsNotFoundPage(true, async browser => {
     const newTabPromise = BrowserTestUtils.waitForNewTab(gBrowser, null, true);
@@ -191,7 +262,6 @@ add_task(async function test_genericHintWhenNoSearchButton() {
     action: SEARCH_CTA_ACTIONS.NONE,
     query: "",
     reason: SEARCH_CTA_REASONS.HOST_UNUSABLE,
-    domain: FAILED_HOST,
     hasEngine: false,
   });
   try {
