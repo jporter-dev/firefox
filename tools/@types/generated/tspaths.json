@@ -6430,9 +6430,6 @@
       "resource://gre/modules/PushBroadcastService.sys.mjs": [
         "../../../dom/push/PushBroadcastService.sys.mjs"
       ],
-      "resource://gre/modules/PushCommandLineHandler.sys.mjs": [
-        "../../../toolkit/components/push/PushCommandLineHandler.sys.mjs"
-      ],
       "resource://gre/modules/PushCrypto.sys.mjs": [
         "../../../dom/push/PushCrypto.sys.mjs"
       ],

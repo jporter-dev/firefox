@@ -50,7 +50,7 @@ add_task(async function test_argument_is_handled() {
 });
 
 const { CommandLineHandler } = ChromeUtils.importESModule(
-  "resource://gre/modules/PushCommandLineHandler.sys.mjs"
+  "moz-src:///toolkit/components/push/PushCommandLineHandler.sys.mjs"
 );
 
 function pushMessagesAreReceived(commandLineState) {
