@@ -1326,6 +1326,18 @@ features:
         type: Boolean
         default: false
 
+  pairing-signin-prompt:
+    description: Controls the day 1 sign-in prompt for users who installed Firefox through a pairing link.
+    variables:
+      enabled:
+        description: Whether the day 1 sign-in prompt can be shown.
+        type: Boolean
+        default: false
+      campaign-utm-content:
+        description: The "utm_content" value used to identify installs from the pairing campaign.
+        type: String
+        default: ""
+
   pdf-viewer:
     description: Feature for the PDF viewer tools for users on Firefox for Android.
     variables:
