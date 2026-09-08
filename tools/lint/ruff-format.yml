@@ -18,6 +18,8 @@ ruff-format:
     find-dotfiles: true
     support-files:
         - 'tools/lint/python/**'
+        - '**/.ruff.toml'
+        - '**/ruff.toml'
         - '**/pyproject.toml'
     type: external
     payload: python.ruff:format
