@@ -726,6 +726,25 @@ Result<MediaDataEncoder::EncodedData, MediaResult> FFmpegVideoEncoder<
   mFrame->height = static_cast<int>(mConfig.mSize.height);
   mFrame->pict_type =
       sample->mKeyframe ? AV_PICTURE_TYPE_I : AV_PICTURE_TYPE_NONE;
+#  if LIBAVCODEC_VERSION_MAJOR > 58
+  mFrame->color_range = mCodecContext->color_range;
+  mFrame->colorspace = mCodecContext->colorspace;
+  mFrame->color_primaries = mCodecContext->color_primaries;
+  mFrame->color_trc = mCodecContext->color_trc;
+
+  const layers::PlanarYCbCrData* yuv = nullptr;
+  if (layers::PlanarYCbCrImage* image = sample->mImage->AsPlanarYCbCrImage()) {
+    yuv = image->GetData();
+  } else if (layers::NVImage* image = sample->mImage->AsNVImage()) {
+    yuv = image->GetData();
+  }
+  if (yuv) {
+    mFrame->color_range = ToAVColorRange(yuv->mColorRange);
+    mFrame->colorspace = ToAVColorSpace(yuv->mYUVColorSpace);
+    mFrame->color_primaries = ToAVColorPrimaries(yuv->mColorPrimaries);
+    mFrame->color_trc = ToAVColorTransfer(yuv->mTransferFunction);
+  }
+#  endif
 
   // Allocate AVFrame data.
   if (int ret = mLib->av_frame_get_buffer(mFrame, 0); ret < 0) {
