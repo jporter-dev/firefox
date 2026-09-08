@@ -267,12 +267,15 @@ export class Tabbrowser {
 
     this.tabContainer.init();
 
+    /**
+     * Invoked with `this` being the browser element on which the drop took
+     * place.
+     *
+     * @this {MozBrowser}
+     * @param {...any} args
+     */
     this.#defaultDropLinkHandler = function (...args) {
-      // The droppedLinkHandler gets invoked with `this` being the browser
-      // element on which the drop took place.
-      let browser = this;
-      let tabbrowser = browser.getTabBrowser();
-      handleDroppedLink(tabbrowser, browser, ...args);
+      handleDroppedLink(this.getTabBrowser(), this, ...args);
     };
     this.#setupInitialBrowserAndTab();
 
