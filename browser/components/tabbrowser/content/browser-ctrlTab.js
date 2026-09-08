@@ -18,8 +18,8 @@ var tabPreviews = {
   /**
    * Get the stored thumbnail URL for a given page URL and wait up to 1s for it
    * to load. If the browser is discarded and there is no stored thumbnail, the
-   * image URL will fail to load and this method will return null after 1s.
-   * Callers should handle this case by doing nothing or using a fallback image.
+   * image URL will fail to load and this method will return null. Callers
+   * should handle this case by doing nothing or using a fallback image.
    *
    * @param {string} uri The page URL.
    * @returns {Promise<Image|null>}
@@ -27,24 +27,24 @@ var tabPreviews = {
   loadImage: async function tabPreviews_loadImage(uri) {
     let img = new Image();
     img.src = PageThumbs.getThumbnailURL(uri);
-    if (img.complete && img.naturalWidth) {
-      return img;
+    if (img.complete) {
+      return img.naturalWidth ? img : null;
     }
     return new Promise(resolve => {
       const controller = new AbortController();
-      img.addEventListener(
-        "load",
-        () => {
-          clearTimeout(timeout);
-          controller.abort();
-          resolve(img);
-        },
-        { signal: controller.signal }
-      );
-      const timeout = setTimeout(() => {
+      let timeout;
+      const finish = value => {
+        clearTimeout(timeout);
         controller.abort();
-        resolve(null);
-      }, 1000);
+        resolve(value);
+      };
+      timeout = setTimeout(() => finish(null), 1000);
+      img.addEventListener("load", () => finish(img), {
+        signal: controller.signal,
+      });
+      img.addEventListener("error", () => finish(null), {
+        signal: controller.signal,
+      });
     });
   },
 
