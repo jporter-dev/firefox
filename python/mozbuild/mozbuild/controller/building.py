@@ -12,7 +12,7 @@ import re
 import subprocess
 import sys
 import time
-from collections import Counter, OrderedDict, namedtuple
+from collections import Counter, namedtuple
 from itertools import dropwhile, islice, takewhile
 from pathlib import Path
 from textwrap import TextWrapper
@@ -134,8 +134,8 @@ class TierStatus:
 
     def __init__(self, resources, metrics):
         """Accepts a SystemResourceMonitor to record results against."""
-        self.tiers = OrderedDict()
-        self.tier_status = OrderedDict()
+        self.tiers = {}
+        self.tier_status = {}
         self.resources = resources
         self.metrics = metrics
 

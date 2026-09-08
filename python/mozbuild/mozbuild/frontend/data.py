@@ -15,7 +15,7 @@ contains the code for converting executed mozbuild files into these data
 structures.
 """
 
-from collections import OrderedDict, defaultdict
+from collections import defaultdict
 
 import mozpack.path as mozpath
 from mozpack.chrome.manifest import ManifestEntry
@@ -386,7 +386,7 @@ class Linkable(ContextDerived):
         self.cxx_link = False
         self.linked_libraries = []
         self.linked_system_libs = []
-        self.lib_defines = Defines(context, OrderedDict())
+        self.lib_defines = Defines(context, {})
         self.sources = defaultdict(list)
         self.extra_link_deps = []
 

@@ -14,7 +14,6 @@ import stat
 import subprocess
 import tempfile
 import uuid
-from collections import OrderedDict
 from io import BytesIO
 from itertools import chain, takewhile
 from pathlib import Path
@@ -1164,7 +1163,7 @@ class JarFinder(BaseFinder):
         """
         assert isinstance(reader, JarReader)
         BaseFinder.__init__(self, base, **kargs)
-        self._files = OrderedDict((f.filename, f) for f in reader)
+        self._files = {f.filename: f for f in reader}
 
     def _find(self, pattern):
         """
@@ -1189,7 +1188,7 @@ class TarFinder(BaseFinder):
         assert isinstance(tar, TarFile)
         self._tar = tar
         BaseFinder.__init__(self, base, **kargs)
-        self._files = OrderedDict((f.name, f) for f in tar if f.isfile())
+        self._files = {f.name: f for f in tar if f.isfile()}
 
     def _find(self, pattern):
         """
@@ -1277,7 +1276,7 @@ class MercurialRevisionFinder(BaseFinder):
         finally:
             os.chdir(oldcwd)
         self._rev = rev if rev is not None else "."
-        self._files = OrderedDict()
+        self._files = {}
 
         # Immediately populate the list of files in the repo since nearly every
         # operation requires this list.

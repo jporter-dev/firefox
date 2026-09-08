@@ -8,7 +8,7 @@ import os
 import sys
 import time
 import traceback
-from collections import OrderedDict, defaultdict
+from collections import defaultdict
 
 import mozinfo
 import mozpack.path as mozpath
@@ -100,7 +100,7 @@ class TreeMetadataEmitter(LoggingMixin):
         self.info = dict(mozinfo.info)
 
         self._libs = defaultdict(list)
-        self._binaries = OrderedDict()
+        self._binaries = dict()
         self._compile_dirs = set()
         self._host_compile_dirs = set()
         self._wasm_compile_dirs = set()

@@ -18,7 +18,7 @@ import functools
 import itertools
 import operator
 import os
-from collections import Counter, OrderedDict
+from collections import Counter
 from types import FunctionType
 
 import mozpack.path as mozpath
@@ -285,14 +285,14 @@ class SubContext(Context, ContextDerivedValue):
         self._sandbox().pop_subcontext(self)
 
 
-class InitializedDefines(ContextDerivedValue, OrderedDict):
+class InitializedDefines(ContextDerivedValue, dict):
     def __init__(self, context, value=None):
-        OrderedDict.__init__(self)
+        dict.__init__(self)
         for define in context.config.substs.get("MOZ_DEBUG_DEFINES", ()):
             self[define] = 1
         if value:
-            if not isinstance(value, OrderedDict):
-                raise ValueError("Can only initialize with another OrderedDict")
+            if not isinstance(value, dict):
+                raise ValueError("Can only initialize with another dict")
             self.update(value)
 
     def update(self, *other, **kwargs):
@@ -305,8 +305,8 @@ class InitializedDefines(ContextDerivedValue, OrderedDict):
         if kwargs:
             raise ValueError("Cannot call update() with kwargs")
         if other:
-            if not isinstance(other[0], OrderedDict):
-                raise ValueError("Can only call update() with another OrderedDict")
+            if not isinstance(other[0], dict):
+                raise ValueError("Can only call update() with another dict")
             return super().update(*other, **kwargs)
         raise ValueError("No arguments passed to update()")
 
@@ -1913,7 +1913,7 @@ VARIABLES = {
         """,
     ),
     "LIBRARY_DEFINES": (
-        OrderedDict,
+        dict,
         dict,
         """Dictionary of compiler defines to declare for the entire library.
 

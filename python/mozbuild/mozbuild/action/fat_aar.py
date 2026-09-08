@@ -11,7 +11,7 @@ import argparse
 import subprocess
 import sys
 import time
-from collections import OrderedDict, defaultdict
+from collections import defaultdict
 from hashlib import sha1  # We don't need a strong hash to compare inputs.
 from io import BytesIO
 from zipfile import ZipFile
@@ -210,7 +210,7 @@ def fat_aar(
         "appservices/classes.jar!/org/mozilla/appservices/**/BuildConfig.class",
     }
 
-    not_allowed = OrderedDict()
+    not_allowed = {}
 
     def format_diffs(ds):
         # Like '  armeabi-v7a, arm64-v8a -> XXX\n  x86_64 -> YYY'.

@@ -6,7 +6,6 @@ import os
 import re
 import struct
 import subprocess
-from collections import OrderedDict
 from tempfile import mkstemp
 
 import buildconfig
@@ -122,8 +121,8 @@ class UnifiedFinder(BaseFinder):
         """
         UnifiedFinder.find() implementation.
         """
-        files1 = OrderedDict(self._finder1.find(path))
-        files2 = OrderedDict(self._finder2.find(path))
+        files1 = dict(self._finder1.find(path))
+        files2 = dict(self._finder2.find(path))
 
         for p in files1 | files2:
             err = errors.count
