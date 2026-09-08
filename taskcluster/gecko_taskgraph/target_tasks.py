@@ -519,6 +519,7 @@ def target_tasks_mozilla_central(full_task_graph, parameters, graph_config):
         build_platform = task.attributes.get("build_platform")
         build_type = task.attributes.get("build_type")
         shippable = task.attributes.get("shippable", False)
+        ccov = task.attributes.get("ccov", False)
 
         if not build_platform or not build_type:
             return True
@@ -528,11 +529,11 @@ def target_tasks_mozilla_central(full_task_graph, parameters, graph_config):
         # (which is to say, not shippable, asan, tsan, or any other opt build
         # with other properties). There's no positive test for this, so we have to
         # do it somewhat hackily. Android doesn't have variants other than shippable
-        # so it is pretty straightforward to check for. Other platforms have many
-        # variants, but none of the regular opt builds we're looking for have a "-"
-        # in their platform name, so this works (for now).
+        # and ccov so it is pretty straightforward to check for. Other platforms
+        # have many variants, but none of the regular opt builds we're looking for
+        # have a "-" in their platform name, so this works (for now).
         is_regular_opt = (
-            family == "android" and not shippable
+            family == "android" and not shippable and not ccov
         ) or "-" not in build_platform
 
         if build_type != "opt" or not is_regular_opt:
