@@ -1721,6 +1721,13 @@ static bool HasUAWidget(const Element& aOriginatingElement) {
   return sr && sr->IsUAWidget();
 }
 
+static bool IsBaseAppearanceSelect(const Element& aElement) {
+  if (const auto* select = HTMLSelectElement::FromNode(aElement)) {
+    return select->IsBaseSelectAppearance();
+  }
+  return false;
+}
+
 /*
  * aParentFrame - the frame that should be the parent of the generated
  *   content.  This is the frame for the corresponding content node,
@@ -1751,7 +1758,8 @@ void nsCSSFrameConstructor::CreateGeneratedContentItem(
   if (aPseudoElement != PseudoStyleType::Backdrop &&
       aPseudoElement != PseudoStyleType::PickerIcon &&
       HasUAWidget(aOriginatingElement) &&
-      !aOriginatingElement.IsHTMLElement(nsGkAtoms::details)) {
+      !aOriginatingElement.IsHTMLElement(nsGkAtoms::details) &&
+      !IsBaseAppearanceSelect(aOriginatingElement)) {
     // ::before / ::after / ::marker shouldn't work on <video> / <input>.
     return;
   }
