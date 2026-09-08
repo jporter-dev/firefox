@@ -4,18 +4,19 @@
 
 //! Specified values for font properties
 
+use crate::Atom;
 use crate::context::QuirksMode;
 use crate::derives::*;
 use crate::parser::{Parse, ParserContext};
 use crate::typed_om::NumericBaseType;
-use crate::values::computed::font::{FamilyName, FontFamilyList, SingleFontFamily};
 use crate::values::computed::Percentage as ComputedPercentage;
-use crate::values::computed::{font as computed, Length, NonNegativeLength};
+use crate::values::computed::font::{FamilyName, FontFamilyList, SingleFontFamily};
 use crate::values::computed::{CSSPixelLength, Context, ToComputedValue};
+use crate::values::computed::{Length, NonNegativeLength, font as computed};
+use crate::values::generics::NonNegative;
 use crate::values::generics::font::{
     self as generics, FeatureTagValue, FontSettings, FontTag, GenericLineHeight, VariationValue,
 };
-use crate::values::generics::NonNegative;
 use crate::values::specified::calc::{Leaf, PercentageContext};
 use crate::values::specified::length::{FontBaseSize, LengthUnit, LineHeightBase, PX_PER_PT};
 use crate::values::specified::number::parse_number_with_clamping_mode;
@@ -23,9 +24,8 @@ use crate::values::specified::{AllowQuirks, Angle, Integer, LengthPercentage};
 use crate::values::specified::{
     NoCalcLength, NonNegativeLengthPercentage, NonNegativeNumber, NonNegativePercentage, Number,
 };
-use crate::values::{serialize_atom_identifier, CustomIdent, SelectorParseErrorKind};
-use crate::Atom;
-use cssparser::{match_ignore_ascii_case, Parser, Token};
+use crate::values::{CustomIdent, SelectorParseErrorKind, serialize_atom_identifier};
+use cssparser::{Parser, Token, match_ignore_ascii_case};
 #[cfg(feature = "gecko")]
 use malloc_size_of::{MallocSizeOf, MallocSizeOfOps, MallocUnconditionalSizeOf};
 use std::fmt::{self, Write};

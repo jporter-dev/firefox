@@ -7,8 +7,8 @@
 
 #![deny(missing_docs)]
 
-use crate::dom::{SendElement, TElement};
 use crate::LocalName;
+use crate::dom::{SendElement, TElement};
 use atomic_refcell::{AtomicRefCell, AtomicRefMut};
 use selectors::bloom::BloomFilter;
 use smallvec::SmallVec;

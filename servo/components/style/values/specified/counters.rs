@@ -6,12 +6,12 @@
 
 use crate::counter_style::CounterStyle;
 use crate::parser::{Parse, ParserContext};
+use crate::values::CustomIdent;
 use crate::values::generics::counters as generics;
 use crate::values::generics::counters::CounterPair;
-use crate::values::specified::image::Image;
 use crate::values::specified::Integer;
-use crate::values::CustomIdent;
-use cssparser::{match_ignore_ascii_case, Parser, Token};
+use crate::values::specified::image::Image;
+use cssparser::{Parser, Token, match_ignore_ascii_case};
 use selectors::parser::SelectorParseErrorKind;
 use style_traits::{ParseError, StyleParseErrorKind};
 

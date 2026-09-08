@@ -15,7 +15,7 @@ use selectors::matching::matches_compound_selector_from;
 use selectors::matching::{CompoundSelectorMatchingResult, MatchingContext};
 use selectors::parser::{Combinator, Component, Selector, SelectorVisitor};
 use selectors::{OpaqueElement, SelectorImpl};
-use smallvec::{smallvec, SmallVec};
+use smallvec::{SmallVec, smallvec};
 use std::fmt;
 use std::fmt::Write;
 
@@ -1250,7 +1250,7 @@ where
                 return ProcessInvalidationResult {
                     invalidated_self: false,
                     matched: false,
-                }
+                };
             },
             CompoundSelectorMatchingResult::FullyMatched => self.handle_fully_matched(invalidation),
             CompoundSelectorMatchingResult::Matched {

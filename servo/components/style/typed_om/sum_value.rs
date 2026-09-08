@@ -7,8 +7,8 @@
 use crate::typed_om::numeric::NoCalcNumeric;
 use crate::typed_om::numeric_type::NumericType;
 use crate::typed_om::{MathSum, MathValue, NumericValue, UnitValue};
-use itertools::Itertools;
 use hashbrown::HashMap;
+use itertools::Itertools;
 use style_traits::CssString;
 use thin_vec::ThinVec;
 
@@ -360,9 +360,11 @@ impl SumValue {
     /// Step 3-6 of:
     /// https://drafts.css-houdini.org/css-typed-om-1/#dom-cssnumericvalue-tosum
     pub fn to_units(&self, units: &[&str]) -> Result<MathSum, ()> {
-        debug_assert!(units
-            .iter()
-            .all(|unit| NumericType::try_from_unit(unit).is_ok()));
+        debug_assert!(
+            units
+                .iter()
+                .all(|unit| NumericType::try_from_unit(unit).is_ok())
+        );
 
         // Step 3.
         let mut values = self

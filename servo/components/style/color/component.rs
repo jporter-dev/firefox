@@ -6,7 +6,7 @@
 
 use std::fmt::Write;
 
-use super::{parsing::ChannelKeyword, AbsoluteColor};
+use super::{AbsoluteColor, parsing::ChannelKeyword};
 use crate::derives::*;
 use crate::typed_om::NumericType;
 use crate::{
@@ -17,7 +17,7 @@ use crate::{
         specified::calc::{CalcNode, CalcParseFlags, Leaf, PercentageContext},
     },
 };
-use cssparser::{color::OPAQUE, Parser, Token};
+use cssparser::{Parser, Token, color::OPAQUE};
 use style_traits::{ParseError, StyleParseErrorKind, ToCss};
 
 /// A single color component.

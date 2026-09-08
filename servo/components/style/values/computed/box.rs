@@ -8,11 +8,11 @@ use crate::derives::*;
 use crate::values::animated::ToAnimatedValue;
 use crate::values::computed::length::{LengthPercentage, NonNegativeLength};
 use crate::values::computed::{Context, Integer, Number, ToComputedValue};
+use crate::values::generics::GreaterThanOrEqualToOne;
 use crate::values::generics::box_::{
     GenericBaselineShift, GenericContainIntrinsicSize, GenericLineClamp, GenericOverflowClipMargin,
     GenericPerspective, GenericScrollbarInset,
 };
-use crate::values::generics::GreaterThanOrEqualToOne;
 use crate::values::specified::box_ as specified;
 use std::fmt;
 use style_traits::{CssWriter, ToCss};

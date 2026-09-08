@@ -6,6 +6,7 @@
 //!
 //! [custom]: https://drafts.csswg.org/css-variables/
 
+use crate::FxHashMap;
 use crate::custom_properties_map::{CustomPropertiesMap, OwnMap};
 use crate::device::Device;
 use crate::dom::AttributeTracker;
@@ -18,8 +19,8 @@ use crate::properties_and_values::{
         SpecifiedValue as SpecifiedRegisteredValue,
     },
 };
-use crate::stylesheets::container_rule::AttrReferenceSet;
 use crate::stylesheets::UrlExtraData;
+use crate::stylesheets::container_rule::AttrReferenceSet;
 use crate::stylist::Stylist;
 use crate::typed_om::{
     ToTyped, TypedValue, UnparsedSegment, UnparsedValue, VariableReferenceValue,
@@ -27,8 +28,7 @@ use crate::typed_om::{
 use crate::values::computed;
 use crate::values::generics::calc::SortKey as AttrUnit;
 use crate::values::specified::{NoCalcLength, ParsedNamespace};
-use crate::FxHashMap;
-use crate::{derives::*, Atom, LocalName, Namespace, Prefix};
+use crate::{Atom, LocalName, Namespace, Prefix, derives::*};
 use cssparser::{CowRcStr, Delimiter, Parser, SourcePosition, Token, TokenSerializationType};
 use selectors::parser::SelectorParseErrorKind;
 use servo_arc::Arc;

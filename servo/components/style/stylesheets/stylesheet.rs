@@ -2,6 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
+use crate::FxHashMap;
 use crate::context::QuirksMode;
 use crate::derives::*;
 use crate::device::Device;
@@ -18,7 +19,6 @@ use crate::stylesheets::{
     CssRule, CssRules, CustomMediaEvaluator, CustomMediaMap, Origin, UrlExtraData,
 };
 use crate::use_counters::UseCounters;
-use crate::FxHashMap;
 use crate::{Namespace, Prefix};
 use cssparser::{Parser, StyleSheetParser};
 #[cfg(feature = "gecko")]

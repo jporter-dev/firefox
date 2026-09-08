@@ -4,6 +4,7 @@
 
 //! Specified types for CSS values that are related to motion path.
 
+use crate::Zero;
 use crate::derives::*;
 use crate::parser::{Parse, ParserContext};
 use crate::values::computed::motion::OffsetRotate as ComputedOffsetRotate;
@@ -13,7 +14,6 @@ use crate::values::specified::basic_shape::BasicShape;
 use crate::values::specified::position::{HorizontalPosition, VerticalPosition};
 use crate::values::specified::url::SpecifiedUrl;
 use crate::values::specified::{Angle, Position};
-use crate::Zero;
 use cssparser::Parser;
 use style_traits::{ParseError, StyleParseErrorKind};
 

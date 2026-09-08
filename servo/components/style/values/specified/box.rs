@@ -9,6 +9,7 @@ pub use crate::logical_geometry::WritingModeProperty;
 use crate::parser::{Parse, ParserContext};
 use crate::properties::{LonghandId, PropertyDeclarationId, PropertyId};
 pub use crate::typed_om::{KeywordValue, ToTyped, TypedValue};
+use crate::values::CustomIdent;
 use crate::values::generics::box_::{
     BaselineShiftKeyword, BlockEllipsis, GenericBaselineShift, GenericContainIntrinsicSize,
     GenericLineClamp, GenericOverflowClipMargin, GenericPerspective, GenericScrollbarInset,
@@ -16,7 +17,6 @@ use crate::values::generics::box_::{
 };
 use crate::values::specified::length::{LengthPercentage, NonNegativeLength};
 use crate::values::specified::{AllowQuirks, NonNegativeNumberOrPercentage, PositiveInteger};
-use crate::values::CustomIdent;
 use cssparser::Parser;
 use num_traits::FromPrimitive;
 use std::fmt::{self, Write};
@@ -1609,9 +1609,7 @@ impl ContainerType {
         if self.contains(Self::SIZE | Self::INLINE_SIZE) {
             return false;
         }
-        if self.contains(Self::SCROLL_STATE)
-            && !crate::pref!("layout.css.scroll-state.enabled")
-        {
+        if self.contains(Self::SCROLL_STATE) && !crate::pref!("layout.css.scroll-state.enabled") {
             return false;
         }
         true

@@ -6,8 +6,8 @@ use crate::attr::{AttrSelectorOperator, AttrSelectorWithOptionalNamespace};
 use crate::attr::{NamespaceConstraint, ParsedAttrSelectorOperation, ParsedCaseSensitivity};
 use crate::bloom::BLOOM_HASH_MASK;
 use crate::builder::{
-    relative_selector_list_specificity_and_flags, selector_list_specificity_and_flags,
     SelectorBuilder, SelectorFlags, Specificity, SpecificityAndFlags,
+    relative_selector_list_specificity_and_flags, selector_list_specificity_and_flags,
 };
 use crate::context::QuirksMode;
 use crate::sink::Push;
@@ -3784,7 +3784,7 @@ pub mod tests {
     use super::*;
     use crate::builder::SelectorFlags;
     use crate::parser;
-    use cssparser::{serialize_identifier, Parser as CssParser, ToCss};
+    use cssparser::{Parser as CssParser, ToCss, serialize_identifier};
     use std::collections::HashMap;
     use std::fmt;
 

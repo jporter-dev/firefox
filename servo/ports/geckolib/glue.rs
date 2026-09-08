@@ -14,7 +14,7 @@ use malloc_size_of::MallocSizeOfOps;
 use nsstring::{nsCString, nsString};
 use selectors::context::{MatchingContext, MatchingMode, NeedsSelectorFlags};
 use selectors::matching::{
-    matches_selector_list, ElementSelectorFlags, MatchingForInvalidation, SelectorCaches,
+    ElementSelectorFlags, MatchingForInvalidation, SelectorCaches, matches_selector_list,
 };
 use selectors::parser::PseudoElement as PseudoElementTrait;
 use selectors::{Element, OpaqueElement};
@@ -55,25 +55,25 @@ use style::gecko::selector_parser::{NonTSPseudoClass, PseudoElement};
 use style::gecko::snapshot_helpers::classes_changed;
 use style::gecko::traversal::RecalcStyleOnly;
 use style::gecko::wrapper::{
-    slow_selector_flags_from_node_selector_flags, GeckoElement, GeckoNode,
+    GeckoElement, GeckoNode, slow_selector_flags_from_node_selector_flags,
 };
 use style::gecko_bindings::bindings::{
-    self, gfx::FontPaletteValueSet, gfxFontFeatureValueSet, nsACString, nsAString, nsAtom,
-    nsChangeHint, nsCompatibility, nsINode as RawGeckoNode, nsresult,
-    AnchorPosOffsetResolutionParams, AnchorPosResolutionParams, CallerType, CompositeOperation,
-    DeclarationBlockMutationClosure, Element as RawGeckoElement, GeckoFontMetrics,
+    self, AnchorPosOffsetResolutionParams, AnchorPosResolutionParams, CallerType,
+    CompositeOperation, DeclarationBlockMutationClosure, Element as RawGeckoElement,
     Gecko_AddPropertyToSet, Gecko_ConstructFontFeatureValueSet, Gecko_ConstructFontPaletteValueSet,
-    Gecko_HaveSeenPtr, IterationCompositeOperation, Loader, LoaderReusableStyleSheets,
-    MallocSizeOf as GeckoMallocSizeOf, NonCustomCSSPropertyId, OriginFlags, PropertyValuePair,
-    PseudoStyleType, SeenPtrs, ServoElementSnapshotTable, ServoStyleSetSizes, ServoTraversalFlags,
-    ShadowRoot as RawShadowRoot, SheetLoadData, SheetLoadDataHolder, StyleRuleInclusion,
-    StyleSheet as DomStyleSheet, URLExtraData,
+    Gecko_HaveSeenPtr, GeckoFontMetrics, IterationCompositeOperation, Loader,
+    LoaderReusableStyleSheets, MallocSizeOf as GeckoMallocSizeOf, NonCustomCSSPropertyId,
+    OriginFlags, PropertyValuePair, PseudoStyleType, SeenPtrs, ServoElementSnapshotTable,
+    ServoStyleSetSizes, ServoTraversalFlags, ShadowRoot as RawShadowRoot, SheetLoadData,
+    SheetLoadDataHolder, StyleRuleInclusion, StyleSheet as DomStyleSheet, URLExtraData,
+    gfx::FontPaletteValueSet, gfxFontFeatureValueSet, nsACString, nsAString, nsAtom, nsChangeHint,
+    nsCompatibility, nsINode as RawGeckoNode, nsresult,
 };
 use style::gecko_bindings::structs;
 use style::gecko_bindings::sugar::ownership::Strong;
 use style::gecko_bindings::sugar::refptr::RefPtr;
 use style::global_style_data::{
-    GlobalStyleData, PlatformThreadHandle, StyleThreadPool, GLOBAL_STYLE_DATA, STYLE_THREAD_POOL,
+    GLOBAL_STYLE_DATA, GlobalStyleData, PlatformThreadHandle, STYLE_THREAD_POOL, StyleThreadPool,
 };
 use style::invalidation::element::element_wrapper::{ElementSnapshot, ElementWrapper, Snapshots};
 use style::invalidation::element::invalidation_map::{InvalidationMap, TSStateForInvalidation};
@@ -89,12 +89,12 @@ use style::parser::{Parse, ParserContext};
 #[cfg(feature = "gecko_debug")]
 use style::properties::LonghandIdSet;
 use style::properties::{
+    CSSWideKeyword, ComputedValues, CountedUnknownProperty, Importance, LonghandId,
+    NonCustomPropertyId, OwnedPropertyDeclarationId, PropertyDeclarationBlock,
+    PropertyDeclarationId, PropertyDeclarationIdSet, PropertyFlags, PropertyId, ShorthandId,
+    SourcePropertyDeclaration, StyleBuilder,
     animated_properties::{AnimationValue, AnimationValueMap},
-    parse_one_declaration_into, parse_style_attribute, CSSWideKeyword, ComputedValues,
-    CountedUnknownProperty, Importance, LonghandId, NonCustomPropertyId,
-    OwnedPropertyDeclarationId, PropertyDeclarationBlock, PropertyDeclarationId,
-    PropertyDeclarationIdSet, PropertyFlags, PropertyId, ShorthandId, SourcePropertyDeclaration,
-    StyleBuilder,
+    parse_one_declaration_into, parse_style_attribute,
 };
 use style::properties_and_values::registry::PropertyRegistration;
 use style::rule_cache::RuleCacheConditions;
@@ -121,13 +121,13 @@ use style::stylesheets::{
     StylesheetLoader as StyleStylesheetLoader, SupportsRule, UrlExtraData, ViewTransitionRule,
 };
 use style::stylist::{
-    add_size_of_ua_cache, replace_parent_selector_with_implicit_scope, scope_root_candidates,
     AuthorStylesEnabled, RegisterCustomPropertyResult, RuleInclusion, ScopeBoundsWithHashes,
-    ScopeConditionId, ScopeConditionReference, Stylist,
+    ScopeConditionId, ScopeConditionReference, Stylist, add_size_of_ua_cache,
+    replace_parent_selector_with_implicit_scope, scope_root_candidates,
 };
 use style::thread_state;
-use style::traversal::resolve_style;
 use style::traversal::DomTraversal;
+use style::traversal::resolve_style;
 use style::traversal_flags::{self, TraversalFlags};
 use style::typed_om::numeric_declaration::NumericDeclaration;
 use style::typed_om::numeric_type::NumericType;
@@ -149,10 +149,10 @@ use style::values::computed::length_percentage::{
 use style::values::computed::position::{AnchorFunction, PositionArea};
 use style::values::computed::{self, ContentVisibility, Context, ToComputedValue};
 use style::values::distance::{ComputeSquaredDistance, SquaredDistance};
+use style::values::generics::Optional;
 use style::values::generics::color::ColorMixFlags;
 use style::values::generics::easing::BeforeFlag;
 use style::values::generics::length::GenericAnchorSizeFunction;
-use style::values::generics::Optional;
 use style::values::resolved;
 use style::values::resolved::ToResolvedValue;
 use style::values::specified::align::AlignFlags;
@@ -163,7 +163,7 @@ use style::values::specified::source_size_list::SourceSizeList;
 use style::values::specified::svg_path::PathCommand;
 use style::values::specified::text::TextTransformCase;
 use style::values::specified::{LengthUnit, NoCalcLength, NoCalcNumber, TextTransform};
-use style::values::{specified, AtomIdent, CustomIdent, KeyframesName};
+use style::values::{AtomIdent, CustomIdent, KeyframesName, specified};
 use style::{custom_properties, driver};
 use style_traits::{CssWriter, ParseError, ParsingMode, SpecifiedValueInfo, ToCss};
 use thin_vec::ThinVec as nsTArray;
@@ -2880,7 +2880,7 @@ where
     F: FnOnce(Option<&ScopeRootCandidate>) -> R,
 {
     use selectors::matching::{
-        matches_selector, MatchingContext, MatchingMode, NeedsSelectorFlags, VisitedHandlingMode,
+        MatchingContext, MatchingMode, NeedsSelectorFlags, VisitedHandlingMode, matches_selector,
     };
 
     let quirks_mode = element.as_node().owner_doc().quirks_mode();
@@ -4421,7 +4421,7 @@ pub unsafe extern "C" fn Servo_CounterStyleRule_GetFallback(
         rule.descriptors()
             .fallback
             .as_ref()
-            .map_or(ptr::null_mut(), |i| i.0 .0.as_ptr())
+            .map_or(ptr::null_mut(), |i| i.0.0.as_ptr())
     })
 }
 #[unsafe(no_mangle)]
@@ -6424,8 +6424,8 @@ pub unsafe extern "C" fn Servo_DeclarationBlock_SetIdentStringValue(
     property: NonCustomCSSPropertyId,
     value: *mut nsAtom,
 ) {
-    use style::properties::longhands::_x_lang::computed_value::T as Lang;
     use style::properties::PropertyDeclaration;
+    use style::properties::longhands::_x_lang::computed_value::T as Lang;
 
     let long = get_longhand_from_id!(property);
     let prop = match_wrap_declared! { long,
@@ -6444,13 +6444,13 @@ pub extern "C" fn Servo_DeclarationBlock_SetKeywordValue(
     value: i32,
 ) -> bool {
     use num_traits::FromPrimitive;
-    use style::properties::longhands;
     use style::properties::PropertyDeclaration;
+    use style::properties::longhands;
     use style::values::generics::box_::{BaselineShift, BaselineShiftKeyword};
     use style::values::generics::font::FontStyle;
     use style::values::specified::{
-        table::CaptionSide, AlignmentBaseline, BorderStyle, Clear, Display, Float, TextAlign,
-        TextEmphasisPosition, TextTransform,
+        AlignmentBaseline, BorderStyle, Clear, Display, Float, TextAlign, TextEmphasisPosition,
+        TextTransform, table::CaptionSide,
     };
 
     fn get_from_computed<T>(value: u32) -> T
@@ -6539,8 +6539,8 @@ pub extern "C" fn Servo_DeclarationBlock_SetMathDepthValue(
     value: i32,
     is_relative: bool,
 ) {
-    use style::properties::longhands::math_depth::SpecifiedValue as MathDepth;
     use style::properties::PropertyDeclaration;
+    use style::properties::longhands::math_depth::SpecifiedValue as MathDepth;
 
     let integer_value = style::values::specified::Integer::new(value);
     let prop = PropertyDeclaration::MathDepth(if is_relative {
@@ -6596,10 +6596,10 @@ pub extern "C" fn Servo_DeclarationBlock_SetPixelValue(
     property: NonCustomCSSPropertyId,
     value: f32,
 ) {
-    use style::properties::longhands::border_spacing::SpecifiedValue as BorderSpacing;
     use style::properties::PropertyDeclaration;
-    use style::values::generics::length::{GenericMargin, Size};
+    use style::properties::longhands::border_spacing::SpecifiedValue as BorderSpacing;
     use style::values::generics::NonNegative;
+    use style::values::generics::length::{GenericMargin, Size};
     use style::values::specified::length::{
         LengthPercentage, NonNegativeLength, NonNegativeLengthPercentage,
     };
@@ -6658,10 +6658,10 @@ pub extern "C" fn Servo_DeclarationBlock_SetLengthValue(
     unit: structs::nsCSSUnit,
 ) -> bool {
     use style::properties::PropertyDeclaration;
-    use style::values::generics::length::{LengthPercentageOrAuto, Size};
     use style::values::generics::NonNegative;
-    use style::values::specified::length::LengthPercentage;
+    use style::values::generics::length::{LengthPercentageOrAuto, Size};
     use style::values::specified::FontSize;
+    use style::values::specified::length::LengthPercentage;
 
     let long = get_longhand_from_id!(property);
     let length_unit = match unit {
@@ -6742,8 +6742,8 @@ pub extern "C" fn Servo_DeclarationBlock_SetBackdropFilter(
     property: NonCustomCSSPropertyId,
     filters: &style::OwnedSlice<Filter>,
 ) -> bool {
-    use style::properties::longhands::backdrop_filter::SpecifiedValue as BackdropFilters;
     use style::properties::PropertyDeclaration;
+    use style::properties::longhands::backdrop_filter::SpecifiedValue as BackdropFilters;
     let long = get_longhand_from_id!(property);
     let v = BackdropFilters(
         filters
@@ -6899,11 +6899,11 @@ pub extern "C" fn Servo_DeclarationBlock_SetPercentValue(
     value: f32,
 ) {
     use style::properties::PropertyDeclaration;
-    use style::values::generics::length::{GenericMargin, LengthPercentageOrAuto, Size};
     use style::values::generics::NonNegative;
+    use style::values::generics::length::{GenericMargin, LengthPercentageOrAuto, Size};
+    use style::values::specified::FontSize;
     use style::values::specified::length::LengthPercentage;
     use style::values::specified::percentage::NoCalcPercentage;
-    use style::values::specified::FontSize;
 
     let long = get_longhand_from_id!(property);
     let pc = NoCalcPercentage::new(value);
@@ -6984,8 +6984,8 @@ pub extern "C" fn Servo_DeclarationBlock_SetColorValue(
     property: NonCustomCSSPropertyId,
     value: structs::nscolor,
 ) {
-    use style::properties::longhands;
     use style::properties::PropertyDeclaration;
+    use style::properties::longhands;
     use style::values::specified::Color;
 
     let long = get_longhand_from_id!(property);
@@ -7010,8 +7010,8 @@ pub unsafe extern "C" fn Servo_DeclarationBlock_SetFontFamily(
     declarations: &LockedDeclarationBlock,
     value: &nsACString,
 ) {
-    use style::properties::longhands::font_family::SpecifiedValue as FontFamily;
     use style::properties::PropertyDeclaration;
+    use style::properties::longhands::font_family::SpecifiedValue as FontFamily;
 
     let string = unsafe { value.as_str_unchecked() };
     let mut parser = Parser::new(&string);
@@ -7043,8 +7043,8 @@ pub unsafe extern "C" fn Servo_DeclarationBlock_SetBackgroundImage(
     value: &nsACString,
     raw_extra_data: *mut URLExtraData,
 ) {
-    use style::properties::longhands::background_image::SpecifiedValue as BackgroundImage;
     use style::properties::PropertyDeclaration;
+    use style::properties::longhands::background_image::SpecifiedValue as BackgroundImage;
     use style::stylesheets::CorsMode;
     use style::values::generics::image::Image;
     use style::values::specified::url::SpecifiedUrl;

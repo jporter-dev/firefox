@@ -7,13 +7,13 @@
 
 use crate::derives::*;
 use crate::parser::{Parse, ParserContext};
+use crate::values::CustomIdent;
 use crate::values::generics::grid::{
     Flex, FlexUnit, GridTemplateComponent, ImplicitGridTracks, RepeatCount,
 };
 use crate::values::generics::grid::{LineNameList, LineNameListValue, NameRepeat, TrackBreadth};
 use crate::values::generics::grid::{TrackList, TrackListValue, TrackRepeat, TrackSize};
 use crate::values::specified::{Integer, LengthPercentage};
-use crate::values::CustomIdent;
 use cssparser::{Parser, Token};
 use style_traits::{ParseError, StyleParseErrorKind};
 
@@ -269,7 +269,10 @@ impl Parse for TrackList<LengthPercentage, Integer> {
 
 #[inline]
 fn allow_grid_template_subgrids() -> bool {
-    crate::pref!("layout.css.grid-template-subgrid-value.enabled", gecko = true)
+    crate::pref!(
+        "layout.css.grid-template-subgrid-value.enabled",
+        gecko = true
+    )
 }
 
 #[inline]

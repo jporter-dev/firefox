@@ -21,11 +21,11 @@ use crate::selector_map::PrecomputedHashSet;
 use crate::str::{starts_with_ignore_ascii_case, string_as_ascii_lowercase};
 use crate::stylesheets::container_rule::AttrReferenceSet;
 use crate::stylesheets::{CssRuleType, Origin, UrlExtraData};
+use crate::values::DashedIdent;
 use crate::values::computed::{self, CSSPixelLength, ToComputedValue};
 use crate::values::specified::{
     Angle, Integer, Length, Number, Percentage, Ratio, Resolution, Time,
 };
-use crate::values::DashedIdent;
 use crate::{Atom, Zero};
 use cssparser::{Parser, Token};
 use selectors::kleene_value::KleeneValue;
@@ -416,7 +416,7 @@ impl QueryFeatureExpression {
             None => {
                 return Err(ParseError::custom(
                     StyleParseErrorKind::MediaQueryExpectedFeatureName,
-                ))
+                ));
             },
         };
 

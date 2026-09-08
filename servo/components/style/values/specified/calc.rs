@@ -6,12 +6,14 @@
 //!
 //! [calc]: https://drafts.csswg.org/css-values/#calc-notation
 
-use crate::color::parsing::ChannelKeyword;
 use crate::color::AbsoluteColor;
+use crate::color::parsing::ChannelKeyword;
 use crate::derives::*;
 use crate::parser::{Parse, ParserContext};
 use crate::typed_om::{NumericBaseType, NumericType, ToTyped, TypedValue};
+use crate::values::DashedIdent;
 use crate::values::computed::{self, ToComputedValue};
+use crate::values::generics::Optional;
 use crate::values::generics::calc::{
     self as generic, CalcNodeLeaf, CalcType, GenericAnchorFunctionFallback,
     GenericCalcPercentageLeaf, MinMaxOp, ModRemOp, ProgressClampingMode, RoundingStrategy,
@@ -21,13 +23,11 @@ use crate::values::generics::length::GenericAnchorSizeFunction;
 use crate::values::generics::position::{
     AnchorSideKeyword, GenericAnchorFunction, GenericAnchorSide, TreeScoped,
 };
-use crate::values::generics::Optional;
 use crate::values::specified::length::NoCalcLength;
 use crate::values::specified::{
     NoCalcAngle, NoCalcNumber, NoCalcPercentage, NoCalcResolution, NoCalcTime, TreeCountingFunction,
 };
-use crate::values::DashedIdent;
-use cssparser::{match_ignore_ascii_case, CowRcStr, Parser, Token};
+use cssparser::{CowRcStr, Parser, Token, match_ignore_ascii_case};
 use debug_unreachable::debug_unreachable;
 use smallvec::SmallVec;
 use std::cmp;
@@ -891,7 +891,7 @@ impl CalcNode {
             &Token::Percentage { unit_value, .. } => {
                 let hint = match flags.percentage_context {
                     PercentageContext::NotAllowed => {
-                        return Err(ParseError::custom(StyleParseErrorKind::UnspecifiedError))
+                        return Err(ParseError::custom(StyleParseErrorKind::UnspecifiedError));
                     },
                     PercentageContext::Allowed(hint) => hint,
                 };
@@ -1363,7 +1363,7 @@ impl CalcNode {
                             product.push(Self::Invert(Box::new(rhs)))
                         },
                         InPlaceDivisionResult::Invalid => {
-                            return Err(ParseError::custom(StyleParseErrorKind::UnspecifiedError))
+                            return Err(ParseError::custom(StyleParseErrorKind::UnspecifiedError));
                         },
                     }
                 },

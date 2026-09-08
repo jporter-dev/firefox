@@ -8,21 +8,21 @@
 
 use super::animate_multiplicative_factor;
 use super::{Animate, Procedure, ToAnimatedZero};
+use crate::Zero;
 use crate::derives::*;
+use crate::values::CSSFloat;
+use crate::values::computed::Angle;
 use crate::values::computed::transform::Rotate as ComputedRotate;
 use crate::values::computed::transform::Scale as ComputedScale;
 use crate::values::computed::transform::Transform as ComputedTransform;
 use crate::values::computed::transform::TransformOperation as ComputedTransformOperation;
 use crate::values::computed::transform::Translate as ComputedTranslate;
 use crate::values::computed::transform::{DirectionVector, Matrix, Matrix3D};
-use crate::values::computed::Angle;
 use crate::values::computed::{Length, LengthPercentage};
 use crate::values::computed::{Number, Percentage};
 use crate::values::distance::{ComputeSquaredDistance, SquaredDistance};
 use crate::values::generics::transform::{self, Transform, TransformOperation};
 use crate::values::generics::transform::{Rotate, Scale, Translate};
-use crate::values::CSSFloat;
-use crate::Zero;
 use std::cmp;
 use std::ops::Add;
 

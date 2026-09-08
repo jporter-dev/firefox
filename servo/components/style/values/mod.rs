@@ -8,13 +8,13 @@
 
 #![deny(missing_docs)]
 
+use crate::Atom;
 use crate::derives::*;
 use crate::parser::{Parse, ParserContext};
 use crate::typed_om::{KeywordValue, NumericType, NumericValue, ToTyped, TypedValue, UnitValue};
 use crate::values::distance::{ComputeSquaredDistance, SquaredDistance};
 use crate::values::generics::position::IsTreeScoped;
-use crate::Atom;
-pub use cssparser::{serialize_identifier, serialize_name, CowRcStr, Parser};
+pub use cssparser::{CowRcStr, Parser, serialize_identifier, serialize_name};
 pub use cssparser::{SourceLocation, Token};
 use num_traits::Zero;
 use precomputed_hash::PrecomputedHash;
@@ -41,11 +41,7 @@ pub type CSSFloat = f32;
 /// it into NaN.
 #[inline]
 pub fn normalize(v: CSSFloat) -> CSSFloat {
-    if v.is_nan() {
-        0.0
-    } else {
-        v
-    }
+    if v.is_nan() { 0.0 } else { v }
 }
 
 /// Computes the minimum value of the two floats. The CSS Values and Units definition

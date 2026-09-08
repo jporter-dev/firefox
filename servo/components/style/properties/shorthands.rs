@@ -10,8 +10,8 @@ use crate::values::specified;
 use cssparser::Parser;
 use std::fmt::{self, Write};
 use style_traits::{
-    values::SequenceWriter, CssWriter, KeywordsCollectFn, ParseError, SpecifiedValueInfo,
-    StyleParseErrorKind, ToCss,
+    CssWriter, KeywordsCollectFn, ParseError, SpecifiedValueInfo, StyleParseErrorKind, ToCss,
+    values::SequenceWriter,
 };
 
 macro_rules! expanded {
@@ -647,11 +647,11 @@ pub mod vertical_align {
 #[cfg(feature = "gecko")]
 pub mod offset {
     use super::*;
+    use crate::Zero;
     pub use crate::properties::generated::shorthands::offset::*;
     use crate::values::specified::{
         LengthPercentage, OffsetPath, OffsetPosition, OffsetRotate, PositionOrAuto,
     };
-    use crate::Zero;
 
     pub fn parse_value(
         context: &ParserContext,
@@ -1459,8 +1459,8 @@ pub mod grid_row {
     pub use crate::properties::generated::shorthands::grid_row::*;
 
     use super::*;
-    use crate::values::specified::GridLine;
     use crate::Zero;
+    use crate::values::specified::GridLine;
 
     pub fn parse_value(
         context: &ParserContext,
@@ -1503,8 +1503,8 @@ pub mod grid_column {
     pub use crate::properties::generated::shorthands::grid_column::*;
 
     use super::*;
-    use crate::values::specified::GridLine;
     use crate::Zero;
+    use crate::values::specified::GridLine;
 
     pub fn parse_value(
         context: &ParserContext,
@@ -1547,8 +1547,8 @@ pub mod grid_area {
     pub use crate::properties::generated::shorthands::grid_area::*;
 
     use super::*;
-    use crate::values::specified::GridLine;
     use crate::Zero;
+    use crate::values::specified::GridLine;
 
     pub fn parse_value(
         context: &ParserContext,
@@ -2132,8 +2132,8 @@ pub mod background_position {
 
     use super::*;
     use crate::properties::longhands::{background_position_x, background_position_y};
-    use crate::values::specified::position::Position;
     use crate::values::specified::AllowQuirks;
+    use crate::values::specified::position::Position;
 
     pub fn parse_value(
         context: &ParserContext,
@@ -2542,11 +2542,7 @@ pub mod font {
 
         #[inline]
         fn count<T>(opt: &Option<T>) -> u8 {
-            if opt.is_some() {
-                1
-            } else {
-                0
-            }
+            if opt.is_some() { 1 } else { 0 }
         }
 
         if (count(&style) + count(&weight) + count(&variant_caps) + count(&width) + nb_normals) > 4
@@ -3375,11 +3371,11 @@ pub mod animation {
         where
             W: fmt::Write,
         {
+            use crate::Zero;
             use crate::values::specified::easing::TimingFunction;
             use crate::values::specified::{
                 AnimationDirection, AnimationFillMode, AnimationPlayState,
             };
-            use crate::Zero;
             use style_traits::values::SequenceWriter;
 
             let len = self.animation_name.0.len();
@@ -3845,8 +3841,8 @@ pub mod grid_template {
 
     use super::*;
     use crate::parser::Parse;
-    use crate::values::generics::grid::{concat_serialize_idents, TrackListValue};
     use crate::values::generics::grid::{TrackList, TrackSize};
+    use crate::values::generics::grid::{TrackListValue, concat_serialize_idents};
     use crate::values::specified::grid::parse_line_names;
     use crate::values::specified::position::{
         GridTemplateAreas, TemplateAreasArc, TemplateAreasParser,

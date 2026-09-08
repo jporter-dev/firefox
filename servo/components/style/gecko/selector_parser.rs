@@ -12,8 +12,8 @@ use crate::selector_parser::{Direction, HorizontalDirection, SelectorParser};
 use crate::str::starts_with_ignore_ascii_case;
 use crate::string_cache::{Atom, Namespace, WeakAtom, WeakNamespace};
 use crate::values::{AtomIdent, AtomString, CSSInteger, CustomIdent};
-use cssparser::{match_ignore_ascii_case, CowRcStr, ToCss, Token};
 use cssparser::{BasicParseError, BasicParseErrorKind, Parser};
+use cssparser::{CowRcStr, ToCss, Token, match_ignore_ascii_case};
 use dom::{DocumentState, ElementState, HEADING_LEVEL_OFFSET};
 use selectors::parser::SelectorParseErrorKind;
 use std::fmt;
@@ -21,7 +21,7 @@ use style_traits::{CssWriter, ParseError, StyleParseErrorKind, ToCss as ToCss_};
 use thin_vec::ThinVec;
 
 pub use crate::gecko::pseudo_element::{
-    PseudoElement, Target, EAGER_PSEUDOS, EAGER_PSEUDO_COUNT, PSEUDO_COUNT,
+    EAGER_PSEUDO_COUNT, EAGER_PSEUDOS, PSEUDO_COUNT, PseudoElement, Target,
 };
 pub use crate::gecko::snapshot::SnapshotMap;
 

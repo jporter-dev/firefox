@@ -6,7 +6,8 @@
 
 use crate::derives::*;
 use crate::parser::{Parse, ParserContext};
-use crate::values::animated::{lists, Animate, Procedure};
+use crate::values::CSSFloat;
+use crate::values::animated::{Animate, Procedure, lists};
 use crate::values::distance::{ComputeSquaredDistance, SquaredDistance};
 use crate::values::generics::basic_shape::GenericShapeCommand;
 use crate::values::generics::basic_shape::{
@@ -14,7 +15,6 @@ use crate::values::generics::basic_shape::{
     ControlReference, CoordinatePair, RelativeControlPoint,
 };
 use crate::values::generics::position::GenericPosition;
-use crate::values::CSSFloat;
 use cssparser::Parser;
 use std::fmt::{self, Write};
 use std::iter::{Cloned, Peekable};

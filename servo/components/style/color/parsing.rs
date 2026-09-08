@@ -9,9 +9,9 @@
 use std::fmt::Write;
 
 use super::{
+    AbsoluteColor,
     color_function::ColorFunction,
     component::{ColorComponent, ColorComponentType},
-    AbsoluteColor,
 };
 use crate::derives::*;
 use crate::typed_om::{NumericBaseType, NumericType};
@@ -19,7 +19,7 @@ use crate::{
     parser::{Parse, ParserContext},
     values::{
         computed::Color as ComputedColor,
-        generics::{calc::CalcType, Optional},
+        generics::{Optional, calc::CalcType},
         specified::{
             angle::NoCalcAngle,
             calc::{Leaf, PercentageContext},
@@ -28,8 +28,9 @@ use crate::{
     },
 };
 use cssparser::{
-    color::{parse_hash_color, PredefinedColorSpace, OPAQUE},
-    match_ignore_ascii_case, CowRcStr, Parser, Token,
+    CowRcStr, Parser, Token,
+    color::{OPAQUE, PredefinedColorSpace, parse_hash_color},
+    match_ignore_ascii_case,
 };
 use style_traits::{CssWriter, ParseError, StyleParseErrorKind, ToCss};
 

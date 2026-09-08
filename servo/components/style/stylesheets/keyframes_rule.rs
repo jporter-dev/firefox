@@ -8,12 +8,12 @@ use crate::derives::*;
 use crate::error_reporting::ContextualParseError;
 use crate::parser::{Parse, ParserContext};
 use crate::properties::{
+    LonghandId, PropertyDeclaration, PropertyDeclarationBlock, PropertyDeclarationId,
     longhands::{
         animation_composition::single_value::SpecifiedValue as SpecifiedComposition,
         transition_timing_function::single_value::SpecifiedValue as SpecifiedTimingFunction,
     },
-    parse_property_declaration_list, LonghandId, PropertyDeclaration, PropertyDeclarationBlock,
-    PropertyDeclarationId,
+    parse_property_declaration_list,
 };
 use crate::shared_lock::{DeepCloneWithLock, SharedRwLock, SharedRwLockReadGuard};
 use crate::shared_lock::{Locked, ToCssWithGuard};
@@ -21,10 +21,10 @@ use crate::stylesheets::rule_parser::VendorPrefix;
 use crate::stylesheets::{CssRuleType, StylesheetContents};
 use crate::values::specified::animation::TimelineRangeName;
 use crate::values::specified::{Number, Percentage};
-use crate::values::{serialize_percentage, KeyframesName};
+use crate::values::{KeyframesName, serialize_percentage};
 use cssparser::{
-    parse_one_rule, AtRuleParser, DeclarationParser, Parser, ParserState, QualifiedRuleParser,
-    RuleBodyItemParser, RuleBodyParser, SourceLocation, Token,
+    AtRuleParser, DeclarationParser, Parser, ParserState, QualifiedRuleParser, RuleBodyItemParser,
+    RuleBodyParser, SourceLocation, Token, parse_one_rule,
 };
 use servo_arc::Arc;
 use std::borrow::Cow;

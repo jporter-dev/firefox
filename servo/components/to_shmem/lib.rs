@@ -12,8 +12,8 @@
 #![crate_name = "to_shmem"]
 #![crate_type = "rlib"]
 
-use std::alloc::Layout;
 use hashbrown::HashSet;
+use std::alloc::Layout;
 use std::ffi::CString;
 use std::marker::PhantomData;
 use std::mem::{self, ManuallyDrop};

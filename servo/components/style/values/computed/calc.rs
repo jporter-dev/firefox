@@ -5,13 +5,13 @@
 //! Computed-value calc() leaf types.
 
 use super::{Angle, Length, Number, Percentage, Resolution, Time};
+use crate::Zero;
 use crate::derives::*;
 use crate::typed_om::{NumericBaseType, NumericType};
+use crate::values::generics::Optional;
 use crate::values::generics::calc::{
     self, CalcType, GenericCalcPercentageLeaf, SimplificationResult,
 };
-use crate::values::generics::Optional;
-use crate::Zero;
 use debug_unreachable::debug_unreachable;
 use serde::{Deserialize, Serialize};
 

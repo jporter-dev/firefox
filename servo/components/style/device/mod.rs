@@ -9,8 +9,8 @@ use crate::custom_properties::CssEnvironment;
 #[cfg(feature = "servo")]
 use crate::derives::*;
 use crate::properties::ComputedValues;
-use crate::values::computed::font::QueryFontMetricsFlags;
 use crate::values::computed::Length;
+use crate::values::computed::font::QueryFontMetricsFlags;
 use parking_lot::RwLock;
 use servo_arc::Arc;
 use std::mem;

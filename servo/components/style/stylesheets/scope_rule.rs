@@ -21,10 +21,10 @@ use cssparser::{Parser, SourceLocation, ToCss};
 use malloc_size_of::{
     MallocSizeOfOps, MallocUnconditionalShallowSizeOf, MallocUnconditionalSizeOf,
 };
+use selectors::OpaqueElement;
 use selectors::context::{MatchingContext, QuirksMode};
 use selectors::matching::matches_selector;
 use selectors::parser::{Component, ParseRelative, Selector, SelectorList};
-use selectors::OpaqueElement;
 use servo_arc::Arc;
 use std::fmt::{self, Write};
 use style_traits::{CssStringWriter, CssWriter, ParseError};

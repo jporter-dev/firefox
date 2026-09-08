@@ -5,11 +5,11 @@
 /// Bloom filter for relative selectors.
 use crate::FxHashMap;
 
+use crate::SelectorImpl;
 use crate::bloom::BloomFilter;
 use crate::context::QuirksMode;
-use crate::parser::{collect_selector_hashes, RelativeSelector, RelativeSelectorMatchHint};
+use crate::parser::{RelativeSelector, RelativeSelectorMatchHint, collect_selector_hashes};
 use crate::tree::{Element, OpaqueElement};
-use crate::SelectorImpl;
 
 enum Entry {
     /// Filter lookup happened once. Construction of the filter is expensive,

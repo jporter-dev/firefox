@@ -15,8 +15,8 @@ use crate::properties::{ComputedValues, PropertyFlags};
 use crate::selector_parser::PseudoElementCascadeType;
 use crate::str::{starts_with_ignore_ascii_case, string_as_ascii_lowercase};
 use crate::string_cache::Atom;
-use crate::values::serialize_atom_identifier;
 use crate::values::AtomIdent;
+use crate::values::serialize_atom_identifier;
 use cssparser::{Parser, ToCss};
 use selectors::parser::PseudoElement as PseudoElementTrait;
 use std::fmt;
@@ -544,7 +544,7 @@ impl PseudoElement {
     pub fn parse_ignore_enabled_state(input: &mut Parser) -> Result<Self, ParseError> {
         use crate::gecko::selector_parser;
         use cssparser::Token;
-        use selectors::parser::{is_css2_pseudo_element, SelectorParseErrorKind};
+        use selectors::parser::{SelectorParseErrorKind, is_css2_pseudo_element};
         use style_traits::StyleParseErrorKind;
 
         // The pseudo-element string should start with ':'.

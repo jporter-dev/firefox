@@ -138,7 +138,9 @@ where
         }
 
         let opaque = self.element.opaque();
-        if let Some((e, s)) = self.snapshots.last_snapshot.get() && e == opaque {
+        if let Some((e, s)) = self.snapshots.last_snapshot.get()
+            && e == opaque
+        {
             return Some(s);
         }
 

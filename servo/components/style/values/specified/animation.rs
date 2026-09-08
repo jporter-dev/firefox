@@ -4,6 +4,7 @@
 
 //! Specified types for properties related to animations and transitions.
 
+use crate::Atom;
 use crate::derives::*;
 use crate::parser::{Parse, ParserContext};
 use crate::properties::{NonCustomPropertyId, PropertyId, ShorthandId};
@@ -12,8 +13,7 @@ use crate::values::generics::animation as generics;
 use crate::values::generics::position::{IsTreeScoped, TreeScoped};
 use crate::values::specified::{LengthPercentage, NonNegativeNumber, Time};
 use crate::values::{AtomIdent, CustomIdent, DashedIdent, KeyframesName};
-use crate::Atom;
-use cssparser::{match_ignore_ascii_case, Parser};
+use cssparser::{Parser, match_ignore_ascii_case};
 use std::fmt::{self, Write};
 use style_traits::{
     CssWriter, KeywordsCollectFn, ParseError, SpecifiedValueInfo, StyleParseErrorKind, ToCss,
@@ -707,7 +707,7 @@ impl ViewTransitionNameKeyword {
 
 impl IsTreeScoped for ViewTransitionNameKeyword {
     fn is_tree_scoped(&self) -> bool {
-        self.0 .0 != atom!("none")
+        self.0.0 != atom!("none")
     }
 }
 

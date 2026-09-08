@@ -4,6 +4,7 @@
 
 //! Code for invalidations due to state or attribute changes.
 
+use crate::AllocErr;
 use crate::context::QuirksMode;
 use crate::derives::*;
 use crate::selector_map::{
@@ -11,7 +12,6 @@ use crate::selector_map::{
 };
 use crate::selector_parser::{NonTSPseudoClass, SelectorImpl};
 use crate::values::AtomIdent;
-use crate::AllocErr;
 use crate::{Atom, LocalName, Namespace, ShrinkIfNeeded};
 use dom::{DocumentState, ElementState};
 use selectors::attr::NamespaceConstraint;

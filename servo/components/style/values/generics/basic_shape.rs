@@ -5,15 +5,15 @@
 //! CSS handling for the [`basic-shape`](https://drafts.csswg.org/css-shapes/#typedef-basic-shape)
 //! types that are generic over their `ToCss` implementations.
 
+use crate::Zero;
 use crate::derives::*;
-use crate::values::animated::{lists, Animate, Procedure, ToAnimatedZero};
+use crate::values::animated::{Animate, Procedure, ToAnimatedZero, lists};
 use crate::values::computed::Percentage;
 use crate::values::distance::{ComputeSquaredDistance, SquaredDistance};
 use crate::values::generics::{
-    border::GenericBorderRadius, position::GenericPositionOrAuto, rect::Rect, NonNegative, Optional,
+    NonNegative, Optional, border::GenericBorderRadius, position::GenericPositionOrAuto, rect::Rect,
 };
 use crate::values::specified::svg_path::{PathCommand, SVGPathData};
-use crate::Zero;
 use std::fmt::{self, Write};
 use style_traits::{CssWriter, ToCss};
 

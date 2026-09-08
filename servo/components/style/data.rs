@@ -10,7 +10,7 @@ use crate::dom::TElement;
 use crate::invalidation::element::invalidator::InvalidationResult;
 use crate::invalidation::element::restyle_hints::RestyleHint;
 use crate::properties::ComputedValues;
-use crate::selector_parser::{PseudoElement, RestyleDamage, EAGER_PSEUDO_COUNT};
+use crate::selector_parser::{EAGER_PSEUDO_COUNT, PseudoElement, RestyleDamage};
 use crate::style_resolver::{PrimaryStyle, ResolvedElementStyles, ResolvedStyle};
 use crate::values::specified::TreeCountingFunction;
 #[cfg(feature = "gecko")]

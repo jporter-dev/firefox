@@ -11,8 +11,8 @@ use crate::dom::{TElement, TNode};
 use crate::invalidation::element::element_wrapper::{ElementSnapshot, ElementWrapper, Snapshots};
 use crate::invalidation::element::invalidation_map::*;
 use crate::invalidation::element::invalidator::{
-    any_next_has_scope_in_negation, note_scope_dependency_force_at_subject,
     DescendantInvalidationLists, InvalidationVector, SiblingTraversalMap,
+    any_next_has_scope_in_negation, note_scope_dependency_force_at_subject,
 };
 use crate::invalidation::element::invalidator::{Invalidation, InvalidationProcessor};
 use crate::invalidation::element::restyle_hints::RestyleHint;
@@ -22,13 +22,13 @@ use crate::stylesheets::origin::OriginSet;
 use crate::values::AtomIdent;
 use crate::{Atom, WeakAtom};
 use dom::ElementState;
+use selectors::OpaqueElement;
 use selectors::attr::CaseSensitivity;
 use selectors::kleene_value::KleeneValue;
 use selectors::matching::{
-    matches_selector_kleene, MatchingContext, MatchingForInvalidation, MatchingMode,
-    NeedsSelectorFlags, SelectorCaches, VisitedHandlingMode,
+    MatchingContext, MatchingForInvalidation, MatchingMode, NeedsSelectorFlags, SelectorCaches,
+    VisitedHandlingMode, matches_selector_kleene,
 };
-use selectors::OpaqueElement;
 use smallvec::SmallVec;
 
 /// The collector implementation.

@@ -35,7 +35,7 @@ use crate::values::generics::ClampToNonNegative;
 use crate::values::specified::font::QueryFontMetricsFlags;
 use crate::values::specified::length::FontBaseSize;
 use crate::{ArcSlice, Atom, One};
-use euclid::{default, Point2D, Rect, Size2D};
+use euclid::{Point2D, Rect, Size2D, default};
 use servo_arc::Arc;
 use std::cell::RefCell;
 use std::cmp;

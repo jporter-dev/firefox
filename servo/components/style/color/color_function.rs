@@ -7,17 +7,17 @@
 use std::fmt::Write;
 
 use super::{
+    AbsoluteColor, ColorFlags, ColorSpace,
     component::ColorComponent,
     convert::normalize_hue,
     parsing::{NumberOrAngleComponent, NumberOrPercentageComponent},
-    AbsoluteColor, ColorFlags, ColorSpace,
 };
 use crate::derives::*;
 use crate::values::{
     computed, computed::color::Color as ComputedColor, generics::Optional, normalize,
     specified::color::Color as SpecifiedColor,
 };
-use cssparser::color::{clamp_floor_256_f32, OPAQUE};
+use cssparser::color::{OPAQUE, clamp_floor_256_f32};
 
 /// Represents a specified color function.
 #[derive(Clone, Debug, MallocSizeOf, PartialEq, ToAnimatedValue, ToShmem)]

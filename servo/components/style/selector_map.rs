@@ -5,6 +5,7 @@
 //! A data structure to efficiently index structs containing selectors by local
 //! name, ids and hash.
 
+use crate::AllocErr;
 use crate::applicable_declarations::{ApplicableDeclarationList, ScopeProximity};
 use crate::context::QuirksMode;
 use crate::derives::*;
@@ -12,7 +13,6 @@ use crate::dom::TElement;
 use crate::rule_tree::CascadeLevel;
 use crate::selector_parser::SelectorImpl;
 use crate::stylist::{CascadeData, ContainerConditionId, Rule, ScopeConditionId, Stylist};
-use crate::AllocErr;
 use crate::{Atom, LocalName, Namespace, ShrinkIfNeeded, WeakAtom};
 use dom::ElementState;
 use hashbrown::hash_map;

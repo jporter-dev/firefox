@@ -15,6 +15,7 @@
 //! the separation between the style system implementation and everything else.
 
 use crate::CaseSensitivityExt;
+use crate::FxHashMap;
 use crate::LocalName;
 use crate::applicable_declarations::ApplicableDeclarationBlock;
 use crate::bloom::each_relevant_element_hash;
@@ -71,7 +72,6 @@ use app_units::Au;
 use dom::{DocumentState, ElementState};
 use euclid::default::Size2D;
 use nsstring::nsString;
-use crate::FxHashMap;
 use selectors::attr::{AttrSelectorOperation, CaseSensitivity, NamespaceConstraint};
 use selectors::bloom::{BLOOM_HASH_MASK, BloomFilter};
 use selectors::matching::VisitedHandlingMode;

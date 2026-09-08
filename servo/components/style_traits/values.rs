@@ -6,7 +6,7 @@
 
 use app_units::Au;
 use cssparser::ToCss as CssparserToCss;
-use cssparser::{serialize_string, ParseError, Parser, UnicodeRange};
+use cssparser::{ParseError, Parser, UnicodeRange, serialize_string};
 use servo_arc::Arc;
 use std::fmt::{self, Write};
 

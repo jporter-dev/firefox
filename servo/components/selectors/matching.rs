@@ -6,7 +6,7 @@ use crate::attr::{
     AttrSelectorOperation, AttrSelectorWithOptionalNamespace, CaseSensitivity, NamespaceConstraint,
     ParsedAttrSelectorOperation, ParsedCaseSensitivity,
 };
-use crate::bloom::{BloomFilter, BLOOM_HASH_MASK};
+use crate::bloom::{BLOOM_HASH_MASK, BloomFilter};
 use crate::kleene_value::KleeneValue;
 use crate::parser::{
     AncestorHashes, Combinator, Component, LocalName, MatchesFeaturelessHost, NthSelectorData,
@@ -788,9 +788,11 @@ fn assigned_slot<E>(element: E, context: &MatchingContext<E::Impl>) -> Option<E>
 where
     E: Element,
 {
-    debug_assert!(element
-        .assigned_slot()
-        .map_or(true, |s| s.is_html_slot_element()));
+    debug_assert!(
+        element
+            .assigned_slot()
+            .map_or(true, |s| s.is_html_slot_element())
+    );
     let scope = context.current_host?;
     let mut current_slot = element.assigned_slot()?;
     while current_slot.containing_shadow_host().unwrap().opaque() != scope {
@@ -952,7 +954,7 @@ where
                 return result;
             },
             SelectorMatchingResult::Unknown | SelectorMatchingResult::NotMatchedGlobally => {
-                return result
+                return result;
             },
             _ => {},
         }
@@ -1332,17 +1334,17 @@ where
                     nth_of_data.selectors(),
                     rightmost,
                 )
-            })
+            });
         },
         Component::Is(ref list) | Component::Where(ref list) => {
             return context.shared.nest(|context| {
                 matches_complex_selector_list(list.slice(), element, context, rightmost)
-            })
+            });
         },
         Component::Negation(ref list) => {
             return context.shared.nest_for_negation(|context| {
                 !matches_complex_selector_list(list.slice(), element, context, rightmost)
-            })
+            });
         },
         Component::Has(ref relative_selectors) => {
             return match_relative_selectors(

@@ -6,12 +6,13 @@
 //!
 //! TODO(emilio): Enhance docs.
 
+use super::CSSFloat;
 use super::computed::{Context, ToComputedValue};
 use super::generics::grid::ImplicitGridTracks as GenericImplicitGridTracks;
 use super::generics::grid::{GridLine as GenericGridLine, TrackBreadth as GenericTrackBreadth};
 use super::generics::grid::{TrackList as GenericTrackList, TrackSize as GenericTrackSize};
 use super::generics::{self, NonNegative};
-use super::CSSFloat;
+use crate::FxHashMap;
 use crate::context::QuirksMode;
 use crate::derives::*;
 use crate::parser::{Parse, ParserContext};
@@ -19,7 +20,6 @@ use crate::typed_om::NumericBaseType;
 use crate::values::computed;
 use crate::values::specified::calc::PercentageContext;
 use crate::values::specified::number::parse_number_with_clamping_mode;
-use crate::FxHashMap;
 use crate::{Namespace, Prefix};
 use cssparser::{Parser, Token};
 use style_traits::values::specified::AllowedNumericType;

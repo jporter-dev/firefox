@@ -19,8 +19,8 @@ use crate::selector_parser::{AttrValue, Lang, PseudoElement, RestyleDamage, Sele
 use crate::shared_lock::{Locked, SharedRwLock};
 use crate::stylesheets::scope_rule::ImplicitScopeRoot;
 use crate::stylist::CascadeData;
-use crate::values::computed::{Display, TreeCountingResult};
 use crate::values::AtomIdent;
+use crate::values::computed::{Display, TreeCountingResult};
 use crate::{LocalName, Namespace, WeakAtom};
 use dom::ElementState;
 use selectors::matching::{ElementSelectorFlags, QuirksMode, VisitedHandlingMode};
@@ -960,7 +960,7 @@ pub trait TElement:
 
     /// Returns element's namespace.
     fn namespace(&self)
-        -> &<SelectorImpl as selectors::parser::SelectorImpl>::BorrowedNamespaceUrl;
+    -> &<SelectorImpl as selectors::parser::SelectorImpl>::BorrowedNamespaceUrl;
 
     /// Returns the size of the element to be used in container size queries.
     /// This will usually be the size of the content area of the primary box,

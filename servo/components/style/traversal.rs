@@ -14,11 +14,11 @@ use crate::sharing::StyleSharingTarget;
 use crate::style_resolver::{PseudoElementResolution, StyleResolverForElement};
 use crate::stylist::RuleInclusion;
 use crate::traversal_flags::TraversalFlags;
+use hashbrown::HashMap;
 use selectors::matching::SelectorCaches;
 #[cfg(feature = "gecko")]
 use selectors::parser::PseudoElement as PseudoElementTrait;
 use smallvec::SmallVec;
-use hashbrown::HashMap;
 
 /// A cache from element reference to known-valid computed style.
 pub type UndisplayedStyleCache =

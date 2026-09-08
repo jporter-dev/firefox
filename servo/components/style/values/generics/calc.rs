@@ -11,9 +11,9 @@ use crate::typed_om::{
     MathClamp, MathInvert, MathMax, MathMin, MathNegate, MathProduct, MathSum, MathValue,
     NumericBaseType, NumericType, NumericValue, ToTyped, TypedValue,
 };
+use crate::values::generics::Optional;
 use crate::values::generics::length::GenericAnchorSizeFunction;
 use crate::values::generics::position::{GenericAnchorFunction, GenericAnchorSide};
-use crate::values::generics::Optional;
 use num_traits::Zero;
 use smallvec::SmallVec;
 use std::convert::AsRef;
@@ -1379,11 +1379,7 @@ impl<L: CalcNodeLeaf> CalcNode<L> {
                 } else if step.is_infinite() {
                     value = match strategy {
                         RoundingStrategy::Nearest | RoundingStrategy::ToZero => {
-                            if value.is_sign_negative() {
-                                -0.0
-                            } else {
-                                0.0
-                            }
+                            if value.is_sign_negative() { -0.0 } else { 0.0 }
                         },
                         RoundingStrategy::Up => {
                             if !value.is_sign_negative() && !value.is_zero() {

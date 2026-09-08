@@ -12,15 +12,15 @@ use crate::font_face::parse_font_face_block;
 use crate::media_queries::MediaList;
 use crate::parser::{Parse, ParserContext};
 use crate::properties::declaration_block::{
-    parse_property_declaration_list, DeclarationParserState, PropertyDeclarationBlock,
+    DeclarationParserState, PropertyDeclarationBlock, parse_property_declaration_list,
 };
-use crate::properties_and_values::rule::{parse_property_block, PropertyRuleName};
+use crate::properties_and_values::rule::{PropertyRuleName, parse_property_block};
 use crate::selector_parser::{SelectorImpl, SelectorParser};
 use crate::shared_lock::{Locked, SharedRwLock};
 use crate::stylesheets::container_rule::{ContainerCondition, ContainerConditions, ContainerRule};
 use crate::stylesheets::document_rule::DocumentCondition;
 use crate::stylesheets::font_feature_values_rule::{
-    parse_family_name_list, FontFeatureValuesBlockType,
+    FontFeatureValuesBlockType, parse_family_name_list,
 };
 use crate::stylesheets::import_rule::{ImportLayer, ImportRule, ImportSupportsCondition};
 use crate::stylesheets::keyframes_rule::parse_keyframe_list;
@@ -38,9 +38,9 @@ use crate::values::computed::font::FamilyName;
 use crate::values::{CssUrl, CustomIdent, DashedIdent, KeyframesName};
 use crate::{Atom, Namespace, Prefix};
 use cssparser::{
-    match_ignore_ascii_case, AtRuleParser, BasicParseError, BasicParseErrorKind, CowRcStr,
-    DeclarationParser, Parser, ParserState, QualifiedRuleParser, RuleBodyItemParser,
-    RuleBodyParser, SourcePosition,
+    AtRuleParser, BasicParseError, BasicParseErrorKind, CowRcStr, DeclarationParser, Parser,
+    ParserState, QualifiedRuleParser, RuleBodyItemParser, RuleBodyParser, SourcePosition,
+    match_ignore_ascii_case,
 };
 use selectors::parser::{ParseRelative, SelectorList};
 use servo_arc::Arc;
@@ -453,7 +453,7 @@ impl<'a, 'i> AtRuleParser<'i> for TopLevelRuleParser<'a, 'i> {
                     }) => {
                         return Err(ParseError::custom(
                             StyleParseErrorKind::UnexpectedTokenWithinNamespace,
-                        ))
+                        ));
                     },
                     Err(e) => return Err(e.into()),
                 };
@@ -1016,7 +1016,7 @@ impl<'a, 'i> AtRuleParser<'i> for NestedRuleParser<'a, 'i> {
                     _ => {
                         return Err(ParseError::from_basic_kind(
                             BasicParseErrorKind::AtRuleBodyInvalid,
-                        ))
+                        ));
                     },
                 };
                 CssRule::LayerBlock(Arc::new(LayerBlockRule {

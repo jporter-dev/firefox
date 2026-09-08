@@ -21,6 +21,7 @@ pub mod generated {
     include!(concat!(env!("OUT_DIR"), "/properties.rs"));
 }
 
+use crate::FxHashMap;
 use crate::applicable_declarations::RevertKind;
 use crate::custom_properties::{self, ComputedSubstitutionFunctions, SubstitutionResult};
 use crate::derives::*;
@@ -34,9 +35,8 @@ use crate::stylesheets::Origin;
 use crate::stylist::Stylist;
 use crate::typed_om::{ToTyped, TypedValue};
 use crate::values::{computed, serialize_atom_name};
-use crate::FxHashMap;
 use arrayvec::{ArrayVec, Drain as ArrayVecDrain};
-use cssparser::{match_ignore_ascii_case, Parser};
+use cssparser::{Parser, match_ignore_ascii_case};
 use servo_arc::Arc;
 use std::{
     borrow::Cow,
@@ -536,7 +536,7 @@ impl PropertyId {
                 return !context
                     .nesting_context
                     .rule_types
-                    .contains(CssRuleType::PositionTry)
+                    .contains(CssRuleType::PositionTry);
             },
             Some(id) => id,
         };
@@ -1666,7 +1666,7 @@ impl UnparsedValue {
                 {
                     Ok(decl) => Cow::Owned(decl),
                     Err(..) => invalid_at_computed_value_time(),
-                }
+                };
             },
             Some(shorthand) => shorthand,
         };
@@ -1851,7 +1851,7 @@ impl<'a> Iterator for TransitionPropertyIterator<'a> {
                     return Some(TransitionPropertyIteration {
                         property: OwnedPropertyDeclarationId::Custom(name),
                         index,
-                    })
+                    });
                 },
                 TransitionProperty::Unsupported(..) => {},
             }

@@ -7,6 +7,8 @@
 
 #![deny(unsafe_code)]
 
+use crate::Atom;
+use crate::LocalName as SelectorLocalName;
 use crate::context::QuirksMode;
 use crate::data::ElementData;
 use crate::derives::*;
@@ -23,10 +25,8 @@ use crate::stylesheets::{
     StylesheetInDocument,
 };
 use crate::stylist::CascadeDataDifference;
-use crate::values::specified::position::PositionTryFallbacksItem;
 use crate::values::AtomIdent;
-use crate::Atom;
-use crate::LocalName as SelectorLocalName;
+use crate::values::specified::position::PositionTryFallbacksItem;
 use selectors::parser::{Component, LocalName, Selector};
 
 /// The kind of change that happened for a given rule.

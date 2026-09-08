@@ -10,8 +10,8 @@ use crate::media_queries::MediaList;
 use crate::parser::{Parse, ParserContext};
 use crate::shared_lock::{DeepCloneWithLock, SharedRwLock, SharedRwLockReadGuard, ToCssWithGuard};
 use crate::stylesheets::{
-    layer_rule::LayerName, supports_rule::SupportsCondition, CssRule, CssRuleType,
-    StylesheetInDocument,
+    CssRule, CssRuleType, StylesheetInDocument, layer_rule::LayerName,
+    supports_rule::SupportsCondition,
 };
 use crate::values::CssUrl;
 use cssparser::{Parser, SourceLocation};

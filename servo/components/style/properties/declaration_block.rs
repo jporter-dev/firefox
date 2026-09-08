@@ -7,10 +7,10 @@
 #![deny(missing_docs)]
 
 use super::{
-    property_counts, AllShorthand, ComputedValues, LogicalGroupSet, LonghandIdSet,
-    LonghandIdSetIterator, NonCustomPropertyId, NonCustomPropertyIdSet, PropertyDeclaration,
-    PropertyDeclarationId, PropertyId, ShorthandId, SourcePropertyDeclaration,
-    SourcePropertyDeclarationDrain, SubpropertiesVec,
+    AllShorthand, ComputedValues, LogicalGroupSet, LonghandIdSet, LonghandIdSetIterator,
+    NonCustomPropertyId, NonCustomPropertyIdSet, PropertyDeclaration, PropertyDeclarationId,
+    PropertyId, ShorthandId, SourcePropertyDeclaration, SourcePropertyDeclarationDrain,
+    SubpropertiesVec, property_counts,
 };
 
 use crate::context::{QuirksMode, TreeCountingCaches};
@@ -20,8 +20,8 @@ use crate::dom::{AttributeTracker, DummyElementContext};
 use crate::error_reporting::{ContextualParseError, ParseErrorReporter};
 use crate::parser::ParserContext;
 use crate::properties::{
-    animated_properties::{AnimationValue, AnimationValueMap},
     StyleBuilder,
+    animated_properties::{AnimationValue, AnimationValueMap},
 };
 use crate::rule_cache::RuleCacheConditions;
 use crate::rule_tree::RuleCascadeFlags;
@@ -34,8 +34,8 @@ use crate::stylist::Stylist;
 use crate::typed_om::TypedValueList;
 use crate::values::computed::Context;
 use cssparser::{
-    parse_important, AtRuleParser, CowRcStr, DeclarationParser, Delimiter, ParseErrorKind, Parser,
-    ParserState, QualifiedRuleParser, RuleBodyItemParser, RuleBodyParser, SourceLocation,
+    AtRuleParser, CowRcStr, DeclarationParser, Delimiter, ParseErrorKind, Parser, ParserState,
+    QualifiedRuleParser, RuleBodyItemParser, RuleBodyParser, SourceLocation, parse_important,
 };
 use itertools::Itertools;
 use selectors::SelectorList;
@@ -960,9 +960,11 @@ impl PropertyDeclarationBlock {
             Some(first_declaration),
             self.first_declaration_to_remove(property)
         );
-        debug_assert!(self.declarations[first_declaration]
-            .id()
-            .is_or_is_longhand_of(property));
+        debug_assert!(
+            self.declarations[first_declaration]
+                .id()
+                .is_or_is_longhand_of(property)
+        );
 
         self.remove_declaration_at(first_declaration);
 

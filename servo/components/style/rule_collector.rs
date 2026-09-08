@@ -11,7 +11,7 @@ use crate::rule_tree::{CascadeLevel, CascadeOrigin, ShadowCascadeOrder, StyleSou
 use crate::selector_map::SelectorMap;
 use crate::selector_parser::PseudoElement;
 use crate::shared_lock::Locked;
-use crate::stylesheets::{layer_rule::LayerOrder, Origin};
+use crate::stylesheets::{Origin, layer_rule::LayerOrder};
 use crate::stylist::{AuthorStylesEnabled, CascadeData, Rule, RuleInclusion, Stylist};
 use selectors::matching::MatchingContext;
 use servo_arc::ArcBorrow;

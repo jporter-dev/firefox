@@ -19,13 +19,13 @@ use crate::gecko_bindings::{
 use crate::parser::{Parse, ParserContext};
 use crate::shared_lock::{SharedRwLockReadGuard, ToCssWithGuard};
 use crate::stylesheets::font_feature_values_rule::parse_family_name_list;
+use crate::values::DashedIdent;
 use crate::values::computed::font::FamilyName;
 use crate::values::specified::Color as SpecifiedColor;
 use crate::values::specified::NonNegativeInteger;
-use crate::values::DashedIdent;
 use cssparser::{
-    match_ignore_ascii_case, AtRuleParser, CowRcStr, DeclarationParser, Parser, ParserState,
-    QualifiedRuleParser, RuleBodyItemParser, RuleBodyParser, SourceLocation,
+    AtRuleParser, CowRcStr, DeclarationParser, Parser, ParserState, QualifiedRuleParser,
+    RuleBodyItemParser, RuleBodyParser, SourceLocation, match_ignore_ascii_case,
 };
 use selectors::parser::SelectorParseErrorKind;
 use std::fmt::{self, Write};

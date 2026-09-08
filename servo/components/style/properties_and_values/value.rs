@@ -7,9 +7,10 @@
 use super::{
     rule::Descriptors as PropertyDescriptors,
     syntax::{
-        data_type::DataType, Component as SyntaxComponent, ComponentName, Descriptor, Multiplier,
+        Component as SyntaxComponent, ComponentName, Descriptor, Multiplier, data_type::DataType,
     },
 };
+use crate::FxHashMap;
 use crate::custom_properties::{AttrTaint, ComputedValue as ComputedPropertyValue};
 use crate::derives::*;
 use crate::parser::{Parse, ParserContext};
@@ -17,11 +18,11 @@ use crate::properties;
 use crate::properties::{CSSWideKeyword, CustomDeclarationValue};
 use crate::stylesheets::{CssRuleType, Origin, UrlExtraData};
 use crate::values::{
+    CustomIdent,
     animated::{self, Animate, Procedure},
     computed::{self, ToComputedValue},
-    specified, CustomIdent,
+    specified,
 };
-use crate::FxHashMap;
 use crate::{Namespace, Prefix};
 use cssparser::{BasicParseErrorKind, ParseErrorKind, Parser as CSSParser, TokenSerializationType};
 use selectors::matching::QuirksMode;
@@ -29,8 +30,8 @@ use servo_arc::Arc;
 use smallvec::SmallVec;
 use std::fmt::{self, Write};
 use style_traits::{
-    owned_str::OwnedStr, CssWriter, ParseError as StyleParseError, ParsingMode,
-    PropertySyntaxParseError, StyleParseErrorKind, ToCss,
+    CssWriter, ParseError as StyleParseError, ParsingMode, PropertySyntaxParseError,
+    StyleParseErrorKind, ToCss, owned_str::OwnedStr,
 };
 
 /// A single component of the computed value.

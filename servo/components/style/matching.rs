@@ -17,9 +17,9 @@ use crate::dom::TElement;
 #[cfg(feature = "servo")]
 use crate::dom::TNode;
 use crate::invalidation::element::restyle_hints::RestyleHint;
-use crate::properties::longhands::display::computed_value::T as Display;
 use crate::properties::ComputedValues;
 use crate::properties::PropertyDeclarationBlock;
+use crate::properties::longhands::display::computed_value::T as Display;
 #[cfg(feature = "servo")]
 use crate::rule_tree::RuleCascadeFlags;
 use crate::rule_tree::{CascadeLevel, CascadeOrigin, StrongRuleNode};
@@ -797,9 +797,11 @@ trait PrivateMatchMethods: TElement {
         pseudo: Option<&PseudoElement>,
     ) -> RestyleHint {
         debug!("accumulate_damage_for: {:?}", self);
-        debug_assert!(!shared_context
-            .traversal_flags
-            .contains(TraversalFlags::FinalAnimationTraversal));
+        debug_assert!(
+            !shared_context
+                .traversal_flags
+                .contains(TraversalFlags::FinalAnimationTraversal)
+        );
 
         let difference = self.compute_style_difference(old_values, new_values, pseudo);
 

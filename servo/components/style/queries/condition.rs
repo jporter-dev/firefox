@@ -22,10 +22,10 @@ use crate::properties_and_values::value::{
 use crate::stylesheets::container_rule::AttrReferenceSet;
 use crate::stylesheets::{CssRuleType, CustomMediaEvaluator, Origin, UrlExtraData};
 use crate::stylist::Stylist;
-use crate::values::{computed, AtomString, DashedIdent};
+use crate::values::{AtomString, DashedIdent, computed};
 use crate::{error_reporting::ContextualParseError, parser::Parse, parser::ParserContext};
 use cssparser::{
-    match_ignore_ascii_case, parse_important, Parser, SourceLocation, SourcePosition, Token,
+    Parser, SourceLocation, SourcePosition, Token, match_ignore_ascii_case, parse_important,
 };
 use selectors::kleene_value::KleeneValue;
 use servo_arc::Arc;

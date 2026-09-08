@@ -7,8 +7,10 @@
 //!
 //! [basic-shape]: https://drafts.csswg.org/css-shapes/#typedef-basic-shape
 
+use crate::Zero;
 use crate::derives::*;
 use crate::parser::{Parse, ParserContext};
+use crate::values::CSSFloat;
 use crate::values::computed::basic_shape::InsetRect as ComputedInsetRect;
 use crate::values::computed::{
     Context, LengthPercentage as ComputedLengthPercentage, ToComputedValue,
@@ -26,9 +28,7 @@ use crate::values::specified::url::SpecifiedUrl;
 use crate::values::specified::{
     LengthPercentage, NoCalcPercentage, NonNegativeLengthPercentage, SVGPathData,
 };
-use crate::values::CSSFloat;
-use crate::Zero;
-use cssparser::{match_ignore_ascii_case, Parser};
+use cssparser::{Parser, match_ignore_ascii_case};
 use std::fmt::{self, Write};
 use style_traits::{CssWriter, ParseError, StyleParseErrorKind, ToCss};
 

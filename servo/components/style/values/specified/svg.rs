@@ -6,14 +6,14 @@
 
 use crate::derives::*;
 use crate::parser::{Parse, ParserContext};
+use crate::values::CustomIdent;
 use crate::values::generics::svg as generic;
-use crate::values::specified::color::Color;
-use crate::values::specified::url::SpecifiedUrl;
 use crate::values::specified::AllowQuirks;
 use crate::values::specified::LengthPercentage;
 use crate::values::specified::SVGPathData;
+use crate::values::specified::color::Color;
+use crate::values::specified::url::SpecifiedUrl;
 use crate::values::specified::{NonNegativeLengthPercentage, Opacity};
-use crate::values::CustomIdent;
 use cssparser::{Parser, Token};
 use std::fmt::{self, Write};
 use style_traits::{CommaWithSpace, CssWriter, ParseError, Separator};

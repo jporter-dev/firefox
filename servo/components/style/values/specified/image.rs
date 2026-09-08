@@ -7,18 +7,19 @@
 //!
 //! [image]: https://drafts.csswg.org/css-images/#image-values
 
+use crate::Atom;
 use crate::color::mix::ColorInterpolationMethod;
 use crate::derives::*;
 use crate::parser::{Parse, ParserContext};
 use crate::stylesheets::CorsMode;
 use crate::typed_om::{ImageValue, KeywordValue, ToTyped, TypedValue};
+use crate::values::generics::NonNegative;
 use crate::values::generics::color::{ColorMixFlags, GenericLightDark};
 use crate::values::generics::image::{
     self as generic, Circle, Ellipse, GradientCompatMode, ShapeExtent,
 };
 use crate::values::generics::image::{GradientFlags, PaintWorklet};
 use crate::values::generics::position::Position as GenericPosition;
-use crate::values::generics::NonNegative;
 use crate::values::specified::position::{HorizontalPositionKeyword, VerticalPositionKeyword};
 use crate::values::specified::position::{Position, PositionComponent, Side};
 use crate::values::specified::url::SpecifiedUrl;
@@ -27,8 +28,7 @@ use crate::values::specified::{
     NonNegativeLengthPercentage, Resolution,
 };
 use crate::values::specified::{Number, NumberOrPercentage, Percentage};
-use crate::Atom;
-use cssparser::{match_ignore_ascii_case, Delimiter, Parser, Token};
+use cssparser::{Delimiter, Parser, Token, match_ignore_ascii_case};
 use selectors::parser::SelectorParseErrorKind;
 use std::cmp::Ordering;
 use std::fmt::{self, Write};

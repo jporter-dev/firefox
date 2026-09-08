@@ -13,7 +13,7 @@ use crate::values::generics::{NonNegative, Optional};
 use crate::values::specified::calc::{CalcNode, CalcNumeric, CalcPercentageLeaf, Leaf};
 use crate::values::specified::{CalcLengthPercentage, LengthPercentage, NoCalcNumber, Number};
 use crate::values::tagged_numeric::{Extracted, NumericUnion, Unpacked, UnpackedMut};
-use crate::values::{normalize, reify_percentage, serialize_percentage, CSSFloat};
+use crate::values::{CSSFloat, normalize, reify_percentage, serialize_percentage};
 use cssparser::{Parser, Token};
 use std::fmt::{self, Write};
 use style_traits::values::specified::AllowedNumericType;

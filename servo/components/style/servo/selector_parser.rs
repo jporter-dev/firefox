@@ -6,6 +6,7 @@
 
 //! Servo's selector parser.
 
+use crate::FxHashMap;
 use crate::attr::{AttrIdentifier, AttrValue};
 use crate::computed_value_flags::ComputedValueFlags;
 use crate::derives::*;
@@ -17,11 +18,10 @@ use crate::properties::{ComputedValues, PropertyFlags};
 use crate::selector_parser::AttrValue as SelectorAttrValue;
 use crate::selector_parser::{PseudoElementCascadeType, SelectorParser};
 use crate::values::{AtomIdent, AtomString};
-use crate::FxHashMap;
 use crate::{Atom, CaseSensitivityExt, LocalName, Namespace, Prefix};
 use cssparser::{
-    match_ignore_ascii_case, serialize_identifier, CowRcStr, Parser as CssParser, SourcePosition,
-    ToCss,
+    CowRcStr, Parser as CssParser, SourcePosition, ToCss, match_ignore_ascii_case,
+    serialize_identifier,
 };
 use dom::{DocumentState, ElementState};
 use selectors::attr::{AttrSelectorOperation, CaseSensitivity, NamespaceConstraint};
@@ -876,12 +876,11 @@ impl ServoElementSnapshot {
     where
         F: FnMut(&AttrValue) -> bool,
     {
-        self.attrs
-            .as_ref()
-            .is_some_and(|attrs| attrs
+        self.attrs.as_ref().is_some_and(|attrs| {
+            attrs
                 .iter()
                 .any(|&(ref ident, ref v)| ident.local_name == *name && f(v))
-            )
+        })
     }
 }
 

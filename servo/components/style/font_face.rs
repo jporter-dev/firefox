@@ -12,7 +12,7 @@ use crate::parser::{Parse, ParserContext};
 use crate::shared_lock::{SharedRwLockReadGuard, ToCssWithGuard};
 use crate::values::computed::FontWeight;
 use crate::values::generics::font::FontStyle as GenericFontStyle;
-use crate::values::specified::{url::SpecifiedUrl, Angle};
+use crate::values::specified::{Angle, url::SpecifiedUrl};
 use cssparser::{Parser, RuleBodyParser, SourceLocation};
 use std::fmt::{self, Write};
 use style_traits::{CssStringWriter, CssWriter, ParseError, StyleParseErrorKind, ToCss};
@@ -343,11 +343,7 @@ pub struct ComputedFontWeightRange(pub FontWeight, pub FontWeight);
 
 #[inline]
 fn sort_range<T: PartialOrd>(a: T, b: T) -> (T, T) {
-    if a > b {
-        (b, a)
-    } else {
-        (a, b)
-    }
+    if a > b { (b, a) } else { (a, b) }
 }
 
 impl FontWeightRange {
