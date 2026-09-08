@@ -7937,8 +7937,11 @@ JSOp MBinaryCache::jsop() const { return JSOp(*resumePoint()->pc()); }
 template <typename T>
 static wasm::MaybeRefType GetBaseRefTypeForWasmLoadOrStore(T ins) {
   const MDefinition* structObject;
-  if (ins->base()->type() == MIRType::WasmStructData) {
-    MOZ_RELEASE_ASSERT(ins->base()->isWasmLoadField());
+  if (ins->base()->type() == MIRType::WasmStructData &&
+      ins->base()->isWasmLoadField()) {
+    // Struct data pointers have no ref type, but always come from some struct
+    // object, so go back to that base object if possible. (We cannot do this
+    // 100% of the time because of phis.)
     structObject = ins->base()->toWasmLoadField()->base();
   } else {
     structObject = ins->base();
