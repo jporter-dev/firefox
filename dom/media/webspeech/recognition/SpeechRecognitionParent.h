@@ -81,16 +81,18 @@ class SpeechRecognitionParent final : public PSpeechRecognitionParent {
 
   // Shared by RecvIsModelAvailable and RecvIsModelInstalled, which otherwise
   // only differ in the HWInferenceChild call they make and which request
-  // holder they track it with. Sends one request per distinct model and
-  // resolves true only if every request does.
+  // holder they track it with. Resolves aResolver(false) if the utility
+  // process/HWInferenceChild isn't available; otherwise calls
+  // aSendFunc(hwInferenceChild), tracks the resulting promise in
+  // aRequestHolder, and resolves aResolver with the result (false on IPC
+  // rejection).
   using BoolPromise = hwinference::PHWInferenceChild::IsModelAvailablePromise;
-  mozilla::ipc::IPCResult RunHWInferenceBoolQueries(
-      const char* aFuncName, const nsTArray<nsCString>& aModelIds,
-      std::function<RefPtr<BoolPromise>(hwinference::HWInferenceChild*,
-                                        const nsCString&)>
+  mozilla::ipc::IPCResult RunHWInferenceBoolQuery(
+      const char* aFuncName,
+      std::function<RefPtr<BoolPromise>(hwinference::HWInferenceChild*)>
           aSendFunc,
       std::function<void(const bool&)> aResolver,
-      MozPromiseRequestHolder<BoolPromise::AllPromiseType>& aRequestHolder);
+      MozPromiseRequestHolder<BoolPromise>& aRequestHolder);
 
   // Runs on mRecognitionThread. Takes ownership of mModelFile, loads it, and
   // enters ProcessAudioStreaming() unless the session was torn down meanwhile.
@@ -122,7 +124,6 @@ class SpeechRecognitionParent final : public PSpeechRecognitionParent {
   // Recognition language
   // Set during RecvInit, then constant
   nsCString mLanguage MOZ_GUARDED_BY(mLock);
-  nsCString mModelId MOZ_GUARDED_BY(mLock);
   // Contextual biasing phrases
   // Set during RecvInit, then constant
   nsTArray<nsString> mPhrases MOZ_GUARDED_BY(mLock);
@@ -172,20 +173,19 @@ class SpeechRecognitionParent final : public PSpeechRecognitionParent {
   // ActorDestroy() so their callbacks never run (and resolve a dead IPDL
   // resolver) after the actor is torn down.
   MozPromiseRequestHolder<
-      hwinference::PHWInferenceChild::IsModelAvailablePromise::AllPromiseType>
+      hwinference::PHWInferenceChild::IsModelAvailablePromise>
       mIsModelAvailableRequest;
   // Backs the JS-facing IsModelInstalled query.
   MozPromiseRequestHolder<
-      hwinference::PHWInferenceChild::IsModelInstalledPromise::AllPromiseType>
+      hwinference::PHWInferenceChild::IsModelInstalledPromise>
       mIsModelInstalledRequest;
   // Tracks RetrieveModel()'s installation check, run before fetching the model
   // file for a recognition session.
   MozPromiseRequestHolder<
       hwinference::PHWInferenceChild::IsModelInstalledPromise>
       mRetrieveModelIsInstalledRequest;
-  MozPromiseRequestHolder<
-      hwinference::PHWInferenceChild::InstallModelPromise::AllPromiseType>
-      mInstallModelsRequest;
+  MozPromiseRequestHolder<hwinference::PHWInferenceChild::InstallModelPromise>
+      mInstallModelRequest;
   MozPromiseRequestHolder<hwinference::PHWInferenceChild::GetModelFilePromise>
       mGetModelFileRequest;
 };

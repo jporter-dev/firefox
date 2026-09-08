@@ -85,33 +85,12 @@ void SpeechRecognitionParent::ResolveOrRejectInitOnIPCThread(
   }
 }
 
-static nsTArray<nsCString> SpeechModelIdsFor(
-    const nsTArray<nsCString>& aLanguages) {
-  nsTArray<nsCString> modelIds;
-  for (const auto& language : aLanguages) {
-    Maybe<dom::SpeechModelMatch> model = dom::SpeechModelFor(language);
-    if (model.isNothing()) {
-      return {};
-    }
-    if (!modelIds.Contains(model->mId)) {
-      modelIds.AppendElement(std::move(model->mId));
-    }
-  }
-  return modelIds;
-}
-
-mozilla::ipc::IPCResult SpeechRecognitionParent::RunHWInferenceBoolQueries(
-    const char* aFuncName, const nsTArray<nsCString>& aModelIds,
-    std::function<RefPtr<BoolPromise>(hwinference::HWInferenceChild*,
-                                      const nsCString&)>
+mozilla::ipc::IPCResult SpeechRecognitionParent::RunHWInferenceBoolQuery(
+    const char* aFuncName,
+    std::function<RefPtr<BoolPromise>(hwinference::HWInferenceChild*)>
         aSendFunc,
     std::function<void(const bool&)> aResolver,
-    MozPromiseRequestHolder<BoolPromise::AllPromiseType>& aRequestHolder) {
-  if (aModelIds.IsEmpty()) {
-    aResolver(false);
-    return IPC_OK();
-  }
-
+    MozPromiseRequestHolder<BoolPromise>& aRequestHolder) {
   RefPtr<mozilla::ipc::UtilityProcessChild> utilityChild =
       mozilla::ipc::UtilityProcessChild::GetSingleton();
   if (!utilityChild) {
@@ -127,31 +106,22 @@ mozilla::ipc::IPCResult SpeechRecognitionParent::RunHWInferenceBoolQueries(
     return IPC_OK();
   }
 
-  nsTArray<RefPtr<BoolPromise>> promises;
-  for (const auto& modelId : aModelIds) {
-    promises.AppendElement(aSendFunc(hwInferenceChild, modelId));
-  }
-
-  BoolPromise::All(GetCurrentSerialEventTarget(), promises)
-      ->Then(
-          GetCurrentSerialEventTarget(), __func__,
-          [self = RefPtr{this}, aResolver = std::move(aResolver), aFuncName,
-           &aRequestHolder](BoolPromise::AllPromiseType::ResolveOrRejectValue&&
-                                aValue) mutable {
-            aRequestHolder.Complete();
-            bool result = false;
-            if (aValue.IsReject()) {
-              LOGE("{} IPC call to main process failed: {}", aFuncName,
-                   static_cast<int>(aValue.RejectValue()));
-            } else {
-              const auto& results = aValue.ResolveValue();
-              result = std::all_of(results.cbegin(), results.cend(),
-                                   [](bool aResult) { return aResult; });
-            }
-            LOGD("{} Sending response back to content process: {}", aFuncName,
-                 result ? "true" : "false");
-            aResolver(result);
-          })
+  aSendFunc(hwInferenceChild)
+      ->Then(GetCurrentSerialEventTarget(), __func__,
+             [self = RefPtr{this}, aResolver = std::move(aResolver), aFuncName,
+              &aRequestHolder](
+                 BoolPromise::ResolveOrRejectValue&& aValue) mutable {
+               aRequestHolder.Complete();
+               if (aValue.IsResolve()) {
+                 LOGD("{} Sending response back to content process: {}",
+                      aFuncName, aValue.ResolveValue() ? "true" : "false");
+                 aResolver(aValue.ResolveValue());
+               } else {
+                 LOGE("{} IPC call to main process failed: {}", aFuncName,
+                      static_cast<int>(aValue.RejectValue()));
+                 aResolver(false);
+               }
+             })
       ->Track(aRequestHolder);
 
   return IPC_OK();
@@ -165,15 +135,15 @@ mozilla::ipc::IPCResult SpeechRecognitionParent::RecvIsModelAvailable(
                     "RecvIsModelAvailable requires at least one language");
   }
 
-  nsTArray<nsCString> modelIds = SpeechModelIdsFor(aLanguages);
-  LOGD("{} languages: {} mapped to ids={}", __func__,
-       fmt::join(aLanguages, ", "), fmt::join(modelIds, ", "));
+  nsCString modelId = dom::LanguagesToSpeechModelId(aLanguages);
+  LOGD("{} languages: {} mapped to id={}", __func__,
+       fmt::join(aLanguages, ", "), modelId.get());
 
-  return RunHWInferenceBoolQueries(
-      __func__, modelIds,
-      [](hwinference::HWInferenceChild* aChild, const nsCString& aModelId) {
+  return RunHWInferenceBoolQuery(
+      __func__,
+      [modelId](hwinference::HWInferenceChild* aChild) {
         return aChild->SendIsModelAvailable(dom::kSpeechRecognitionTask,
-                                            aModelId);
+                                            modelId);
       },
       std::move(aResolver), mIsModelAvailableRequest);
 }
@@ -186,15 +156,15 @@ mozilla::ipc::IPCResult SpeechRecognitionParent::RecvIsModelInstalled(
                     "RecvIsModelInstalled requires at least one language");
   }
 
-  nsTArray<nsCString> modelIds = SpeechModelIdsFor(aLanguages);
-  LOGD("{} languages: {} mapped to ids={}", __func__,
-       fmt::join(aLanguages, ", "), fmt::join(modelIds, ", "));
+  nsCString modelId = dom::LanguagesToSpeechModelId(aLanguages);
+  LOGD("{} languages: {} mapped to id={}", __func__,
+       fmt::join(aLanguages, ", "), modelId.get());
 
-  return RunHWInferenceBoolQueries(
-      __func__, modelIds,
-      [](hwinference::HWInferenceChild* aChild, const nsCString& aModelId) {
+  return RunHWInferenceBoolQuery(
+      __func__,
+      [modelId](hwinference::HWInferenceChild* aChild) {
         return aChild->SendIsModelInstalled(dom::kSpeechRecognitionTask,
-                                            aModelId);
+                                            modelId);
       },
       std::move(aResolver), mIsModelInstalledRequest);
 }
@@ -206,13 +176,9 @@ mozilla::ipc::IPCResult SpeechRecognitionParent::RecvInstallModels(
     return IPC_FAIL(this, "RecvInstallModels requires at least one language");
   }
 
-  nsTArray<nsCString> modelIds = SpeechModelIdsFor(aLanguages);
-  LOGD("{} languages: {} mapped to ids={}", __func__,
-       fmt::join(aLanguages, ", "), fmt::join(modelIds, ", "));
-  if (modelIds.IsEmpty()) {
-    aResolver(hwinference::ModelInstallResult::Failed);
-    return IPC_OK();
-  }
+  nsCString modelId = dom::LanguagesToSpeechModelId(aLanguages);
+  LOGD("{} languages: {} mapped to id={}", __func__,
+       fmt::join(aLanguages, ", "), modelId.get());
 
   RefPtr<mozilla::ipc::UtilityProcessChild> utilityChild =
       mozilla::ipc::UtilityProcessChild::GetSingleton();
@@ -227,34 +193,19 @@ mozilla::ipc::IPCResult SpeechRecognitionParent::RecvInstallModels(
   // mContentId is the trusted id of the content process that owns this
   // connection, so the parent can verify the requesting window really belongs
   // to the requester.
-  using InstallModelPromise = PHWInferenceChild::InstallModelPromise;
-  nsTArray<RefPtr<InstallModelPromise>> promises;
-  for (const auto& modelId : modelIds) {
-    promises.AppendElement(hwInferenceChild->SendInstallModel(
-        dom::kSpeechRecognitionTask, modelId, aInnerWindowId, mContentId));
-  }
-
-  InstallModelPromise::All(GetCurrentSerialEventTarget(), promises)
+  hwInferenceChild
+      ->SendInstallModel(dom::kSpeechRecognitionTask, modelId, aInnerWindowId,
+                         mContentId)
       ->Then(GetCurrentSerialEventTarget(), __func__,
              [self = RefPtr{this}, aResolver = std::move(aResolver)](
-                 InstallModelPromise::AllPromiseType::ResolveOrRejectValue&&
+                 PHWInferenceChild::InstallModelPromise::ResolveOrRejectValue&&
                      aValue) mutable {
-               self->mInstallModelsRequest.Complete();
-               if (aValue.IsReject()) {
-                 aResolver(hwinference::ModelInstallResult::Failed);
-                 return;
-               }
-               // Anything but Installed is reported as-is, so a download the
-               // user refused stays a refusal rather than a failure.
-               for (const auto& result : aValue.ResolveValue()) {
-                 if (result != hwinference::ModelInstallResult::Installed) {
-                   aResolver(result);
-                   return;
-                 }
-               }
-               aResolver(hwinference::ModelInstallResult::Installed);
+               self->mInstallModelRequest.Complete();
+               aResolver(aValue.IsResolve()
+                             ? aValue.ResolveValue()
+                             : hwinference::ModelInstallResult::Failed);
              })
-      ->Track(mInstallModelsRequest);
+      ->Track(mInstallModelRequest);
 
   return IPC_OK();
 }
@@ -303,7 +254,7 @@ void SpeechRecognitionParent::RetrieveModel(InitResolver&& aResolver) {
   nsCString modelId;
   {
     MutexAutoLock lock(mLock);
-    modelId = mModelId;
+    modelId = dom::LanguagesToSpeechModelId(nsTArray{mLanguage});
   }
 
   LOGD("{} Checking model is installed: id={}", __func__, modelId.get());
@@ -560,7 +511,7 @@ void SpeechRecognitionParent::ActorDestroy(ActorDestroyReason aReason) {
   mIsModelAvailableRequest.DisconnectIfExists();
   mIsModelInstalledRequest.DisconnectIfExists();
   mRetrieveModelIsInstalledRequest.DisconnectIfExists();
-  mInstallModelsRequest.DisconnectIfExists();
+  mInstallModelRequest.DisconnectIfExists();
   mGetModelFileRequest.DisconnectIfExists();
 
   // Use AsyncShutdown(), not Shutdown(): the latter joins the thread by
@@ -601,19 +552,10 @@ mozilla::ipc::IPCResult SpeechRecognitionParent::RecvInit(
   // Moved out of Idle here rather than on the recognition thread once the
   // engine is up: this is what tells a session setup still in flight there
   // that the session has gone away in the meantime.
-  dom::SpeechModelMatch model;
-  if (aLanguage.IsEmpty()) {
-    model = dom::DefaultSpeechModel();
-  } else if (Maybe<dom::SpeechModelMatch> match =
-                 dom::SpeechModelFor(aLanguage)) {
-    model = std::move(*match);
-  }
-
   {
     MutexAutoLock lock(mLock);
     mState = State::Initializing;
-    mModelId = std::move(model.mId);
-    mLanguage = std::move(model.mLocale);
+    mLanguage = aLanguage;
     mPhrases = aPhrases.Clone();
   }
 

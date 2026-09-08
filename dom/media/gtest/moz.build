@@ -83,6 +83,7 @@ UNIFIED_SOURCES += [
     "TestRemoteImageHolder.cpp",
     "TestRust.cpp",
     "TestSimpleMap.cpp",
+    "TestSpeechModelMapping.cpp",
     "TestTelemetryProbesReporter.cpp",
     "TestTimeUnit.cpp",
     "TestUnboundedMPSCQueue.cpp",
@@ -120,7 +121,6 @@ if CONFIG["OS_TARGET"] != "Android":
         "TestGMPCrossOrigin.cpp",
         "TestGMPPluginScan.cpp",
         "TestGMPRemoveAndDelete.cpp",
-        "TestSpeechModelMapping.cpp",
     ]
 
 if CONFIG["MOZ_APPLEMEDIA"]:

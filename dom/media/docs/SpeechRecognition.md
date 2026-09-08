@@ -64,7 +64,7 @@ Main Process:
   registered for the task (contract id
   `@mozilla.org/ml/model-resolver;1?task=<task>`) — for speech recognition,
   `SpeechModelResolver` (`SpeechModelResolver.{h,cpp}`), which just expands the
-  id against the same compiled-in model table `SpeechModelFor` reads
+  id against the same compiled-in model table `LanguagesToSpeechModelId` reads
   (see Security, below). Before downloading, it asks that same component to
   authorize the download (`nsIMLModelResolver::authorizeDownload`, passing the
   resolved coordinates); `SpeechModelResolver` owns the consent decision and
@@ -82,7 +82,7 @@ name an arbitrary model artifact, and why it cannot fake consent to a download
 — is generic to every `HWInference` consumer and is documented in
 [Security](/toolkit/components/ml/HWInference), using speech
 recognition as its worked example. Speech recognition contributes
-`dom::SpeechModelFor` (a language to an opaque id, in the Utility
+`dom::LanguagesToSpeechModelId` (languages to an opaque id, in the Utility
 process, from a table generated from `models.yaml` at build time),
 `SpeechModelResolver` (the id back to `ModelHub` coordinates, in the main
 process, from that same table, and the consent decision for a download).
@@ -256,9 +256,8 @@ This is best explained in comments in the code, see
 `SpeechRecognitionParent::ProcessAudioStreaming` in `SpeechRecognitionParent.cpp`.
 The model loads from a file descriptor (`parakeet_capi_load_fd`), opens a
 streaming session for the recognition language (`parakeet_capi_stream_begin_lang`,
-given a locale that model knows, see Language→model mapping below, and falling
-back to language auto-detection if it rejects it anyway), then is fed audio as
-it arrives (`parakeet_capi_stream_feed`). The
+falling back to language auto-detection if the model rejects the requested
+language), then is fed audio as it arrives (`parakeet_capi_stream_feed`). The
 model keeps its own encoder/decoder caches across feeds, and finalized words are
 drained (`parakeet_capi_stream_drain_words`) and emitted as final results at
 streaming latency.
@@ -272,9 +271,9 @@ I have uploaded a few models to our bucket, an english-only model, and a
 multilingual model. I expect that more models will be added in the future, both
 with different performance characteristics, but also containing different
 languages, and with different capabilities, such as token timestamping,
-diarisation, punctuation correctness, etc. Consequently, the routing is
-currently minimal: english goes to the english model, and the other model takes
-whatever of the rest it recognizes (see Language→model mapping below).
+diarisation, punctuation correctness, etc. Consequently, the language validation
+is currently minimal: english goes to the english model, everything else to the
+other model.
 
 Our bucket also contains a Voice Activity Detection (VAD) model (Silero VAD),
 that can be used to detect speech activity in audio data, but I haven't wired it
@@ -745,30 +744,18 @@ and clarified.
 
 ### Language→model mapping
 
-`dom/media/webspeech/recognition/models.yaml` is an ordered list of models, each
-declaring the locales it recognizes, spelled the way that model expects them
-(for the multilingual model, its prompt dictionary keys). A request picks the
-first entry that recognizes it, negotiated with
-`LocaleService::NegotiateLanguages`, so `es-MX` is recognized as the model's
-generic `es`; there is no catch-all, and a tag no entry recognizes is simply not
-supported. `media.webspeech.recognition.model.<language subtag>` restricts the
-choice to the model it names. A request with no language at all takes the first
-entry and passes no locale, leaving the engine to its model file's own default.
-I plan to add more models (much smaller, more specialized with different
-variants, etc.) prior to landing.
-
-`SpeechModelFor` in `SpeechRecognitionModelMapping.{h,cpp}` answers both, over
-a table generated from the yaml: the model id and the locale, returned together
-as a match, or no match when the language is unsupported. The Utility process
-calls it for `IsModelAvailable`/`IsModelInstalled`/`InstallModels`, so a language
-becomes an id before it crosses to the main process; the main process works only
-from the coordinates it receives, using `SpeechModelSizeMB` for the prompt's
-download size. A session is started with the negotiated locale rather than the
-tag content asked for.
-
-`available()` reports `unavailable` and `install()` resolves false for an
-unrecognized language, without launching the HWInference process or downloading
-anything, and `start()` fires `service-not-allowed`.
+`LanguagesToSpeechModel` (in `SpeechRecognitionModelMapping.{h,cpp}`, called
+from the Utility process for `IsModelAvailable`/`IsModelInstalled`/`InstallModels`
+to map languages to model coordinates before they cross to the main process;
+the main process itself never calls it, working only from the already-mapped
+coordinates it receives, using `SpeechModelSizeMB` from the same file for the
+prompt's download size) uses only the first language's primary subtag (e.g.
+`en` from `en-US`) to look up a default model in the generated table in
+`dom/media/webspeech/recognition/models.yaml`, falling back to a multilingual
+default model when the prefix is empty or unmatched. The default for a given
+locale prefix (or the multilingual fallback) can be overridden with
+`media.webspeech.recognition.model.<prefix>`. I plan to add more models (much
+smaller, more specialized with different variants, etc.) prior to landing.
 
 ### Phrase boost
 

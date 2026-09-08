@@ -10,13 +10,6 @@ import json
 import yaml
 
 
-def locale_array(name, locales):
-    """A null-terminated static array of locale strings, 8 per line."""
-    items = [f'"{locale}"' for locale in locales] + ["nullptr"]
-    lines = ["    " + ", ".join(items[i : i + 8]) for i in range(0, len(items), 8)]
-    return f"static const char* const {name}[] = {{\n" + ",\n".join(lines) + "};\n"
-
-
 def gen_models_header(output, input):
     with open(input) as f:
         data = yaml.safe_load(f)
@@ -30,39 +23,45 @@ def gen_models_header(output, input):
         "namespace mozilla::dom {\n\n"
         "struct SpeechRecognitionModelInfo {\n"
         "  const char* id;\n"
-        "  const char* const* supported_locales; // null-terminated\n"
+        "  const char* const* locales; // null-terminated; empty (first==nullptr) = fallback\n"
         "  const char* repo;\n"
         "  const char* filename;\n"
         "  const char* revision;\n"
         "  uint32_t size_mb;\n"
         "  const char* quant;\n"
         "  uint32_t latency_ms;\n"
+        "  bool is_default;\n"
         "  bool is_streaming; // true = streaming RNN-T, false = offline CTC batch\n"
         "};\n\n"
     )
 
     # Emit per-model locale arrays.
     for m in models:
+        locales = m["locales"]
+        entries = (
+            ", ".join(f'"{l}"' for l in locales) + (", " if locales else "") + "nullptr"
+        )
         output.write(
-            locale_array(
-                f"kSpeechModelSupportedLocales_{m['id']}", m["supported_locales"]
-            )
+            f"static const char* const kSpeechModelLocales_{m['id']}[] = {{{entries}}};\n"
         )
 
     output.write("\n")
 
-    # Emit the table, sentinel-terminated, in models.yaml (preference) order.
+    # Emit the table, sentinel-terminated.
     output.write(
         "static const SpeechRecognitionModelInfo kSpeechRecognitionModels[] = {\n"
     )
     for m in models:
+        is_default = "true" if m.get("default", False) else "false"
         is_streaming = "true" if m.get("streaming", True) else "false"
         output.write(
-            f'  {{"{m["id"]}", kSpeechModelSupportedLocales_{m["id"]},\n'
+            f'  {{"{m["id"]}", kSpeechModelLocales_{m["id"]},\n'
             f'   "{m["repo"]}", "{m["filename"]}", "{m["revision"]}",\n'
-            f'   {m["size_mb"]}, "{m["quant"]}", {m["latency_ms"]}, {is_streaming}}},\n'
+            f'   {m["size_mb"]}, "{m["quant"]}", {m["latency_ms"]}, {is_default}, {is_streaming}}},\n'
         )
-    output.write("  {nullptr, nullptr, nullptr, nullptr, nullptr, 0, nullptr, 0}\n")
+    output.write(
+        "  {nullptr, nullptr, nullptr, nullptr, nullptr, 0, nullptr, 0, false}\n"
+    )
     output.write("};\n\n")
 
     output.write("}  // namespace mozilla::dom\n")
