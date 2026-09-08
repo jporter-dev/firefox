@@ -130,14 +130,11 @@ Two paths depart from that order:
 
 `tab.linkedBrowser` is set before `TabOpen`, so its presence tells you nothing
 about whether the browser is usable. What a lazy tab lacks is a browser *in the
-document*: `tab.linkedPanel` is null, and `#createLazyBrowser` has replaced a
-list of the browser's properties with substitutes. `currentURI`,
-`contentTitle`, `audioMuted`, `remoteType` and the zoom levels answer out of
-session store, and **every other substituted property inserts the browser when
-it is read** — a docShell, an `about:blank` load and a `TabBrowserInserted`
-caused by nothing but the listener that looked. On Nightly that path logs a
-stack citing
-[Bug 1345098](https://bugzilla.mozilla.org/show_bug.cgi?id=1345098).
+document*: `tab.linkedPanel` is null, and most of the browser's properties are
+substitutes that **insert the browser when they are read** — a docShell, an
+`about:blank` load and a `TabBrowserInserted` caused by nothing but the listener
+that looked. {doc}`lazy-browsers` covers which properties are safe and which are
+not.
 
 A listener that needs a real browser gates on `tab.linkedPanel` or waits for
 `TabBrowserInserted`.
@@ -146,10 +143,11 @@ A listener that needs a real browser gates on `tab.linkedPanel` or waits for
 
 By the time this fires, `discardBrowser` has aborted the tab's dialogs, reset
 its sharing state, unhooked its progress listener and filter, destroyed the
-browser, removed its panel and re-installed the lazy substitutes. The
-`<browser>` element survives as `tab.linkedBrowser`, so a cached reference is
-not dangling — it is an element whose docShell and browsing context are gone and
-whose properties will quietly build new ones. A listener holding the browser,
+browser, removed its panel and re-installed the lazy substitutes
+({doc}`lazy-browsers`). The `<browser>` element survives as `tab.linkedBrowser`,
+so a cached reference is not dangling — it is an element whose docShell and
+browsing context are gone and whose properties will quietly build new ones. A
+listener holding the browser,
 its `browsingContext`, or anything keyed on either has to drop it here.
 
 Discarding also clears the tab's now-stale `activemedia-blocked`, `busy`,

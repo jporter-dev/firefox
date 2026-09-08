@@ -174,7 +174,8 @@ function takes one as its first argument. It saves nothing but the forwarder.
 ## When gBrowser.addTab is right
 
 When you need something `openLinkIn` cannot express: a lazy browser
-(`createLazyBrowser`, `lazyTabTitle`), a tab with no load (`skipLoad`), a tab
+({doc}`lazy-browsers`, via `createLazyBrowser` and `lazyTabTitle`), a tab with
+no load (`skipLoad`), a tab
 created outside the strip (`insertTab`), a specific process
 (`preferredRemoteType`), or the bulk-restore and tab-group options. That covers
 session restore and tab duplication, a discarded tab created for an extension,
