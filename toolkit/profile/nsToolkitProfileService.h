@@ -7,7 +7,6 @@
 
 #include "mozilla/Components.h"
 #include "mozilla/LinkedList.h"
-#include "nsIObserver.h"
 #include "nsIToolkitProfileService.h"
 #include "nsIToolkitProfile.h"
 #include "nsIFactory.h"
@@ -82,12 +81,10 @@ class nsToolkitProfileLock final : public nsIProfileLock {
   nsProfileLock mLock;
 };
 
-class nsToolkitProfileService final : public nsIToolkitProfileService,
-                                      public nsIObserver {
+class nsToolkitProfileService final : public nsIToolkitProfileService {
  public:
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSITOOLKITPROFILESERVICE
-  NS_DECL_NSIOBSERVER
 
   nsresult SelectStartupProfile(int* aArgc, char* aArgv[], bool aIsResetting,
                                 nsIFile** aRootDir, nsIFile** aLocalDir,
