@@ -5,7 +5,10 @@
 with Files("**"):
     BUG_COMPONENT = ("Core", "Machine Learning: Frontend")
 
-BROWSER_CHROME_MANIFESTS += ["test/browser/browser.toml"]
+BROWSER_CHROME_MANIFESTS += [
+    "test/browser/browser.toml",
+    "test/browser_perf/perftest.toml",
+]
 MARIONETTE_MANIFESTS += ["test/marionette/manifest.toml"]
 XPCSHELL_TESTS_MANIFESTS += ["test/xpcshell/xpcshell.toml"]
 

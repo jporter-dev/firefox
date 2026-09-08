@@ -113,3 +113,13 @@ Qwen3-0.6B-GGUF:
         revision: 233b3855f89029f46416b3e8fe5970c79b2ad25d
         path-prefix: "onnx-models/unsloth/Qwen3-0.6B-GGUF/main/"
         artifact-name: Qwen3-0.6B-GGUF.tar.zst
+
+mozilla-query-intent:
+    description: Smart Window intent detection model
+    fetch:
+        type: git
+        repo: https://huggingface.co/Mozilla/mobilebert-query-intent-detection
+        revision: f37f03073eb286317abdcf1fc681548327f43281
+        # Lowercase, to match the model id the browser requests.
+        path-prefix: "onnx-models/mozilla/mobilebert-query-intent-detection/main/"
+        artifact-name: mobilebert-query-intent-detection.tar.zst

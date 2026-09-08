@@ -183,6 +183,29 @@ perftest_browser_xhtml_dom.js
 **Measures the size of the DOM**
 
 
+## browser/components/aiwindow/ui/test/browser_perf
+
+Performance tests for Smart Window on Firefox Desktop
+
+browser_smartwindow_perf.js
+===========================
+
+:owner: GenAI Team
+:name: browser_smartwindow_perf.js
+:Default options:
+
+::
+
+ --perfherder
+ --perfherder-metrics name:ttft-overhead,unit:ms,shouldAlert:True
+ --verbose
+ --manifest perftest.toml
+ --manifest-flavor browser-chrome
+ --try-platform linux, mac, win
+
+**User-perceived responsiveness of Smart Window across window states and profile sizes**
+
+
 ## browser/components/translations/tests/browser
 
 Performance tests for Translations models on Firefox Desktop
