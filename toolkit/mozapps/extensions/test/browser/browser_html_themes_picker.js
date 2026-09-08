@@ -24,6 +24,8 @@ const PREF_NOVA_THEMES_PICKER = "browser.aboutaddons.novaThemesPickerEnabled";
 const PREF_ACTIVE_THEME_ID = "extensions.activeThemeID";
 
 const DEFAULT_THEME_ID = "default-theme@mozilla.org";
+const LIGHT_THEME_ID = "firefox-compact-light@mozilla.org";
+const DARK_THEME_ID = "firefox-compact-dark@mozilla.org";
 const NOVA_SUN_ID = "nova-sun@mozilla.org";
 const DEFAULT_THEME_ID_PREFIX = "default-theme";
 const NOVA_SUN_ID_PREFIX = "nova-sun";
@@ -54,10 +56,14 @@ function getThemeButton(card) {
   return card.querySelector(".theme-card-footer moz-button");
 }
 
-async function getThemePreviewSrc(card) {
+async function getThemePreviewImage(card) {
   const themePreview = card.querySelector("theme-preview");
   await themePreview.updateComplete;
-  return card.querySelector(".card-heading-image")?.src;
+  return card.querySelector(".card-heading-image");
+}
+
+async function getThemePreviewSrc(card) {
+  return (await getThemePreviewImage(card))?.src;
 }
 
 async function waitForThemesPickerReady(picker) {
@@ -251,6 +257,44 @@ add_task(async function test_picker_renders_all_known_themes() {
 
   await closeView(win);
   await SpecialPowers.popPrefEnv();
+});
+
+// Verifies that the built-in Light and Dark themes reuse the default theme
+// Nova preview image, forced to the matching color scheme, when Nova is
+// enabled, and keep their own preview images otherwise.
+add_task(async function test_light_dark_themes_preview() {
+  for (const novaEnabled of [true, false]) {
+    await SpecialPowers.pushPrefEnv({
+      set: [
+        [PREF_NOVA_ENABLED, novaEnabled],
+        [PREF_NOVA_THEMES_PICKER, true],
+      ],
+    });
+
+    const win = await loadInitialView("theme");
+
+    for (const [themeId, colorScheme] of [
+      [LIGHT_THEME_ID, "light"],
+      [DARK_THEME_ID, "dark"],
+    ]) {
+      const img = await getThemePreviewImage(getAddonCard(win, themeId));
+      Assert.equal(
+        img.src,
+        novaEnabled
+          ? DEFAULT_THEME_PREVIEW_NOVA_URL
+          : `resource://builtin-themes/${colorScheme}/preview.svg`,
+        `${themeId} uses the expected preview image (nova enabled: ${novaEnabled})`
+      );
+      Assert.equal(
+        img.style.colorScheme,
+        novaEnabled ? colorScheme : "",
+        `${themeId} preview image has the expected forced color scheme (nova enabled: ${novaEnabled})`
+      );
+    }
+
+    await closeView(win);
+    await SpecialPowers.popPrefEnv();
+  }
 });
 
 // Verifies that the Nova themes picker can be expanded and collapsed as

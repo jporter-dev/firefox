@@ -2,9 +2,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { html, nothing } from "chrome://global/content/vendor/lit.all.mjs";
+import {
+  html,
+  nothing,
+  styleMap,
+} from "chrome://global/content/vendor/lit.all.mjs";
 import { MozLitElement } from "chrome://global/content/lit-utils.mjs";
-import { getScreenshotUrlForAddon } from "../aboutaddons-utils.mjs";
+import { getScreenshotForAddon } from "../aboutaddons-utils.mjs";
 import { isNovaThemesPickerEnabled } from "./aboutaddons-themes-picker.mjs";
 
 const lazy = {};
@@ -39,10 +43,15 @@ export class ThemePreview extends MozLitElement {
     let screenshotUrl = this.#themesListManager?.getThemePreviewURL(
       this.addon.id
     );
+    let screenshotColorScheme;
 
     // Use the AMO preview for default-theme and other themes
     // that aren't in the official extra themes set.
-    screenshotUrl ??= getScreenshotUrlForAddon(this.addon);
+    if (!screenshotUrl) {
+      let { url, colorScheme } = getScreenshotForAddon(this.addon);
+      screenshotUrl = url;
+      screenshotColorScheme = colorScheme;
+    }
 
     if (!screenshotUrl) {
       return nothing;
@@ -51,6 +60,7 @@ export class ThemePreview extends MozLitElement {
       class="card-heading-image"
       role="presentation"
       src=${screenshotUrl}
+      style=${styleMap({ colorScheme: screenshotColorScheme })}
     />`;
   }
 

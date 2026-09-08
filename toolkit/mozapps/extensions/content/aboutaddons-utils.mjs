@@ -732,29 +732,55 @@ export function nl2br(text) {
   return frag;
 }
 
+const DEFAULT_THEME_PREVIEW_URL =
+  "chrome://mozapps/content/extensions/default-theme/preview.svg";
+const DEFAULT_THEME_PREVIEW_NOVA_URL =
+  "chrome://mozapps/content/extensions/default-theme/preview-nova.svg";
+
 /**
- * Select the screeenshot to display above an add-on card.
+ * Select the screenshot to display above an add-on card.
  *
  * @param {AddonWrapper|DiscoAddonWrapper} addon
- * @returns {string|null}
- *          The URL of the best fitting screenshot, if any.
+ * @returns {{url?: string, colorScheme?: string}}
+ *          The URL of the best fitting screenshot, if any, along with the
+ *          color scheme it should be rendered with when it shouldn't follow
+ *          the one of the page.
  */
-export function getScreenshotUrlForAddon(addon) {
-  if (addon.id == "default-theme@mozilla.org") {
-    return !lazy.BROWSER_NOVA_ENABLED
-      ? "chrome://mozapps/content/extensions/default-theme/preview.svg"
-      : "chrome://mozapps/content/extensions/default-theme/preview-nova.svg";
+export function getScreenshotForAddon(addon) {
+  switch (addon.id) {
+    case "default-theme@mozilla.org":
+      return {
+        url: lazy.BROWSER_NOVA_ENABLED
+          ? DEFAULT_THEME_PREVIEW_NOVA_URL
+          : DEFAULT_THEME_PREVIEW_URL,
+      };
+    case "firefox-compact-light@mozilla.org":
+    case "firefox-compact-dark@mozilla.org":
+      // TODO: When removing this branch, also remove
+      // browser/themes/addons/{light,dark}/preview.svg, which would become
+      // unused.
+      if (lazy.BROWSER_NOVA_ENABLED) {
+        const colorScheme =
+          addon.id == "firefox-compact-light@mozilla.org" ? "light" : "dark";
+        return {
+          url: DEFAULT_THEME_PREVIEW_NOVA_URL,
+          colorScheme,
+        };
+      }
+      break;
+    default:
+      break;
   }
   const builtInThemePreview = lazy.BuiltInThemes.previewForBuiltInThemeId(
     addon.id
   );
   if (builtInThemePreview) {
-    return builtInThemePreview;
+    return { url: builtInThemePreview };
   }
 
   let { screenshots } = addon;
   if (!screenshots || !screenshots.length) {
-    return null;
+    return {};
   }
 
   // The image size is defined at .card-heading-image in aboutaddons.css, and
@@ -765,7 +791,7 @@ export function getScreenshotUrlForAddon(addon) {
     console.warn(`Did not find screenshot with desired size for ${addon.id}.`);
     screenshot = screenshots[0];
   }
-  return screenshot.url;
+  return { url: screenshot.url };
 }
 
 /**
