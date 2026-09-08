@@ -372,7 +372,6 @@ security.ui.tlserror:
         description: >
           The status of the failed channel, as an nsresult.
         type: quantity
-    telemetry_mirror: SecurityUiTlserror_Load_Abouttlserror
 
 security.ui.neterror:
   load_aboutneterror:
