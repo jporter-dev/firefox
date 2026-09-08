@@ -7220,10 +7220,6 @@ export class Tabbrowser {
     aOurTab.hasTabNote = aOtherTab.hasTabNote;
     aOurTab.canonicalUrl = aOtherTab.canonicalUrl;
 
-    if (otherBrowser.isDistinctProductPageVisit) {
-      ourBrowser.isDistinctProductPageVisit = true;
-    }
-
     let srcBrowserId = otherBrowser.browserId;
 
     // Add a reference to the original registeredOpenURI to the closing
