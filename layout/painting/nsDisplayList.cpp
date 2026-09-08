@@ -8707,6 +8707,14 @@ WebRenderCommandsResult nsDisplayFilters::CreateWebRenderCommands(
     wr::DisplayListBuilder& aBuilder, wr::IpcResourceUpdateQueue& aResources,
     const StackingContextHelper& aSc, RenderRootStateManager* aManager,
     nsDisplayListBuilder* aDisplayListBuilder) {
+  // The SVG spec says not to draw anything for an element without valid
+  // dimensions, filter included. SVGIntegrationUtils::PaintFilter bails out for
+  // the software path; this one has to do the same or a filter that paints
+  // without reading its input, feFlood say, still fills the filter region.
+  if (!ValidateSVGFrame()) {
+    return Ok();
+  }
+
   WrFiltersHolder wrFilters;
   const ComputedStyle& style = mStyle ? *mStyle : *mFrame->Style();
   auto filterChain = style.StyleEffects()->mFilters.AsSpan();
