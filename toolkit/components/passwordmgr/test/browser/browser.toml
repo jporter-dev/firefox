@@ -279,6 +279,8 @@ skip-if = [
   "tsan",
 ]
 
+["browser_primary_password_reauth.js"]
+
 ["browser_private_window.js"]
 support-files = [
   "subtst_privbrowsing_1.html",
