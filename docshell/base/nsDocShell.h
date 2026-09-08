@@ -1096,16 +1096,7 @@ class nsDocShell final : public nsDocLoader,
   void MaybeDisconnectChildListenersOnPageHide();
 
   /**
-   * Do either a history.pushState() or history.replaceState() operation,
-   * depending on the value of aReplace.
-   */
-  MOZ_CAN_RUN_SCRIPT
-  nsresult AddState(JS::Handle<JS::Value> aData, const nsAString& aTitle,
-                    const nsAString& aURL, mozilla::dom::CallerType aCallerType,
-                    bool aReplace, JSContext* aCx);
-
-  /**
-   * Helper for AddState and document.open that does just the
+   * Helper for addState and document.open that does just the
    * history-manipulation guts.
    *
    * Arguments the spec defines:
