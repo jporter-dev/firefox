@@ -207,6 +207,20 @@ async function handleDroppedLink(
  * modules that implement the tab strip. Nothing else may use those.
  */
 export class Tabbrowser {
+  /**
+   * The preferences the tab strip's other modules read.
+   */
+  static prefs = XPCOMUtils.declareLazy({
+    showPidAndActiveness: {
+      pref: "browser.tabs.tooltipsShowPidAndActiveness",
+      default: false,
+    },
+    tabGroupsEnabled: {
+      pref: "browser.tabs.groups.enabled",
+      default: false,
+    },
+  });
+
   static create(window) {
     window.gBrowser = new Tabbrowser(window);
     window.gBrowser.init();
@@ -227,19 +241,6 @@ export class Tabbrowser {
     );
     this.splitViewCommandSet =
       this.document.getElementById("splitViewCommands");
-
-    XPCOMUtils.defineLazyPreferenceGetter(
-      this,
-      "tabGroupsEnabled",
-      "browser.tabs.groups.enabled",
-      false
-    );
-    XPCOMUtils.defineLazyPreferenceGetter(
-      this,
-      "showPidAndActiveness",
-      "browser.tabs.tooltipsShowPidAndActiveness",
-      false
-    );
 
     Services.obs.addObserver(this, "contextual-identity-updated");
     Services.obs.addObserver(this, "intl:app-locales-changed");
@@ -9409,7 +9410,7 @@ export class Tabbrowser {
     if (includeLabel) {
       labelArray.push(tab._fullLabel || tab.getAttribute("label"));
     }
-    if (this.showPidAndActiveness) {
+    if (Tabbrowser.prefs.showPidAndActiveness) {
       const pids = this.getTabPids(tab);
       let debugStringArray = [];
       if (pids.length) {

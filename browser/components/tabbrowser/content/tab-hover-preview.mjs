@@ -13,6 +13,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
     "moz-src:///browser/components/sessionstore/PageWireframes.sys.mjs",
   SponsorProtection:
     "moz-src:///browser/components/newtab/SponsorProtection.sys.mjs",
+  Tabbrowser: "moz-src:///browser/components/tabbrowser/Tabbrowser.sys.mjs",
   TabNotes: "moz-src:///browser/components/tabnotes/TabNotes.sys.mjs",
 });
 
@@ -679,7 +680,7 @@ class TabPanel extends HoverPanel {
 
     this.#updateContainerIndicator();
 
-    if (this.win.gBrowser.showPidAndActiveness) {
+    if (lazy.Tabbrowser.prefs.showPidAndActiveness) {
       this.panelElement.querySelector(".tab-preview-pid").textContent =
         this.#displayPids;
       this.panelElement.querySelector(".tab-preview-activeness").textContent =
