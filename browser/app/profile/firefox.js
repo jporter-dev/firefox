@@ -1462,9 +1462,16 @@ pref("browser.netError.searchCTA.enabled", false);
 // Freshness window for the search CTA's connectivity signal. If the last
 // captive-portal check is older than this, an authoritative re-check runs
 // before the CTA is shown (bug 2055712). connectivityRecheckTimeoutMs bounds
-// that re-check so the CTA can never hang.
+// that re-check so the CTA can never hang, and decisionTimeoutMs bounds it
+// again from the outside, so in practice the outer deadline is what ends a
+// slow re-check.
 pref("browser.netError.searchCTA.connectivityFreshnessMs", 60000);
 pref("browser.netError.searchCTA.connectivityRecheckTimeoutMs", 3000);
+
+// How long the online dnsNotFound page may wait for the search CTA decision
+// (bug 2067882). The page holds its first paint until the decision arrives, so
+// it renders once instead of showing a placeholder. 0 waits indefinitely.
+pref("browser.netError.searchCTA.decisionTimeoutMs", 300);
 
 // Enable captive portal detection.
 pref("network.captive-portal-service.enabled", true);

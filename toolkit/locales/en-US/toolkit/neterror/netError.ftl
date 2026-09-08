@@ -65,9 +65,6 @@ neterror-search-cta-reload-button =
     .label = Reload
     .accesskey = R
 
-# Shown in place of the Search button while the search option is being prepared.
-neterror-search-cta-loading = Loading
-
 # Shown in place of the Search button when the user clicks it but connectivity
 # has dropped since the page loaded, so the search cannot be performed.
 neterror-search-cta-offline = You appear to be offline. Reconnect and try again.

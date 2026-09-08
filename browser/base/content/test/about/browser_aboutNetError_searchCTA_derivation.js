@@ -11,6 +11,7 @@ const CTA_PREF = "browser.netError.searchCTA.enabled";
 
 add_setup(async function () {
   stubSearchCTASupportedEngine();
+  pinSearchCTADecisionDeadline();
   await SearchTestUtils.installSearchExtension(
     {
       name: "MozSearchCTADerivation",

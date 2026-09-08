@@ -38,6 +38,14 @@ function stubSearchCTASupportedEngine() {
   registerCleanupFunction(() => sandbox.restore());
 }
 
+// The search CTA decision has a deadline, which the page waits out before
+// rendering without a CTA (bug 2067882). The deadline has its own tests.
+function pinSearchCTADecisionDeadline() {
+  const pref = "browser.netError.searchCTA.decisionTimeoutMs";
+  Services.prefs.setIntPref(pref, 0);
+  registerCleanupFunction(() => Services.prefs.clearUserPref(pref));
+}
+
 /**
  * Load a synthetic online dnsNotFound error page for an arbitrary failed URL,
  * including path, query string and fragment. loadNetErrorPage() only accepts a

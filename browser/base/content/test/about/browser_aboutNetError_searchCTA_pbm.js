@@ -17,6 +17,7 @@ const EXPECTED_QUERY = "doesnotexist-searchctapbm.com";
 
 add_setup(async function () {
   stubSearchCTASupportedEngine();
+  pinSearchCTADecisionDeadline();
   // Enable a separate private default so getDefaultPrivate() returns the
   // dedicated engine below; the .ui.enabled pref must be set before installing
   // it, or setDefaultPrivate() would fall back to the normal default.

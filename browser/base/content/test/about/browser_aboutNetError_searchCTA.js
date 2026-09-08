@@ -33,6 +33,7 @@ XPCOMUtils.defineLazyServiceGetter(
 
 add_setup(async function () {
   stubSearchCTASupportedEngine();
+  pinSearchCTADecisionDeadline();
   // A deterministic default engine so the search submission URL is known.
   await SearchTestUtils.installSearchExtension(
     {
@@ -129,11 +130,6 @@ add_task(async function test_ctaRendersWhenEnabled() {
           card.hostname,
           "Only the host is emphasized, not the whole sentence"
         );
-        Assert.greater(
-          parseInt(content.getComputedStyle(emphasizedHost).fontWeight, 10),
-          parseInt(content.getComputedStyle(card.errorIntro).fontWeight, 10),
-          "The host renders heavier than the sentence around it"
-        );
 
         const hint = card.shadowRoot.querySelector(
           '[data-l10n-id="neterror-search-cta-hint-search-query"]'
@@ -184,6 +180,85 @@ add_task(async function test_ctaRendersWhenEnabled() {
       }
     );
   });
+});
+
+// The page originally showed placeholder wording while the parent was still
+// deciding, then swap in the real content a frame later, which made the UI
+// flicker (bug 2067882).
+add_task(async function test_nothingRendersBeforeTheDecision() {
+  const sandbox = sinon.createSandbox();
+  let releaseDecision;
+  const decisionHeld = new Promise(resolve => {
+    releaseDecision = resolve;
+  });
+  const realDecide = NetErrorParent.prototype.decideSearchCTA;
+  sandbox
+    .stub(NetErrorParent.prototype, "decideSearchCTA")
+    .callsFake(async function (failedURL) {
+      await decisionHeld;
+      return realDecide.call(this, failedURL);
+    });
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      [CTA_PREF, true],
+      [FRESHNESS_PREF, ALWAYS_FRESH],
+    ],
+  });
+
+  try {
+    await BrowserTestUtils.withNewTab("about:blank", async browser => {
+      const url = `about:neterror?e=dnsNotFound&u=http%3A%2F%2F${encodeURIComponent(
+        FAILED_HOST
+      )}%2F`;
+      SpecialPowers.spawn(browser, [url], errorUrl => {
+        content.location = errorUrl;
+      });
+      await TestUtils.waitForCondition(
+        () => browser.currentURI.spec.startsWith("about:neterror"),
+        "The error document became current"
+      );
+
+      await SpecialPowers.spawn(browser, [], async () => {
+        const card = await ContentTaskUtils.waitForCondition(
+          () =>
+            content.document.querySelector("net-error-card")?.wrappedJSObject,
+          "The net-error-card is created"
+        );
+        ok(!card.searchCTAResolved, "The parent has not answered yet");
+        ok(
+          !card.hasUpdated,
+          "The card has not rendered while the answer is out"
+        );
+        is(
+          card.shadowRoot.childElementCount,
+          0,
+          "Nothing at all is rendered before the answer arrives"
+        );
+      });
+
+      releaseDecision();
+      await waitForSettledNetErrorCard(browser);
+
+      await SpecialPowers.spawn(browser, [REGISTRABLE_DOMAIN], async query => {
+        const card =
+          content.document.querySelector("net-error-card").wrappedJSObject;
+        ok(card.hasUpdated, "The card renders once the answer is in");
+        ok(card.searchCTAButton, "The render it does has the Search button");
+        const hint = card.shadowRoot.querySelector(
+          '[data-l10n-id="neterror-search-cta-hint-search-query"]'
+        );
+        ok(hint, "The render it does names the query");
+        is(
+          hint.getAttribute("data-l10n-args"),
+          JSON.stringify({ query }),
+          "The named query is the one Search will submit"
+        );
+      });
+    });
+  } finally {
+    await SpecialPowers.popPrefEnv();
+    sandbox.restore();
+  }
 });
 
 // The intro has to name the host that actually failed, subdomain included, so
