@@ -2587,15 +2587,6 @@ void BrowsingContext::Navigate(
     dom::NavigationAPIMethodTracker* aNavigationAPIMethodTracker) {
   MOZ_LOG_FMT(gNavigationAPILog, LogLevel::Debug, "Navigate to {} as {}", *aURI,
               aHistoryHandling);
-  CallerType callerType = aSubjectPrincipal.IsSystemPrincipal()
-                              ? CallerType::System
-                              : CallerType::NonSystem;
-
-  nsresult rv = CheckNavigationRateLimit(callerType);
-  if (NS_FAILED(rv)) {
-    aRv.Throw(rv);
-    return;
-  }
 
   RefPtr<nsDocShellLoadState> loadState =
       CheckURLAndCreateLoadState(aURI, aSubjectPrincipal, aSourceDocument, aRv);
@@ -2647,7 +2638,7 @@ void BrowsingContext::Navigate(
   loadState->SetNavigationAPIState(aNavigationAPIState);
   loadState->SetNavigationAPIMethodTracker(aNavigationAPIMethodTracker);
 
-  rv = LoadURI(loadState);
+  nsresult rv = LoadURI(loadState);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     if (rv == NS_ERROR_DOM_BAD_CROSS_ORIGIN_URI &&
         loadState->URI()->SchemeIs("javascript")) {
@@ -4608,10 +4599,10 @@ bool BrowsingContext::ShouldUpdateSessionHistory(uint32_t aLoadType) {
           (IsForceReloadType(aLoadType) && IsSubframe()));
 }
 
-nsresult BrowsingContext::CheckNavigationRateLimit(CallerType aCallerType) {
+bool BrowsingContext::CheckNavigationRateLimit(CallerType aCallerType) {
   // We only rate limit non system callers
   if (aCallerType == CallerType::System) {
-    return NS_OK;
+    return true;
   }
 
   // Fetch rate limiting preferences
@@ -4621,7 +4612,7 @@ nsresult BrowsingContext::CheckNavigationRateLimit(CallerType aCallerType) {
 
   // Disable throttling if either of the preferences is set to 0.
   if (limitCount == 0 || timeSpanSeconds == 0) {
-    return NS_OK;
+    return true;
   }
 
   TimeDuration throttleSpan = TimeDuration::FromSeconds(timeSpanSeconds);
@@ -4631,24 +4622,24 @@ nsresult BrowsingContext::CheckNavigationRateLimit(CallerType aCallerType) {
     // Initial call or timespan exceeded, reset counter and timespan.
     mNavigationRateLimitSpanStart = TimeStamp::Now();
     mNavigationRateLimitCount = 1;
-    return NS_OK;
+    return true;
   }
 
-  if (mNavigationRateLimitCount >= limitCount) {
+  if (NS_WARN_IF(mNavigationRateLimitCount >= limitCount)) {
     // Rate limit reached
-
     Document* doc = GetDocument();
     if (doc) {
       nsContentUtils::ReportToConsole(nsIScriptError::errorFlag, "DOM"_ns, doc,
                                       PropertiesFile::DOM_PROPERTIES,
-                                      "LocChangeFloodingPrevented");
+                                      "NavigationChangeFloodingPrevented");
     }
 
-    return NS_ERROR_DOM_SECURITY_ERR;
+    return false;
   }
 
   mNavigationRateLimitCount++;
-  return NS_OK;
+
+  return true;
 }
 
 void BrowsingContext::ResetNavigationRateLimit() {
