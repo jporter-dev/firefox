@@ -1865,11 +1865,6 @@ void MacroAssembler::callWithABIPre(uint32_t* stackAdjust, bool callFromWasm) {
 }
 
 void MacroAssembler::callWithABIPost(uint32_t stackAdjust, ABIType result) {
-  // Call boundaries communicate stack via SP, so we must resync PSP now.
-  initPseudoStackPtr();
-
-  freeStack(stackAdjust);
-
   if (dynamicAlignment_) {
     // This then-clause makes more sense if you first read
     // setupUnalignedABICall above.
@@ -1882,7 +1877,12 @@ void MacroAssembler::callWithABIPost(uint32_t stackAdjust, ABIType result) {
     // enforce this, we could add a debug-only CallWithABIState enum to the
     // MacroAssembler and assert that setupUnalignedABICall updates it before
     // we get here, then reset it to its initial state.
-    Ldr(GetStackPointer64(), MemOperand(GetStackPointer64(), 0));
+    //
+    // SP is authoritative at the call boundary, so load the saved stack
+    // pointer through SP directly instead of resyncing PSP and popping the
+    // outgoing arguments just to form the same address.
+    Ldr(GetStackPointer64(), MemOperand(sp, stackAdjust));
+    implicitPop(stackAdjust);
     syncStackPtr();
 
     // Restore LR.  This restores LR to the value stored by
@@ -1895,6 +1895,11 @@ void MacroAssembler::callWithABIPost(uint32_t stackAdjust, ABIType result) {
     // without it, the following test segfaults:
     // tests/backup-point-bug1315634.js
     syncStackPtr();
+  } else {
+    // Call boundaries communicate stack via SP, so we must resync PSP now.
+    initPseudoStackPtr();
+
+    freeStack(stackAdjust);
   }
 
   // If the ABI's return regs are where ION is expecting them, then
