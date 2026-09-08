@@ -238,7 +238,7 @@ def filterpaths(
     )
 
 
-def findobject(path, definition):
+def findobject(path, definition, linter_paths=None):
     """
     Find a Python object given a path of the form <modulepath>:<objectpath>.
     Conceptually equivalent to
@@ -250,31 +250,44 @@ def findobject(path, definition):
     except that <modulepath> is loaded from the file it names next to the
     linter definition, so a module of the same name elsewhere on `sys.path`
     or already in `sys.modules` is never picked up.
+
+    :param path: The <modulepath>:<objectpath> to resolve.
+    :param definition: Path to the linter definition naming the object. Its
+                       directory is searched first.
+    :param linter_paths: Additional directories to search, for definitions
+                         that live apart from the modules they name.
     """
     if path.count(":") != 1:
         raise ValueError(f'python path {path!r} does not have the form "module:object"')
 
     modulepath, objectpath = path.split(":")
-    obj = _load_module(modulepath, os.path.dirname(definition))
+    roots = [os.path.dirname(definition)]
+    roots.extend(r for r in (linter_paths or []) if r not in roots)
+    obj = _load_module(modulepath, roots)
     for a in objectpath.split("."):
         obj = getattr(obj, a)
     return obj
 
 
-def _load_module(modulepath, root):
+def _find_module_file(modulepath, roots):
+    for root in roots:
+        base = os.path.join(root, *modulepath.split("."))
+        if os.path.isfile(f"{base}.py"):
+            return f"{base}.py", None
+        if os.path.isfile(os.path.join(base, "__init__.py")):
+            return os.path.join(base, "__init__.py"), [base]
+
+    raise ModuleNotFoundError(
+        f"No module named {modulepath!r} under {', '.join(roots)}"
+    )
+
+
+def _load_module(modulepath, roots):
     name = f"mozlint.linters.{modulepath}"
     if name in sys.modules:
         return sys.modules[name]
 
-    base = os.path.join(root, *modulepath.split("."))
-    location = f"{base}.py"
-    search_locations = None
-    if not os.path.isfile(location):
-        location = os.path.join(base, "__init__.py")
-        search_locations = [base]
-    if not os.path.isfile(location):
-        raise ModuleNotFoundError(f"No module named {modulepath!r} under {root}")
-
+    location, search_locations = _find_module_file(modulepath, roots)
     spec = importlib.util.spec_from_file_location(
         name, location, submodule_search_locations=search_locations
     )

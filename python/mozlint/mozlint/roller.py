@@ -251,7 +251,11 @@ class LintRoller:
                     setupargs["virtualenv_manager"] = virtualenv_manager
                 start_time = time.monotonic()
                 res = (
-                    findobject(linter["setup"], linter["path"])(
+                    findobject(
+                        linter["setup"],
+                        linter["path"],
+                        self.lintargs.get("linter_paths"),
+                    )(
                         **setupargs,
                     )
                     or 0

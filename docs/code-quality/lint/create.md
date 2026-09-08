@@ -177,6 +177,11 @@ a function to call). The payload's own imports still go through `sys.path`, so
 consumers of `mozlint` must keep the linter directory on it. Structured log
 linters use the same mechanism.
 
+A consumer whose definitions live apart from the modules they name (such as
+comm-central, whose definitions in `comm/tools/lint` wrap payloads from
+`tools/lint`) can pass those extra directories as the `linter_paths` lintarg.
+They are searched after the definition's own directory.
+
 The `support-files` key is used to list configuration files or files related
 to the running of the linter itself. If using `--outgoing` or `--workdir`
 and one of these files was modified, the entire tree will be linted instead of
