@@ -65,8 +65,6 @@ skip-if = [
   "os == 'mac' && os_version == '10.15' && arch == 'x86_64' && opt", # perma-fail see Bug 1655601
 ]
 
-["browser_creditCard_doorhanger_options_link.js"]
-
 ["browser_creditCard_doorhanger_sync.js"]
 skip-if = [
   "os == 'mac' && os_version == '10.15' && arch == 'x86_64' && opt", # perma-fail see Bug 1655601
