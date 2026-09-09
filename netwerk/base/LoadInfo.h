@@ -205,9 +205,6 @@ nsresult LoadInfoArgsToLoadInfo(const mozilla::net::LoadInfoArgs& aLoadInfoArgs,
   GETTER(bool, IsMediaRequest, isMediaRequest, false)                          \
   SETTER(bool, IsMediaRequest)                                                 \
                                                                                \
-  GETTER(bool, IsFromObjectOrEmbed, isFromObjectOrEmbed, false)                \
-  SETTER(bool, IsFromObjectOrEmbed)                                            \
-                                                                               \
   GETTER(nsILoadInfo::CrossOriginEmbedderPolicy, LoadingEmbedderPolicy,        \
          loadingEmbedderPolicy, nsILoadInfo::EMBEDDER_POLICY_NULL)             \
   SETTER(nsILoadInfo::CrossOriginEmbedderPolicy, LoadingEmbedderPolicy)        \

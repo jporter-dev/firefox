@@ -3414,12 +3414,6 @@ bool HttpBaseChannel::ShouldBlockOpaqueResponse() const {
     return false;
   }
 
-  // Ignore the request from object or embed elements
-  if (mLoadInfo->GetIsFromObjectOrEmbed()) {
-    LOGORB("No block: Request From <object> or <embed>");
-    return false;
-  }
-
   // Exclude no_cors System XHR
   if (extContentPolicyType == ExtContentPolicy::TYPE_XMLHTTPREQUEST) {
     if (securityMode ==
