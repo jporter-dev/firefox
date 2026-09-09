@@ -30,6 +30,7 @@
 #include "ScopedGLHelpers.h"
 #include "gfxUtils.h"
 #include "mozilla/StaticPrefs_widget.h"
+#include "mozilla/ToString.h"
 #include "mozilla/gfx/DataSurfaceHelpers.h"
 #include "mozilla/gfx/Logging.h"
 #include "mozilla/gfx/gfxVars.h"
@@ -1135,7 +1136,7 @@ void NativeLayerWayland::SetColorProperties(
   // Setting colorspace and Transfer function
   if (!mSurface->SetPrimaries(params, surfaceColorSpace)) {
     LOG("No primaries for color space %s. Quit",
-        YUVColorSpaceToString(surfaceColorSpace));
+        mozilla::ToString(surfaceColorSpace).c_str());
 
     wp_image_description_creator_params_v1_destroy(params);
     return;
@@ -1143,7 +1144,7 @@ void NativeLayerWayland::SetColorProperties(
 
   if (!mSurface->SetTransferFunction(params, surfaceTransferFunction)) {
     LOG("Transfer function %s isn't supported. Quit",
-        TransferFunctionToString(surfaceTransferFunction));
+        mozilla::ToString(surfaceTransferFunction).c_str());
 
     wp_image_description_creator_params_v1_destroy(params);
     return;
