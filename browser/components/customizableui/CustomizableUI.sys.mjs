@@ -5611,6 +5611,7 @@ export var CustomizableUI = {
   /**
    * An iteratable property of windows managed by CustomizableUI.
    * Note that this can *only* be used as an iterator. ie:
+   *
    *     for (let window of CustomizableUI.windows) { ... }
    */
   windows: {
@@ -7488,11 +7489,11 @@ function XULWidgetSingleWrapper(aWidgetId, aNode, aDocument) {
  * There are two panels that toolbar items can be overflowed to:
  *
  * 1. The default items overflow panel
- *   This is where built-in default toolbar items will go to.
+ *    This is where built-in default toolbar items will go to.
  * 2. The Unified Extensions panel
- *   This is where browser_action toolbar buttons created by extensions will
- *   go to if the Unified Extensions UI is enabled - otherwise, those items will
- *   go to the default items overflow panel.
+ *    This is where browser_action toolbar buttons created by extensions will
+ *    go to if the Unified Extensions UI is enabled - otherwise, those items will
+ *    go to the default items overflow panel.
  *
  * Finally, OverflowableToolbar manages the showing of the default items
  * overflow panel when the associated anchor is clicked or dragged over. The

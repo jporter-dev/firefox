@@ -1949,8 +1949,8 @@ export class UrlbarProvider {
    * overridden.
    *
    * @param {string} methodName The name of the method to call.
-   * @param {*} args The method arguments.
-   * @returns {*} The return value of the method, or undefined if the method
+   * @param {any} args The method arguments.
+   * @returns {any} The return value of the method, or undefined if the method
    *          throws an error.
    * @abstract
    */
