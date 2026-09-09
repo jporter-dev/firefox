@@ -8725,15 +8725,6 @@ nsresult nsDocShell::InternalLoad(nsDocShellLoadState* aLoadState,
     }
   }
 
-  CallerType callerType = aLoadState->TriggeringPrincipal()->IsSystemPrincipal()
-                              ? CallerType::System
-                              : CallerType::NonSystem;
-
-  if (!aLoadState->LoadIsFromSessionHistory() &&
-      !mBrowsingContext->CheckNavigationRateLimit(callerType)) {
-    return NS_OK;
-  }
-
   // See if this is actually a load between two history entries for the same
   // document. If the process fails, or if we successfully navigate within the
   // same document, return.
@@ -10906,10 +10897,9 @@ bool nsDocShell::CollectWireframe() {
 // nsDocShell: Session History
 //*****************************************************************************
 
-nsresult nsDocShell::AddState(JS::Handle<JS::Value> aData,
-                              const nsAString& aTitle, const nsAString& aURL,
-                              CallerType aCallerType, bool aReplace,
-                              JSContext* aCx) {
+NS_IMETHODIMP
+nsDocShell::AddState(JS::Handle<JS::Value> aData, const nsAString& aTitle,
+                     const nsAString& aURL, bool aReplace, JSContext* aCx) {
   MOZ_LOG(gSHLog, LogLevel::Debug,
           ("nsDocShell[%p]: AddState(..., %s, %s, %d)", this,
            NS_ConvertUTF16toUTF8(aTitle).get(),
@@ -11071,10 +11061,6 @@ nsresult nsDocShell::AddState(JS::Handle<JS::Value> aData,
     }
 
   }  // end of same-origin check
-
-  if (!mBrowsingContext->CheckNavigationRateLimit(aCallerType)) {
-    return NS_OK;
-  }
 
   // https://html.spec.whatwg.org/#shared-history-push/replace-state-steps
   // Step 8

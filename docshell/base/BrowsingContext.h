@@ -1054,13 +1054,13 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
 
   bool ShouldUpdateSessionHistory(uint32_t aLoadType);
 
-  // Checks if we reached the rate limit for navigations, which includes calls
-  // to the Location and History APIs.
-  // The rate limit is controlled by the "dom.navigation.navigationRateLimit"
-  // prefs. Rate limit applies per BrowsingContext. Returns true if we are below
-  // the rate limit and increments the counter. Returns false if the limit is
-  // reached
-  bool CheckNavigationRateLimit(CallerType aCallerType);
+  // Checks if we reached the rate limit for calls to Location and History API.
+  // The rate limit is controlled by the
+  // "dom.navigation.navigationRateLimit" prefs.
+  // Rate limit applies per BrowsingContext.
+  // Returns NS_OK if we are below the rate limit and increments the counter.
+  // Returns NS_ERROR_DOM_SECURITY_ERR if limit is reached.
+  nsresult CheckNavigationRateLimit(CallerType aCallerType);
 
   void ResetNavigationRateLimit();
 
