@@ -20,7 +20,7 @@
 #include "mozilla/gfx/SourceSurfaceD3D11.h"
 #include "mozilla/gfx/gfxVars.h"
 #include "mozilla/ipc/FileDescriptor.h"
-#include "mozilla/layers/CompositeProcessD3D11FencesHolderMap.h"
+#include "mozilla/layers/CompositeProcessFencesHolderMap.h"
 #include "mozilla/layers/CompositorBridgeChild.h"
 #include "mozilla/layers/D3D11ZeroCopyTextureImage.h"
 #include "mozilla/layers/FenceD3D11.h"
@@ -324,12 +324,11 @@ D3D11TextureData::~D3D11TextureData() {
   }
   if (mFencesHolderId.isSome()) {
     MOZ_ASSERT(mFencesHolderId->IsValid());
-    auto* fencesHolderMap = CompositeProcessD3D11FencesHolderMap::Get();
+    auto* fencesHolderMap = CompositeProcessFencesHolderMap::Get();
     if (fencesHolderMap) {
       fencesHolderMap->Unregister(mFencesHolderId.ref());
     } else {
-      gfxCriticalNoteOnce
-          << "CompositeProcessD3D11FencesHolderMap does not exist";
+      gfxCriticalNoteOnce << "CompositeProcessFencesHolderMap does not exist";
     }
   }
 }
@@ -337,8 +336,10 @@ D3D11TextureData::~D3D11TextureData() {
 bool D3D11TextureData::Lock(OpenMode aMode) {
   if (mFencesHolderId.isSome()) {
     MOZ_ASSERT(mFencesHolderId->IsValid());
-    auto* fencesHolderMap = CompositeProcessD3D11FencesHolderMap::Get();
-    fencesHolderMap->WaitAllFencesAndForget(mFencesHolderId.ref(), mDevice);
+    auto* fencesHolderMap = CompositeProcessFencesHolderMap::Get();
+    auto fences =
+        fencesHolderMap->TakeAllFencesAndForget(mFencesHolderId.ref());
+    FenceD3D11::WaitD3D11Fences(fences, mDevice);
   }
 
   if (mHasKeyedMutex && !LockD3DTexture(mTexture.get())) {
@@ -352,7 +353,7 @@ void D3D11TextureData::Unlock() {
   IncrementAndSignalWriteFence();
   if (mFencesHolderId.isSome()) {
     MOZ_ASSERT(mFencesHolderId->IsValid());
-    auto* fencesHolderMap = CompositeProcessD3D11FencesHolderMap::Get();
+    auto* fencesHolderMap = CompositeProcessFencesHolderMap::Get();
     fencesHolderMap->SetWriteFence(mFencesHolderId.ref(), mWriteFence);
   }
   if (mHasKeyedMutex) {
@@ -411,7 +412,7 @@ already_AddRefed<TextureClient> D3D11TextureData::CreateTextureClient(
 
   Maybe<CompositeProcessFencesHolderId> fencesHolderId;
   if (aWriteFence) {
-    auto* fencesHolderMap = layers::CompositeProcessD3D11FencesHolderMap::Get();
+    auto* fencesHolderMap = layers::CompositeProcessFencesHolderMap::Get();
     fencesHolderId = Some(CompositeProcessFencesHolderId::GetNext());
     fencesHolderMap->Register(fencesHolderId.ref());
   }
@@ -532,7 +533,7 @@ D3D11TextureData* D3D11TextureData::Create(IntSize aSize, SurfaceFormat aFormat,
     // On the main thread we use the syncobject to handle synchronization.
     if (!(aFlags & ALLOC_MANUAL_SYNCHRONIZATION)) {
       if (!(aFlags & USE_D3D11_KEYED_MUTEX)) {
-        auto* fencesHolderMap = CompositeProcessD3D11FencesHolderMap::Get();
+        auto* fencesHolderMap = CompositeProcessFencesHolderMap::Get();
         useFence = fencesHolderMap && FenceD3D11::IsSupported(device);
       }
       if (!useFence) {
@@ -645,7 +646,7 @@ D3D11TextureData* D3D11TextureData::Create(IntSize aSize, SurfaceFormat aFormat,
       MakeRefPtr<gfx::FileHandleWrapper>(UniqueFileHandle(sharedHandle));
 
   if (useFence) {
-    auto* fencesHolderMap = CompositeProcessD3D11FencesHolderMap::Get();
+    auto* fencesHolderMap = CompositeProcessFencesHolderMap::Get();
     fencesHolderMap->Register(fencesHolderId.ref());
   }
 
@@ -694,7 +695,7 @@ void D3D11TextureData::IncrementAndSignalWriteFence() {
 
   MOZ_ASSERT(mFencesHolderId->IsValid());
 
-  auto* fencesHolderMap = CompositeProcessD3D11FencesHolderMap::Get();
+  auto* fencesHolderMap = CompositeProcessFencesHolderMap::Get();
   if (!fencesHolderMap) {
     MOZ_ASSERT_UNREACHABLE("unexpected to be called");
     return;
@@ -762,7 +763,7 @@ DXGIYCbCrTextureData* DXGIYCbCrTextureData::Create(
   const RefPtr sharedHandleCr =
       MakeRefPtr<gfx::FileHandleWrapper>(UniqueFileHandle(handleCr));
 
-  auto* fenceHolderMap = CompositeProcessD3D11FencesHolderMap::Get();
+  auto* fenceHolderMap = CompositeProcessFencesHolderMap::Get();
   if (!fenceHolderMap) {
     MOZ_ASSERT_UNREACHABLE("unexpected to be called");
     return nullptr;
@@ -814,7 +815,7 @@ DXGIYCbCrTextureData::DXGIYCbCrTextureData(
       mHandles{aHandles[0], aHandles[1], aHandles[2]} {}
 
 DXGIYCbCrTextureData::~DXGIYCbCrTextureData() {
-  auto* fenceHolderMap = CompositeProcessD3D11FencesHolderMap::Get();
+  auto* fenceHolderMap = CompositeProcessFencesHolderMap::Get();
   if (!fenceHolderMap) {
     MOZ_ASSERT_UNREACHABLE("unexpected to be called");
     return;
@@ -955,7 +956,7 @@ DXGITextureHostD3D11::DXGITextureHostD3D11(
     return;
   }
   MOZ_ASSERT(mDescriptor.fencesHolderId()->IsValid());
-  if (auto* fenceHolderMap = CompositeProcessD3D11FencesHolderMap::Get()) {
+  if (auto* fenceHolderMap = CompositeProcessFencesHolderMap::Get()) {
     fenceHolderMap->RegisterReference(mDescriptor.fencesHolderId().ref());
   } else {
     MOZ_ASSERT_UNREACHABLE("FencesHolderMap not available");
@@ -966,7 +967,7 @@ DXGITextureHostD3D11::~DXGITextureHostD3D11() {
   if (!mDescriptor.fencesHolderId()) {
     return;
   }
-  if (auto* fenceHolderMap = CompositeProcessD3D11FencesHolderMap::Get()) {
+  if (auto* fenceHolderMap = CompositeProcessFencesHolderMap::Get()) {
     fenceHolderMap->Unregister(mDescriptor.fencesHolderId().ref());
   } else {
     MOZ_ASSERT_UNREACHABLE("FencesHolderMap not available");
@@ -1357,7 +1358,7 @@ void DXGITextureHostD3D11::NotifyNotUsed() {
     return;
   }
 
-  auto* fenceHolderMap = CompositeProcessD3D11FencesHolderMap::Get();
+  auto* fenceHolderMap = CompositeProcessFencesHolderMap::Get();
   if (!fenceHolderMap) {
     MOZ_ASSERT_UNREACHABLE("unexpected to be called");
     return;
@@ -1389,7 +1390,7 @@ DXGIYCbCrTextureHostD3D11::DXGIYCbCrTextureHostD3D11(
       mHandles{aDescriptor.handleY(), aDescriptor.handleCb(),
                aDescriptor.handleCr()},
       mSize(aDescriptor.size()) {
-  if (auto* fenceHolderMap = CompositeProcessD3D11FencesHolderMap::Get()) {
+  if (auto* fenceHolderMap = CompositeProcessFencesHolderMap::Get()) {
     fenceHolderMap->RegisterReference(mDescriptor.fencesHolderId());
   } else {
     MOZ_ASSERT_UNREACHABLE("FencesHolderMap not available");
@@ -1397,7 +1398,7 @@ DXGIYCbCrTextureHostD3D11::DXGIYCbCrTextureHostD3D11(
 }
 
 DXGIYCbCrTextureHostD3D11::~DXGIYCbCrTextureHostD3D11() {
-  if (auto* fenceHolderMap = CompositeProcessD3D11FencesHolderMap::Get()) {
+  if (auto* fenceHolderMap = CompositeProcessFencesHolderMap::Get()) {
     fenceHolderMap->Unregister(mDescriptor.fencesHolderId());
   } else {
     MOZ_ASSERT_UNREACHABLE("FencesHolderMap not available");
@@ -1508,7 +1509,7 @@ void DXGIYCbCrTextureHostD3D11::NotifyNotUsed() {
     return;
   }
 
-  auto* fenceHolderMap = CompositeProcessD3D11FencesHolderMap::Get();
+  auto* fenceHolderMap = CompositeProcessFencesHolderMap::Get();
   if (!fenceHolderMap) {
     MOZ_ASSERT_UNREACHABLE("unexpected to be called");
     return;

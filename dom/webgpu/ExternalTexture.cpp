@@ -13,6 +13,7 @@
 #include "mozilla/dom/WebGPUBinding.h"
 #include "mozilla/gfx/Logging.h"
 #include "mozilla/gfx/Types.h"
+#include "mozilla/layers/CompositeProcessFencesHolderMap.h"
 #include "mozilla/layers/ImageDataSerializer.h"
 #include "mozilla/layers/LayersSurfaces.h"
 #include "mozilla/layers/TextureHost.h"
@@ -24,7 +25,7 @@
 #include "nsLayoutUtils.h"
 
 #ifdef XP_WIN
-#  include "mozilla/layers/CompositeProcessD3D11FencesHolderMap.h"
+#  include "mozilla/layers/FenceD3D11.h"
 #  include "mozilla/layers/GpuProcessD3D11TextureMap.h"
 #  include "mozilla/layers/TextureD3D11.h"
 #endif
@@ -1209,14 +1210,18 @@ bool ExternalTextureSourceHost::OnBeforeQueueSubmit(WebGPUParent* aParent,
   // Wait on the write fence provided by the decoder, if any, to ensure we don't
   // read from the texture before writes have completed.
   if (mFenceId) {
-    const auto* fencesMap = layers::CompositeProcessD3D11FencesHolderMap::Get();
+    auto* fencesMap = layers::CompositeProcessFencesHolderMap::Get();
     if (!fencesMap) {
       gfxCriticalErrorOnce()
-          << "CompositeProcessD3D11FencesHolderMap is not initialized";
+          << "CompositeProcessFencesHolderMap is not initialized";
       return false;
     }
-    auto [fenceHandle, fenceValue] =
-        fencesMap->GetWriteFenceHandleAndValue(*mFenceId);
+
+    auto fence = fencesMap->GetWriteFence(*mFenceId);
+    auto* fenceD3D11 = fence ? fence->AsFenceD3D11() : nullptr;
+
+    auto fenceHandle = fenceD3D11 ? fenceD3D11->mHandle : nullptr;
+    auto fenceValue = fenceD3D11 ? fenceD3D11->GetFenceValue() : 0;
     if (fenceHandle) {
       const bool success =
           ffi::wgpu_server_device_wait_fence_from_shared_handle(

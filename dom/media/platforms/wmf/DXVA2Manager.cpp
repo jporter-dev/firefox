@@ -26,7 +26,7 @@
 #include "mozilla/StaticPrefs_media.h"
 #include "mozilla/gfx/DeviceManagerDx.h"
 #include "mozilla/glean/DomMediaPlatformsWmfMetrics.h"
-#include "mozilla/layers/CompositeProcessD3D11FencesHolderMap.h"
+#include "mozilla/layers/CompositeProcessFencesHolderMap.h"
 #include "mozilla/layers/D3D11ShareHandleImage.h"
 #include "mozilla/layers/D3D11ZeroCopyTextureImage.h"
 #include "mozilla/layers/FenceD3D11.h"
@@ -689,7 +689,7 @@ D3D11DXVA2Manager::InitInternal(layers::KnowsCompositor* aKnowsCompositor,
     }
   }
 
-  auto* fencesHolderMap = layers::CompositeProcessD3D11FencesHolderMap::Get();
+  auto* fencesHolderMap = layers::CompositeProcessFencesHolderMap::Get();
   const bool useFence =
       fencesHolderMap && layers::FenceD3D11::IsSupported(mDevice);
   if (useFence) {
@@ -1366,7 +1366,7 @@ HRESULT D3D11DXVA2Manager::CopyTextureToImage(
   }
 
   auto* textureData = client->GetInternalData()->AsD3D11TextureData();
-  auto* fencesHolderMap = CompositeProcessD3D11FencesHolderMap::Get();
+  auto* fencesHolderMap = CompositeProcessFencesHolderMap::Get();
   MOZ_ASSERT(textureData);
   const bool useFence =
       textureData && textureData->mFencesHolderId.isSome() && fencesHolderMap;

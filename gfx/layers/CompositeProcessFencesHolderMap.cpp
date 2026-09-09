@@ -2,32 +2,36 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "CompositeProcessD3D11FencesHolderMap.h"
+#include "CompositeProcessFencesHolderMap.h"
 
-#include "mozilla/layers/FenceD3D11.h"
+#include "mozilla/layers/Fence.h"
 #include "nsXULAppAPI.h"
+
+#if defined(XP_WIN)
+#  include "mozilla/layers/FenceD3D11.h"
+#endif
 
 namespace mozilla {
 
 namespace layers {
 
-StaticAutoPtr<CompositeProcessD3D11FencesHolderMap>
-    CompositeProcessD3D11FencesHolderMap::sInstance;
+StaticAutoPtr<CompositeProcessFencesHolderMap>
+    CompositeProcessFencesHolderMap::sInstance;
 
 /* static */
-void CompositeProcessD3D11FencesHolderMap::Init() {
+void CompositeProcessFencesHolderMap::Init() {
   MOZ_ASSERT(XRE_IsGPUProcess() || XRE_IsParentProcess());
-  sInstance = new CompositeProcessD3D11FencesHolderMap();
+  sInstance = new CompositeProcessFencesHolderMap();
 }
 
 /* static */
-void CompositeProcessD3D11FencesHolderMap::Shutdown() {
+void CompositeProcessFencesHolderMap::Shutdown() {
   MOZ_ASSERT(XRE_IsGPUProcess() || XRE_IsParentProcess());
   sInstance = nullptr;
 }
 
-void CompositeProcessD3D11FencesHolderMap::Register(
-    CompositeProcessFencesHolderId aHolderId) {
+void CompositeProcessFencesHolderMap::Register(
+    const CompositeProcessFencesHolderId aHolderId) {
   MOZ_ASSERT(aHolderId.IsValid());
 
   MonitorAutoLock lock(mMonitor);
@@ -37,8 +41,8 @@ void CompositeProcessD3D11FencesHolderMap::Register(
   MOZ_ASSERT(inserted, "Map already contained FencesHolder for id!");
 }
 
-void CompositeProcessD3D11FencesHolderMap::RegisterReference(
-    CompositeProcessFencesHolderId aHolderId) {
+void CompositeProcessFencesHolderMap::RegisterReference(
+    const CompositeProcessFencesHolderId aHolderId) {
   if (!aHolderId.IsValid()) {
     return;
   }
@@ -55,8 +59,8 @@ void CompositeProcessD3D11FencesHolderMap::RegisterReference(
   ++it->second->mOwners;
 }
 
-void CompositeProcessD3D11FencesHolderMap::Unregister(
-    CompositeProcessFencesHolderId aHolderId) {
+void CompositeProcessFencesHolderMap::Unregister(
+    const CompositeProcessFencesHolderId aHolderId) {
   if (!aHolderId.IsValid()) {
     return;
   }
@@ -75,8 +79,8 @@ void CompositeProcessD3D11FencesHolderMap::Unregister(
   }
 }
 
-void CompositeProcessD3D11FencesHolderMap::SetWriteFence(
-    CompositeProcessFencesHolderId aHolderId, RefPtr<FenceD3D11> aWriteFence) {
+void CompositeProcessFencesHolderMap::SetWriteFence(
+    const CompositeProcessFencesHolderId aHolderId, RefPtr<Fence> aWriteFence) {
   MOZ_ASSERT(aWriteFence);
 
   if (!aWriteFence) {
@@ -92,11 +96,15 @@ void CompositeProcessD3D11FencesHolderMap::SetWriteFence(
     return;
   }
 
-  RefPtr<FenceD3D11> fence = aWriteFence->CloneFromHandle();
+#if defined(XP_WIN)
+  RefPtr<Fence> fence = aWriteFence->AsFenceD3D11()->CloneFromHandle();
   if (!fence) {
     MOZ_ASSERT_UNREACHABLE("unexpected to be called");
     return;
   }
+#else
+  RefPtr<Fence> fence = aWriteFence;
+#endif
 
   MOZ_ASSERT(!it->second->mWriteFence);
   MOZ_ASSERT(it->second->mReadFences.empty());
@@ -104,8 +112,8 @@ void CompositeProcessD3D11FencesHolderMap::SetWriteFence(
   it->second->mWriteFence = fence;
 }
 
-void CompositeProcessD3D11FencesHolderMap::SetReadFence(
-    CompositeProcessFencesHolderId aHolderId, RefPtr<FenceD3D11> aReadFence) {
+void CompositeProcessFencesHolderMap::SetReadFence(
+    const CompositeProcessFencesHolderId aHolderId, RefPtr<Fence> aReadFence) {
   MOZ_ASSERT(aReadFence);
 
   if (!aReadFence) {
@@ -121,48 +129,23 @@ void CompositeProcessD3D11FencesHolderMap::SetReadFence(
     return;
   }
 
-  RefPtr<FenceD3D11> fence = aReadFence->CloneFromHandle();
+#if defined(XP_WIN)
+  RefPtr<Fence> fence = aReadFence->AsFenceD3D11()->CloneFromHandle();
   if (!fence) {
     MOZ_ASSERT_UNREACHABLE("unexpected to be called");
     return;
   }
+#else
+  RefPtr<Fence> fence = aReadFence;
+#endif
 
   it->second->mReadFences.push_back(fence);
 }
 
-bool CompositeProcessD3D11FencesHolderMap::WaitWriteFence(
-    CompositeProcessFencesHolderId aHolderId, ID3D11Device* aDevice) {
-  MOZ_ASSERT(aDevice);
-
-  if (!aDevice) {
-    return false;
-  }
-
-  RefPtr<FenceD3D11> writeFence;
-  {
-    MonitorAutoLock lock(mMonitor);
-
-    MOZ_ASSERT(aHolderId.IsValid());
-    auto it = mFencesHolderById.find(aHolderId);
-    if (it == mFencesHolderById.end()) {
-      MOZ_ASSERT_UNREACHABLE("unexpected to be called");
-      return false;
-    }
-    writeFence = it->second->mWriteFence;
-  }
-
-  if (!writeFence) {
-    return true;
-  }
-
-  return writeFence->Wait(aDevice);
-}
-
-std::pair<const RefPtr<gfx::FileHandleWrapper>, uint64_t>
-CompositeProcessD3D11FencesHolderMap::GetWriteFenceHandleAndValue(
-    CompositeProcessFencesHolderId aHolderId) const {
+RefPtr<Fence> CompositeProcessFencesHolderMap::GetWriteFence(
+    const CompositeProcessFencesHolderId aHolderId) {
   MonitorAutoLock lock(mMonitor);
-  RefPtr<FenceD3D11> writeFence;
+  RefPtr<Fence> writeFence;
   MOZ_ASSERT(aHolderId.IsValid());
 
   auto it = mFencesHolderById.find(aHolderId);
@@ -170,48 +153,40 @@ CompositeProcessD3D11FencesHolderMap::GetWriteFenceHandleAndValue(
   if (it != mFencesHolderById.end()) {
     writeFence = it->second->mWriteFence;
   }
-
-  if (writeFence) {
-    return {writeFence->mHandle, writeFence->GetFenceValue()};
-  }
-  return {};
+  return writeFence;
 }
 
-bool CompositeProcessD3D11FencesHolderMap::WaitAllFencesAndForget(
-    CompositeProcessFencesHolderId aHolderId, ID3D11Device* aDevice) {
-  MOZ_ASSERT(aDevice);
+std::vector<RefPtr<Fence>>
+CompositeProcessFencesHolderMap::TakeAllFencesAndForget(
+    const CompositeProcessFencesHolderId aHolderId) {
+  std::vector<RefPtr<Fence>> fences;
 
-  if (!aDevice) {
-    return false;
+  MonitorAutoLock lock(mMonitor);
+
+  auto it = mFencesHolderById.find(aHolderId);
+  MOZ_ASSERT(it != mFencesHolderById.end());
+  if (it == mFencesHolderById.end()) {
+    MOZ_ASSERT_UNREACHABLE("unexpected to be called");
+    return fences;
   }
 
-  RefPtr<FenceD3D11> writeFence;
-  std::vector<RefPtr<FenceD3D11>> readFences;
-  {
-    MonitorAutoLock lock(mMonitor);
+  auto& holder = it->second;
 
-    MOZ_ASSERT(aHolderId.IsValid());
-    auto it = mFencesHolderById.find(aHolderId);
-    if (it == mFencesHolderById.end()) {
-      MOZ_ASSERT_UNREACHABLE("unexpected to be called");
-      return false;
-    }
-    writeFence = it->second->mWriteFence.forget();
-    readFences.swap(it->second->mReadFences);
-
-    MOZ_ASSERT(!it->second->mWriteFence);
-    MOZ_ASSERT(it->second->mReadFences.empty());
+  if (holder->mWriteFence) {
+    fences.emplace_back(std::move(holder->mWriteFence));
   }
 
-  if (writeFence) {
-    writeFence->Wait(aDevice);
+  MOZ_ASSERT(!holder->mWriteFence);
+
+  fences.reserve(fences.size() + holder->mReadFences.size());
+
+  for (auto& fence : holder->mReadFences) {
+    fences.emplace_back(std::move(fence));
   }
 
-  for (auto& fence : readFences) {
-    fence->Wait(aDevice);
-  }
+  holder->mReadFences.clear();
 
-  return true;
+  return fences;
 }
 
 }  // namespace layers

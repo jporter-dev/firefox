@@ -2,10 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef MOZILLA_GFX_CompositeProcessD3D11FencesHolderMap_H
-#define MOZILLA_GFX_CompositeProcessD3D11FencesHolderMap_H
-
-#include <d3d11.h>
+#ifndef MOZILLA_GFX_CompositeProcessFencesHolderMap_H
+#define MOZILLA_GFX_CompositeProcessFencesHolderMap_H
 
 #include <vector>
 
@@ -17,55 +15,53 @@
 namespace mozilla {
 namespace layers {
 
-class FenceD3D11;
+class Fence;
 
 /**
- * A class to manage FenceD3D11 that is shared in GPU process.
+ * A class to manage Fence that is shared in Composite process.
  */
-class CompositeProcessD3D11FencesHolderMap {
+class CompositeProcessFencesHolderMap {
  public:
   static void Init();
   static void Shutdown();
-  static CompositeProcessD3D11FencesHolderMap* Get() { return sInstance; }
+  static CompositeProcessFencesHolderMap* Get() { return sInstance; }
 
-  CompositeProcessD3D11FencesHolderMap() = default;
-  ~CompositeProcessD3D11FencesHolderMap() = default;
+  CompositeProcessFencesHolderMap() = default;
+  ~CompositeProcessFencesHolderMap() = default;
 
-  void Register(CompositeProcessFencesHolderId aHolderId);
-  void RegisterReference(CompositeProcessFencesHolderId aHolderId);
-  void Unregister(CompositeProcessFencesHolderId aHolderId);
+  void Register(const CompositeProcessFencesHolderId aHolderId);
+  void RegisterReference(const CompositeProcessFencesHolderId aHolderId);
+  void Unregister(const CompositeProcessFencesHolderId aHolderId);
 
-  void SetWriteFence(CompositeProcessFencesHolderId aHolderId,
-                     RefPtr<FenceD3D11> aWriteFence);
-  void SetReadFence(CompositeProcessFencesHolderId aHolderId,
-                    RefPtr<FenceD3D11> aReadFence);
+  void SetWriteFence(const CompositeProcessFencesHolderId aHolderId,
+                     RefPtr<Fence> aWriteFence);
+  void SetReadFence(const CompositeProcessFencesHolderId aHolderId,
+                    RefPtr<Fence> aReadFence);
 
-  bool WaitWriteFence(CompositeProcessFencesHolderId aHolderId,
-                      ID3D11Device* aDevice);
-  std::pair<const RefPtr<gfx::FileHandleWrapper>, uint64_t>
-  GetWriteFenceHandleAndValue(CompositeProcessFencesHolderId aHolderId) const;
-  bool WaitAllFencesAndForget(CompositeProcessFencesHolderId aHolderId,
-                              ID3D11Device* aDevice);
+  RefPtr<Fence> GetWriteFence(const CompositeProcessFencesHolderId aHolderId);
+
+  std::vector<RefPtr<Fence>> TakeAllFencesAndForget(
+      const CompositeProcessFencesHolderId aHolderId);
 
  private:
   struct FencesHolder {
     FencesHolder() = default;
 
-    RefPtr<FenceD3D11> mWriteFence;
-    std::vector<RefPtr<FenceD3D11>> mReadFences;
+    RefPtr<Fence> mWriteFence;
+    std::vector<RefPtr<Fence>> mReadFences;
     uint32_t mOwners = 1;
   };
 
-  mutable Monitor mMonitor{"CompositeProcessD3D11FencesHolderMap::mMonitor"};
+  mutable Monitor mMonitor{"CompositeProcessFencesHolderMap::mMonitor"};
 
   std::unordered_map<CompositeProcessFencesHolderId, UniquePtr<FencesHolder>,
                      CompositeProcessFencesHolderId::HashFn>
       mFencesHolderById MOZ_GUARDED_BY(mMonitor);
 
-  static StaticAutoPtr<CompositeProcessD3D11FencesHolderMap> sInstance;
+  static StaticAutoPtr<CompositeProcessFencesHolderMap> sInstance;
 };
 
 }  // namespace layers
 }  // namespace mozilla
 
-#endif /* MOZILLA_GFX_CompositeProcessD3D11FencesHolderMap_H */
+#endif /* MOZILLA_GFX_CompositeProcessFencesHolderMap_H */

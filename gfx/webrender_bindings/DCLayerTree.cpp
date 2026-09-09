@@ -30,7 +30,8 @@
 #include "mozilla/gfx/Types.h"
 #include "mozilla/gfx/gfxVars.h"
 #include "mozilla/glean/GfxMetrics.h"
-#include "mozilla/layers/CompositeProcessD3D11FencesHolderMap.h"
+#include "mozilla/layers/CompositeProcessFencesHolderMap.h"
+#include "mozilla/layers/FenceD3D11.h"
 #include "mozilla/webrender/RenderD3D11TextureHost.h"
 #include "mozilla/webrender/RenderDcompSurfaceTextureHost.h"
 #include "mozilla/webrender/RenderTextureHost.h"
@@ -3689,9 +3690,10 @@ bool DCSurfaceVideo::CallVideoProcessorBlt() {
   }
 
   if (texture->mFencesHolderId.isSome()) {
-    auto* fencesHolderMap = layers::CompositeProcessD3D11FencesHolderMap::Get();
+    auto* fencesHolderMap = layers::CompositeProcessFencesHolderMap::Get();
     MOZ_ASSERT(fencesHolderMap);
-    fencesHolderMap->WaitWriteFence(texture->mFencesHolderId.ref(), device);
+    auto fence = fencesHolderMap->GetWriteFence(texture->mFencesHolderId.ref());
+    layers::FenceD3D11::WaitD3D11Fence(fence, device);
   }
 
   RefPtr<IDXGISwapChain3> swapChain3;

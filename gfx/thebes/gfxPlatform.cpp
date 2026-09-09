@@ -72,7 +72,7 @@
 
 #if defined(XP_WIN)
 #  include "gfxWindowsPlatform.h"
-#  include "mozilla/layers/CompositeProcessD3D11FencesHolderMap.h"
+#  include "mozilla/layers/CompositeProcessFencesHolderMap.h"
 #  include "mozilla/widget/WinWindowOcclusionTracker.h"
 #elif defined(XP_DARWIN)
 #  include "gfxPlatformMac.h"
@@ -1347,7 +1347,7 @@ void gfxPlatform::InitLayersIPC() {
 #endif
     if (!gfxConfig::IsEnabled(Feature::GPU_PROCESS)) {
 #if defined(XP_WIN)
-      CompositeProcessD3D11FencesHolderMap::Init();
+      CompositeProcessFencesHolderMap::Init();
 #endif
       RemoteTextureMap::Init();
       wr::RenderThread::Start(GPUProcessManager::Get()->AllocateNamespace());
@@ -1404,7 +1404,7 @@ void gfxPlatform::ShutdownLayersIPC() {
               StaticPrefs::GetPrefName_gfx_webrender_blob_tile_size()));
     }
 #if defined(XP_WIN)
-    CompositeProcessD3D11FencesHolderMap::Shutdown();
+    CompositeProcessFencesHolderMap::Shutdown();
     widget::WinWindowOcclusionTracker::ShutDown();
 #endif
   } else {
@@ -4229,7 +4229,7 @@ void gfxPlatform::DisableGPUProcess() {
       "FEATURE_FAILURE_DISABLED_BY_FALLBACK_GPU_PROCESS_DISABLED"_ns);
 
 #if defined(XP_WIN)
-  CompositeProcessD3D11FencesHolderMap::Init();
+  CompositeProcessFencesHolderMap::Init();
 #endif
   RemoteTextureMap::Init();
   // We need to initialize the parent process to prepare for WebRender if we
