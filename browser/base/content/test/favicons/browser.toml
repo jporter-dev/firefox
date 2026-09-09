@@ -66,6 +66,9 @@ support-files = [
 ["browser_favicon_force_reload.js"]
 support-files = ["file_force_reload_page.html"]
 
+["browser_favicon_idle_starvation.js"]
+support-files = ["file_favicon_idle_starvation.html"]
+
 ["browser_favicon_load.js"]
 https_first_disabled = true
 support-files = [
