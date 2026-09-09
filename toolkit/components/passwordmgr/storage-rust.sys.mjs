@@ -608,20 +608,12 @@ export class LoginManagerRustStorage {
     return null;
   }
 
-  /**
-   * Resolves a stored login from a login passed by value, so callers may pass
-   * a login without a guid. Unlike findLoginToUpdate(), which has dedupe
-   * semantics and matches on origin and username only, this requires
-   * nsILoginInfo.equals(), matching the JSON backend's _getIdForLogin().
-   */
-  async #findEqualStoredLogin(login) {
-    const storedLogin = await this.#storageAdapter.findLoginToUpdate(login);
-    return storedLogin?.equals(login) ? storedLogin : null;
-  }
-
   async modifyLoginAsync(oldLogin, newLoginData, _fromSync) {
     try {
-      const oldStoredLogin = await this.#findEqualStoredLogin(oldLogin);
+      // Resolve the stored login by value so callers may pass a login without a
+      // guid, matching the JSON storage backend.
+      const oldStoredLogin =
+        await this.#storageAdapter.findLoginToUpdate(oldLogin);
 
       if (!oldStoredLogin) {
         throw new Error("No matching logins");
@@ -694,7 +686,8 @@ export class LoginManagerRustStorage {
 
   async recordPasswordUseAsync(login) {
     try {
-      const oldStoredLogin = await this.#findEqualStoredLogin(login);
+      const oldStoredLogin =
+        await this.#storageAdapter.findLoginToUpdate(login);
 
       if (!oldStoredLogin) {
         throw new Error("No matching logins");
@@ -943,7 +936,9 @@ export class LoginManagerRustStorage {
   }
 
   async removeLoginAsync(login, _fromSync) {
-    const storedLogin = await this.#findEqualStoredLogin(login);
+    // Resolve the stored login by value so callers may pass a login without a
+    // guid, matching the JSON storage backend.
+    const storedLogin = await this.#storageAdapter.findLoginToUpdate(login);
     if (!storedLogin) {
       throw new Error("No matching logins");
     }
