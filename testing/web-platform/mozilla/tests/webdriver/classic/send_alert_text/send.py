@@ -1,13 +1,7 @@
 from tests.support.classic.asserts import assert_error
 from tests.support.http_handlers.authentication import basic_authentication
 
-
-def send_alert_text(session, text=None):
-    return session.transport.send(
-        "POST",
-        "session/{session_id}/alert/text".format(**vars(session)),
-        {"text": text},
-    )
+from . import send_alert_text
 
 
 def test_basic_auth_unsupported_operation(url, session):

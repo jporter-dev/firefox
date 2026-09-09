@@ -216,7 +216,11 @@ navigate.waitForNavigationCompleted = async function waitForNavigationCompleted(
   options = {}
 ) {
   const {
-    browsingContextFn = driver.getBrowsingContext.bind(driver),
+    // Skip the privilege check because observing a navigation needs to work
+    // regardless of the current page. Callers are responsible for restricting
+    // the navigation itself.
+    browsingContextFn = () =>
+      driver.getBrowsingContext({ skipPrivilegeCheck: true }),
     loadEventExpected = true,
     requireBeforeUnload = true,
   } = options;

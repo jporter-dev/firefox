@@ -96,7 +96,10 @@ reftest.Runner = class {
   setup(urlCount, screenshotMode, isPrint = false, cacheScreenshots = true) {
     this.isPrint = isPrint;
 
-    lazy.assert.open(this.driver.getBrowsingContext({ top: true }));
+    // The reftest harness controls the window and the content it loads.
+    lazy.assert.open(
+      this.driver.getBrowsingContext({ skipPrivilegeCheck: true, top: true })
+    );
     this.parentWindow = this.driver.getCurrentWindow();
 
     this.screenshotMode =
@@ -157,7 +160,10 @@ reftest.Runner = class {
       lazy.logger.debug("Using current window");
       reftestWin = this.parentWindow;
       await lazy.navigate.waitForNavigationCompleted(this.driver, () => {
-        const browsingContext = this.driver.getBrowsingContext();
+        // The reftest harness controls the window and the content it loads.
+        const browsingContext = this.driver.getBrowsingContext({
+          skipPrivilegeCheck: true,
+        });
         lazy.navigate.navigateTo(browsingContext, lazy.aboutBlankURI);
       });
     } else {
@@ -656,7 +662,11 @@ reftest.Runner = class {
   }
 
   async loadTestUrl(win, url, timeout, warnOnOverflow = true) {
-    const browsingContext = this.driver.getBrowsingContext({ top: true });
+    // The reftest harness controls the window and the content it loads.
+    const browsingContext = this.driver.getBrowsingContext({
+      skipPrivilegeCheck: true,
+      top: true,
+    });
     const webProgress = browsingContext.webProgress;
 
     lazy.logger.debug(`Starting load of ${url}`);
