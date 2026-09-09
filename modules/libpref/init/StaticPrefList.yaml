@@ -2817,6 +2817,12 @@
   value: true
   mirror: always
 
+# Fire DOMContentLoaded at the end of parsing, instead of from a task.
+- name: dom.document.domcontentloaded.synchronous.enabled
+  type: bool
+  value: true
+  mirror: always
+
 # Enable/disable Gecko specific edit commands
 - name: dom.document.edit_command.contentReadOnly.enabled
   type: bool
