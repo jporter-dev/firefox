@@ -449,6 +449,7 @@ dependencies {
     implementation project(':components:compose-base')
     implementation project(':components:compose-browser-toolbar')
     implementation project(':components:compose-cfr')
+    implementation project(':components:compose-menu')
     implementation project(':components:concept-awesomebar')
     implementation project(':components:concept-base')
     implementation project(':components:concept-engine')
