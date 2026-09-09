@@ -766,6 +766,10 @@ from the coordinates it receives, using `SpeechModelSizeMB` for the prompt's
 download size. A session is started with the negotiated locale rather than the
 tag content asked for.
 
+`available()` reports `unavailable` and `install()` resolves false for an
+unrecognized language, without launching the HWInference process or downloading
+anything, and `start()` fires `service-not-allowed`.
+
 ### Phrase boost
 
 Phrase boost is implemented in a follow-up patch. The base architecture passes
