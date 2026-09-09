@@ -14,5 +14,5 @@
  Exposed=Window]
 interface SpeechRecognitionResultList {
     readonly attribute unsigned long length;
-    getter SpeechRecognitionResult item(unsigned long index);
+    getter SpeechRecognitionResult? item(unsigned long index);
 };

@@ -87,6 +87,14 @@ skip-if = [
 
 ["test_preference_enable.html"]
 
+["test_result_item_out_of_range.html"]
+subsuite = "speech-recognition"
+tags = "mtg parakeet-asr"
+skip-if = [
+  "os == 'linux' && os_version == '22.04' && arch == 'x86_64' && display == 'wayland'", # Bug 2053116
+  "verify", # skip under test-verify: it runs outside the subsuite, so serve_model.py (the model hub) is never started
+]
+
 # The parakeet tests run in their own subsuite (mochitest-speech-recognition) so
 # the large model artifacts are fetched only for this task. The parakeet-asr tag
 # makes runtests.py start the local model hub (serve_model.py) for them.
