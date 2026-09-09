@@ -926,6 +926,7 @@ nsresult EditContext::GetCharacterBounds(
               static_cast<const void*>(this), aStart, aEnd,
               mCodepointRectsStartIndex, CodepointRectsEndIndex());
   MOZ_ASSERT(aRects.IsEmpty());
+  MOZ_ASSERT(aStart <= aEnd);
   aStart = std::min(aStart, TextLength());
   aEnd = std::min(aEnd, TextLength());
   enum class CollapseDirection {
