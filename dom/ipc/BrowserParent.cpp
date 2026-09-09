@@ -630,7 +630,6 @@ void BrowserParent::SetOwnerElement(Element* aElement) {
       newWindowHandle =
           reinterpret_cast<uintptr_t>(widget->GetNativeData(NS_NATIVE_WINDOW));
     }
-    (void)SendUpdateNativeWindowHandle(newWindowHandle);
     a11y::DocAccessibleParent* doc = GetTopLevelDocAccessible();
     if (doc) {
       HWND hWnd = reinterpret_cast<HWND>(doc->GetEmulatedWindowHandle());
