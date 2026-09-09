@@ -878,7 +878,7 @@ export class CreditCardSaveDoorhanger extends AutofillDoorhanger {
   static dataType = AutofillDataTypes.CREDIT_CARD;
   static telemetryObject = "capture_doorhanger";
 
-  static spotlightURL = "about:preferences#privacy-credit-card-autofill";
+  static preferenceURL = "privacy-credit-card-autofill";
 
   constructor(browser, oldRecord, newRecord, flowId) {
     super(browser, oldRecord, newRecord, flowId);
@@ -981,14 +981,13 @@ export class CreditCardSaveDoorhanger extends AutofillDoorhanger {
     const privacyLinkElement = this.doc.createXULElement("label", {
       is: "text-link",
     });
-    privacyLinkElement.setAttribute("useoriginprincipal", true);
-    privacyLinkElement.setAttribute(
-      "href",
-      CreditCardSaveDoorhanger.spotlightURL ||
-        "about:preferences#privacy-payment-methods-autofill"
-    );
-
     this.doc.l10n.setAttributes(privacyLinkElement, "autofill-options-link");
+
+    /* eslint-disable-next-line mozilla/balanced-listeners */
+    privacyLinkElement.addEventListener("click", event => {
+      event.preventDefault();
+      this.onMenuItemClick("open-pref");
+    });
 
     return privacyLinkElement;
   }
