@@ -11,6 +11,7 @@
 #include "mozilla/layers/APZThreadUtils.h"
 #include "mozilla/layers/DoubleTapToZoom.h"  // for DoubleTapToZoomMetrics
 #include "mozilla/layers/GeckoContentController.h"  // for GeckoContentController
+#include "mozilla/layers/KeyboardMap.h"             // for KeyboardMap
 #include "mozilla/layers/RemoteCompositorSession.h"  // for RemoteCompositorSession
 #include "mozilla/layers/SynchronousTask.h"
 #ifdef MOZ_WIDGET_ANDROID
@@ -276,6 +277,114 @@ void APZInputBridgeChild::UpdateWheelTransaction(
   APZThreadUtils::AssertOnControllerThread();
 
   SendUpdateWheelTransaction(aRefPoint, aEventMessage, aTargetGuid);
+}
+
+// This actor is bound to the controller thread (see
+// APZInputBridgeChild::Open()), so they must hop to it before sending.
+void APZInputBridgeChild::SetKeyboardMap(const KeyboardMap& aKeyboardMap) {
+  if (!APZThreadUtils::IsControllerThread()) {
+    APZThreadUtils::RunOnControllerThread(NewRunnableMethod<KeyboardMap>(
+        "layers::APZInputBridgeChild::SetKeyboardMap", this,
+        &APZInputBridgeChild::SetKeyboardMap, aKeyboardMap));
+    return;
+  }
+
+  if (!mIsOpen) {
+    return;
+  }
+
+  SendSetKeyboardMap(aKeyboardMap);
+}
+
+// This actor is bound to the controller thread (see
+// APZInputBridgeChild::Open()), so they must hop to it before sending.
+void APZInputBridgeChild::SetDPI(float aDpiValue) {
+  if (!APZThreadUtils::IsControllerThread()) {
+    APZThreadUtils::RunOnControllerThread(
+        NewRunnableMethod<float>("layers::APZInputBridgeChild::SetDPI", this,
+                                 &APZInputBridgeChild::SetDPI, aDpiValue));
+    return;
+  }
+
+  if (!mIsOpen) {
+    return;
+  }
+
+  SendSetDPI(aDpiValue);
+}
+
+// This actor is bound to the controller thread (see
+// APZInputBridgeChild::Open()), so they must hop to it before sending.
+void APZInputBridgeChild::SetBrowserGestureResponse(
+    uint64_t aInputBlockId, BrowserGestureResponse aResponse) {
+  if (!APZThreadUtils::IsControllerThread()) {
+    APZThreadUtils::RunOnControllerThread(
+        NewRunnableMethod<uint64_t, BrowserGestureResponse>(
+            "layers::APZInputBridgeChild::SetBrowserGestureResponse", this,
+            &APZInputBridgeChild::SetBrowserGestureResponse, aInputBlockId,
+            aResponse));
+    return;
+  }
+
+  if (!mIsOpen) {
+    return;
+  }
+
+  SendSetBrowserGestureResponse(aInputBlockId, aResponse);
+}
+
+// This actor is bound to the controller thread (see
+// APZInputBridgeChild::Open()), so they must hop to it before sending.
+void APZInputBridgeChild::StartAutoscroll(const ScrollableLayerGuid& aGuid,
+                                          const ScreenPoint& aAnchorLocation) {
+  if (!APZThreadUtils::IsControllerThread()) {
+    APZThreadUtils::RunOnControllerThread(
+        NewRunnableMethod<ScrollableLayerGuid, ScreenPoint>(
+            "layers::APZInputBridgeChild::StartAutoscroll", this,
+            &APZInputBridgeChild::StartAutoscroll, aGuid, aAnchorLocation));
+    return;
+  }
+
+  if (!mIsOpen) {
+    return;
+  }
+
+  SendStartAutoscroll(aGuid, aAnchorLocation);
+}
+
+// This actor is bound to the controller thread (see
+// APZInputBridgeChild::Open()), so they must hop to it before sending.
+void APZInputBridgeChild::StopAutoscroll(const ScrollableLayerGuid& aGuid) {
+  if (!APZThreadUtils::IsControllerThread()) {
+    APZThreadUtils::RunOnControllerThread(
+        NewRunnableMethod<ScrollableLayerGuid>(
+            "layers::APZInputBridgeChild::StopAutoscroll", this,
+            &APZInputBridgeChild::StopAutoscroll, aGuid));
+    return;
+  }
+
+  if (!mIsOpen) {
+    return;
+  }
+
+  SendStopAutoscroll(aGuid);
+}
+
+// This actor is bound to the controller thread (see
+// APZInputBridgeChild::Open()), so they must hop to it before sending.
+void APZInputBridgeChild::SetLongTapEnabled(bool aTapGestureEnabled) {
+  if (!APZThreadUtils::IsControllerThread()) {
+    APZThreadUtils::RunOnControllerThread(NewRunnableMethod<bool>(
+        "layers::APZInputBridgeChild::SetLongTapEnabled", this,
+        &APZInputBridgeChild::SetLongTapEnabled, aTapGestureEnabled));
+    return;
+  }
+
+  if (!mIsOpen) {
+    return;
+  }
+
+  SendSetLongTapEnabled(aTapGestureEnabled);
 }
 
 }  // namespace layers

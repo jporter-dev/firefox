@@ -670,8 +670,6 @@ class APZCTreeManager : public IAPZCTreeManager, public APZInputBridge {
     aCallback(lock);
   }
 
-  LayersId GetRootLayersId() const { return mRootLayersId; }
-
  private:
   using GuidComparator = ScrollableLayerGuid::Comparator;
   using ScrollNode = WebRenderScrollDataWrapper;

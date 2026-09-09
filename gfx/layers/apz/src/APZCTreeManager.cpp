@@ -1153,7 +1153,13 @@ void APZCTreeManager::StartScrollbarDrag(const ScrollableLayerGuid& aGuid,
 
 void APZCTreeManager::StartAutoscroll(const ScrollableLayerGuid& aGuid,
                                       const ScreenPoint& aAnchorLocation) {
-  APZThreadUtils::AssertOnControllerThread();
+  if (!APZThreadUtils::IsControllerThread()) {
+    APZThreadUtils::RunOnControllerThread(
+        NewRunnableMethod<ScrollableLayerGuid, ScreenPoint>(
+            "layers::APZCTreeManager::StartAutoscroll", this,
+            &APZCTreeManager::StartAutoscroll, aGuid, aAnchorLocation));
+    return;
+  }
 
   RefPtr<AsyncPanZoomController> apzc = GetTargetAPZC(aGuid);
   if (!apzc) {
@@ -1165,7 +1171,13 @@ void APZCTreeManager::StartAutoscroll(const ScrollableLayerGuid& aGuid,
 }
 
 void APZCTreeManager::StopAutoscroll(const ScrollableLayerGuid& aGuid) {
-  APZThreadUtils::AssertOnControllerThread();
+  if (!APZThreadUtils::IsControllerThread()) {
+    APZThreadUtils::RunOnControllerThread(
+        NewRunnableMethod<ScrollableLayerGuid>(
+            "layers::APZCTreeManager::StopAutoscroll", this,
+            &APZCTreeManager::StopAutoscroll, aGuid));
+    return;
+  }
 
   if (RefPtr<AsyncPanZoomController> apzc = GetTargetAPZC(aGuid)) {
     apzc->StopAutoscroll();

@@ -373,7 +373,7 @@ class NPZCSupport final
     }
 
     if (controller) {
-      controller->SetLongTapEnabled(aIsLongpressEnabled);
+      controller->InputBridge()->SetLongTapEnabled(aIsLongpressEnabled);
     }
   }
 
