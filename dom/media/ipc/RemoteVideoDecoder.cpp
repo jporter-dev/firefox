@@ -15,6 +15,7 @@
 #include "MediaInfo.h"
 #include "PDMFactory.h"
 #include "RemoteCDMParent.h"
+#include "RemoteDecodeUtils.h"
 #include "RemoteImageHolder.h"
 #include "RemoteMediaManagerParent.h"
 #include "mozilla/StaticPrefs_media.h"
@@ -70,6 +71,9 @@ MediaResult RemoteVideoDecoderChild::ProcessOutput(
           data.base().offset(), data.base().time(), data.base().duration()));
       continue;
     }
+    MOZ_LOG_FMT(
+        gRemoteDecodeLog, LogLevel::Verbose, "Remote video ts={} received: {}",
+        data.base().time().ToMicroseconds(), data.image().ToString().get());
     RefPtr<Image> image = data.image().TransferToImage(mBufferRecycleBin);
 
     RefPtr<VideoData> video = VideoData::CreateFromImage(
@@ -327,20 +331,23 @@ MediaResult RemoteVideoDecoderParent::ProcessDecodedData(
                           video->mImage, texture);
     }
 
+    RemoteImageHolder imageHolder(
+        mParent,
+        XRE_IsGPUProcess()
+            ? VideoBridgeSource::GpuProcess
+            : (XRE_IsRDDProcess() ? VideoBridgeSource::RddProcess
+                                  : VideoBridgeSource::MFMediaEngineCDMProcess),
+        size, video->mImage->GetColorDepth(), sd, yuvColorSpace, colorPrimaries,
+        transferFunction, colorRange);
+    MOZ_LOG_FMT(
+        gRemoteDecodeLog, LogLevel::Verbose,
+        "Remote video ts={} send via {}: {}", video->mTime.ToMicroseconds(),
+        needStorage ? "texture" : "shmem", imageHolder.ToString().get());
+
     RemoteVideoData output(
         MediaDataIPDL(data->mOffset, data->mTime, data->mTimecode,
                       data->mDuration, data->mKeyframe),
-        video->mDisplay,
-        RemoteImageHolder(
-            mParent,
-            XRE_IsGPUProcess()
-                ? VideoBridgeSource::GpuProcess
-                : (XRE_IsRDDProcess()
-                       ? VideoBridgeSource::RddProcess
-                       : VideoBridgeSource::MFMediaEngineCDMProcess),
-            size, video->mImage->GetColorDepth(), sd, yuvColorSpace,
-            colorPrimaries, transferFunction, colorRange),
-        video->mFrameID);
+        video->mDisplay, std::move(imageHolder), video->mFrameID);
 
     array.AppendElement(std::move(output));
   }
