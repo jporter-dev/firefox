@@ -1289,6 +1289,40 @@ const ActiveScrolledRoot* DisplayPortUtils::ActivateDisplayportOnASRAncestors(
   return asr;
 }
 
+const ActiveScrolledRoot* DisplayPortUtils::GetASRForAbsPosFrame(
+    nsIFrame* aFrame, const ActiveScrolledRoot* aContainingBlockASR,
+    nsDisplayListBuilder* aBuilder) {
+  MOZ_ASSERT(aFrame->IsAbsolutelyPositioned());
+  if (!aBuilder->IsPaintingToWindow() ||
+      // If we are in view transition capture we get a null asr no matter
+      // what, so don't bother checking for async scrolling with a CSS anchor
+      // pos anchor.
+      aBuilder->IsInViewTransitionCapture() ||
+      // If there is an active view transition in this document it is tricky
+      // to determine what will be an active scroll frame outside of that
+      // frame's BuildDisplayList, so don't bother to async scroll with an
+      // anchor in that case. Bug 2001861 tracks removing this check.
+      aFrame->PresContext()->Document()->GetActiveViewTransition()) {
+    return aContainingBlockASR;
+  }
+  nsIFrame* scrollsWithAnchor =
+      AnchorPositioningUtils::GetAnchorThatFrameScrollsWith(aFrame, aBuilder);
+  if (!scrollsWithAnchor) {
+    return aContainingBlockASR;
+  }
+  if (aBuilder->IsRetainingDisplayList()) {
+    if (aBuilder->IsPartialUpdate()) {
+      aBuilder->SetPartialBuildFailed(true);
+    } else {
+      aBuilder->SetDisablePartialUpdates(true);
+    }
+  }
+  // TODO should we set the scroll parent id too?
+  // https://github.com/w3c/csswg-drafts/issues/12042
+  return ActivateDisplayportOnASRAncestors(
+      scrollsWithAnchor, aFrame->GetParent(), aContainingBlockASR, aBuilder);
+}
+
 static bool CheckAxes(ScrollContainerFrame* aScrollFrame, PhysicalAxes aAxes) {
   if (aAxes == kPhysicalAxesBoth) {
     return true;

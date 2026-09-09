@@ -12,6 +12,7 @@
 #include "MobileViewportManager.h"
 #include "mozilla/AbsoluteContainingBlock.h"
 #include "mozilla/ComputedStyleInlines.h"
+#include "mozilla/DisplayPortUtils.h"
 #include "mozilla/PresShell.h"
 #include "mozilla/ProfilerLabels.h"
 #include "mozilla/ReflowInput.h"
@@ -133,8 +134,11 @@ static void BuildDisplayListForTopLayerFrame(nsDisplayListBuilder* aBuilder,
       // root scroll frame.
       clipState.SetClipChainForContainingBlockDescendants(
           savedOutOfFlowData->mCombinedClipChain);
+
       asrSetter.SetCurrentActiveScrolledRoot(
-          savedOutOfFlowData->mContainingBlockActiveScrolledRoot);
+          DisplayPortUtils::GetASRForAbsPosFrame(
+              aFrame, savedOutOfFlowData->mContainingBlockActiveScrolledRoot,
+              aBuilder));
       asrSetter.SetCurrentScrollParentId(savedOutOfFlowData->mScrollParentId);
     }
   }
