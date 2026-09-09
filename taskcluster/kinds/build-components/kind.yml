@@ -20,6 +20,7 @@ kind-dependencies:
 
 tasks:
     build-component:
+        run-on-repo-type: [hg]
         artifact-template:
             type: file
             name: public/build/{artifact_file_name}
@@ -60,6 +61,7 @@ tasks:
                 nightly: false
                 default: true
         run:
+            clone-with: hg
             gradlew:
                 by-build-type:
                     release:
