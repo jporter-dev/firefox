@@ -55,6 +55,16 @@ skip-if = ["verify"]  # skip under test-verify: it runs outside the subsuite, so
 # needed). These are nets for concurrency bugs in the IPC/session lifecycle
 # (see bug 1940906), not targeted regression tests for a single bug.
 
+["test_parakeet_continuous.html"]
+subsuite = "speech-recognition"
+tags = "mtg parakeet-asr"
+# Audio capture doesn't produce real signal under Wayland in CI, so
+# recognition always returns an empty transcript there.
+skip-if = [
+  "os == 'linux' && os_version == '22.04' && arch == 'x86_64' && display == 'wayland'", # Bug 2053116
+  "verify", # skip under test-verify: it runs outside the subsuite, so serve_model.py (the model hub) is never started
+]
+
 ["test_parakeet_e2e.html"]
 subsuite = "speech-recognition"
 tags = "mtg parakeet-asr"

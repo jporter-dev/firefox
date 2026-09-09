@@ -1121,9 +1121,16 @@ void SpeechRecognition::HandleRecognitionResultFromBackend(
     return;
   }
 
-  // NOTE: We don't implement non-continuous mode (mContinuous=false) for now.
-  // The spec semantics are unclear with modern local LLM-based recognition.
-  // See https://github.com/WebAudio/web-speech-api/issues/176
+  // https://webaudio.github.io/web-speech-api/#dom-speechrecognition-continuous
+  // "When the continuous attribute is set to false, the user agent must return
+  // no more than one final result". Such a session is stopped as soon as its
+  // first final result is dispatched (below), but the backend's end-of-stream
+  // flush can still produce results while it winds down; drop those.
+  if (!mContinuous && !mRecognitionResults.IsEmpty()) {
+    LOG("Ignoring result - non-continuous session already delivered its final "
+        "result");
+    return;
+  }
 
   RefPtr<SpeechRecognitionResult> result = new SpeechRecognitionResult(this);
 
@@ -1164,6 +1171,15 @@ void SpeechRecognition::HandleRecognitionResultFromBackend(
     domEvent->WidgetEventPtr()->mTimeStamp = aEventTime;
   }
   DispatchEvent(*domEvent);
+
+  // https://webaudio.github.io/web-speech-api/#dom-speechrecognition-continuous
+  // False describes "a single turn pattern of interaction": the turn is over
+  // once its one final result has been delivered, so end the session rather
+  // than keep the microphone open. Stop() rather than Abort(), so that the
+  // backend still flushes and "end" fires the usual way.
+  if (aIsFinal && !mContinuous) {
+    Stop();
+  }
 }
 
 void SpeechRecognition::HandleRecognitionErrorFromBackend(
