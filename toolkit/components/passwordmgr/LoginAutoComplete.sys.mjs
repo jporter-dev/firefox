@@ -104,10 +104,6 @@ class AutocompleteItem {
     this.style = style;
     this.value = "";
   }
-
-  removeFromStorage() {
-    /* Do nothing by default */
-  }
 }
 
 class InsecureLoginFormAutocompleteItem extends AutocompleteItem {
@@ -127,18 +123,10 @@ class InsecureLoginFormAutocompleteItem extends AutocompleteItem {
 
 class LoginAutocompleteItem extends AutocompleteItem {
   login;
-  #actor;
 
-  constructor(
-    login,
-    hasBeenTypePassword,
-    duplicateUsernames,
-    actor,
-    isOriginMatched
-  ) {
+  constructor(login, hasBeenTypePassword, duplicateUsernames, isOriginMatched) {
     super("loginWithOrigin");
     this.login = login.QueryInterface(Ci.nsILoginMetaInfo);
-    this.#actor = actor;
 
     const isDuplicateUsername =
       login.username && duplicateUsernames.has(login.username);
@@ -199,17 +187,6 @@ class LoginAutocompleteItem extends AutocompleteItem {
           },
     });
     this.image = `page-icon:${login.origin}`;
-  }
-
-  async removeFromStorage() {
-    if (this.#actor) {
-      let vanilla = lazy.LoginHelper.loginToVanillaObject(this.login);
-      this.#actor.sendAsyncMessage("PasswordManager:removeLogin", {
-        login: vanilla,
-      });
-    } else {
-      await Services.logins.removeLoginAsync(this.login);
-    }
   }
 }
 
@@ -286,13 +263,6 @@ class ImportableLoginsAutocompleteItem extends AutocompleteItem {
     this.#actor.sendAsyncMessage(
       "PasswordManager:decreaseSuggestImportCount",
       1
-    );
-  }
-
-  removeFromStorage() {
-    this.#actor.sendAsyncMessage(
-      "PasswordManager:decreaseSuggestImportCount",
-      100
     );
   }
 }
@@ -394,7 +364,6 @@ export class LoginAutoCompleteResult {
         login,
         hasBeenTypePassword,
         duplicateUsernames,
-        actor,
         lazy.LoginHelper.isOriginMatching(login.origin, formOrigin, {
           schemeUpgrades: lazy.LoginHelper.schemeUpgrades,
         })

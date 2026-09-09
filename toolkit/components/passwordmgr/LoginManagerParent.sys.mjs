@@ -396,11 +396,6 @@ export class LoginManagerParent extends JSWindowActorParent {
         return this.doAutocompleteSearch(this.origin, data);
       }
 
-      case "PasswordManager:removeLogin": {
-        await this.#onRemoveLogin(data.login);
-        break;
-      }
-
       // Used by tests to detect that a form-fill has occurred. This redirects
       // to the top-level browsing context.
       case "PasswordManager:formProcessed": {
@@ -461,11 +456,6 @@ export class LoginManagerParent extends JSWindowActorParent {
         });
       });
     }
-  }
-
-  async #onRemoveLogin(login) {
-    login = lazy.LoginHelper.vanillaObjectToLogin(login);
-    Services.logins.removeLoginAsync(login);
   }
 
   #onOpenImportableLearnMore() {
