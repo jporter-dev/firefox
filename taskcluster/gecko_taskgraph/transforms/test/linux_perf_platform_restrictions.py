@@ -17,8 +17,10 @@ TALOS_DUAL_PLATFORM_TESTS = {
     "talos-damp-webconsole",
 }
 
-# Perftest jobs that must remain on linux1804
-PERFTEST_LINUX_1804_TESTS = {
+# Bug 2008059 - Perftest jobs that keep both linux1804 and linux2404 during
+# the migration, so tier 2 alerts do not miss regressions. Remove this set
+# when the linux2404 series has enough history.
+PERFTEST_DUAL_PLATFORM_TESTS = {
     "tr8ns-perf-base",
     "tr8ns-perf-basememory",
     "tr8ns-perf-tiny",
@@ -48,37 +50,18 @@ def restrict_tests_to_2404(config, tasks):
 
 def restrict_perftest_to_2404(config, jobs):
     """
-    Bug 2021939 - Restrict most perftest jobs to Ubuntu 24.04 by removing
-    linux1804 from non-allowed jobs' platform list.
+    Bug 2021939 - Restrict perftest jobs to Ubuntu 24.04. Remove linux1804
+    from the platform list of each job. Jobs in PERFTEST_DUAL_PLATFORM_TESTS
+    keep both platforms.
     """
     for job in jobs:
-        job_name = job.get("name", "")
         platforms = job.get("platform")
 
-        if job_name not in PERFTEST_LINUX_1804_TESTS and isinstance(platforms, list):
+        if job.get("name", "") not in PERFTEST_DUAL_PLATFORM_TESTS and isinstance(
+            platforms, list
+        ):
             filtered = [p for p in platforms if "linux1804" not in p]
             if len(filtered) < len(platforms):
                 job["platform"] = filtered
-
-        yield job
-
-
-def restrict_perftest_to_1804(config, jobs):
-    """
-    Temporary workaround for Bug 1983694 - Restrict perftest jobs that fail
-    on Ubuntu 24.04 to run on Ubuntu 18.04 hardware only.
-
-    Perftest jobs have a different structure than test tasks - they use a
-    'platform' field that is a list of platforms, and 'name' instead of
-    'test-name'. This function filters the platform list.
-    """
-    for job in jobs:
-        job_name = job.get("name", "")
-        platforms = job.get("platform")
-
-        if job_name in PERFTEST_LINUX_1804_TESTS and isinstance(platforms, list):
-            filtered_platforms = [p for p in platforms if "linux2404" not in p]
-            if len(filtered_platforms) < len(platforms):
-                job["platform"] = filtered_platforms
 
         yield job

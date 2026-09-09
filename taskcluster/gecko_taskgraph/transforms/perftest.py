@@ -438,7 +438,6 @@ def set_perftest_attributes(config, jobs):
         yield job
 
 
-# Restrict most perftest jobs to Ubuntu 24.04, keeping only allowed exceptions on 18.04.
 transforms.add(linux_perf_platform_restrictions.restrict_perftest_to_2404)
 
 
@@ -457,10 +456,6 @@ def setup_autoland_retriggers(config, jobs):
         ):
             attrs["task_duplicates"] = 4
         yield job
-
-
-# Apply platform restrictions for perftest jobs failing on Ubuntu 24.04
-transforms.add(linux_perf_platform_restrictions.restrict_perftest_to_1804)
 
 
 @transforms.add
