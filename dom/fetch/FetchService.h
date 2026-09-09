@@ -201,11 +201,6 @@ class FetchService final : public nsIObserver {
 
     bool IsLocalHostFetch() const;
 
-    // True when the request must be offered to a service worker's fetch
-    // handler before the network is considered, i.e. the client is controlled
-    // and the request's service-workers mode is "all".
-    bool IsServiceWorkerEligible() const;
-
     /* FetchDriverObserver interface */
     void OnResponseEnd(FetchDriverObserver::EndReason aReason,
                        JS::Handle<JS::Value> aReasonDetails) override;

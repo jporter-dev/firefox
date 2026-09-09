@@ -23,9 +23,6 @@ support-files = [
   "reroute.js",
   "reroute.js^headers^",
   "slow.sjs",
-  "stall.sjs",
-  "frame_offline_cancel.html",
-  "worker_offline_cancel.js",
   "sw_reroute.js",
   "empty.js",
   "empty.js^headers^",
@@ -141,8 +138,6 @@ skip-if = [
 ["test_headers_mainthread.html"]
 
 ["test_headers_sw_reroute.html"]
-
-["test_offline_cancel_inflight_fetch.html"]
 
 ["test_readableStreams.html"]
 scheme = "https"
