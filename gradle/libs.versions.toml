@@ -114,7 +114,7 @@ json = "20260814"
 jsoup = "1.23.2"
 lottie = "6.7.1"
 okhttp = "5.5.0"
-okio = "3.18.1"
+okio = "3.18.2"
 sentry = "8.55.0"
 zxing = "3.5.4"
 
