@@ -767,10 +767,8 @@ Maybe<PlanarYCbCrData> PlanarYCbCrData::From(
 
 std::ostream& operator<<(std::ostream& aOut, const PlanarYCbCrData& aData) {
   aOut << "PlanarYCbCrData: {"
-       << "mYStride=" << aData.mYStride
-       << ", mCbCrStride=" << aData.mCbCrStride
-       << ", mYSkip=" << aData.mYSkip
-       << ", mCbSkip=" << aData.mCbSkip
+       << "mYStride=" << aData.mYStride << ", mCbCrStride=" << aData.mCbCrStride
+       << ", mYSkip=" << aData.mYSkip << ", mCbSkip=" << aData.mCbSkip
        << ", mCrSkip=" << aData.mCrSkip
        << ", mPictureRect=" << aData.mPictureRect
        << ", mColorDepth=" << aData.mColorDepth
@@ -780,8 +778,7 @@ std::ostream& operator<<(std::ostream& aOut, const PlanarYCbCrData& aData) {
        << ", mColorRange=" << aData.mColorRange
        << ", mChromaSubsampling=" << aData.mChromaSubsampling
        << ", YPictureSize=" << aData.YDataSize()
-       << ", CbCrPictureSize=" << aData.CbCrDataSize()
-       << "}";
+       << ", CbCrPictureSize=" << aData.CbCrDataSize() << "}";
   return aOut;
 }
 
