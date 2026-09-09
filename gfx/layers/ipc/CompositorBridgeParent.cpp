@@ -654,7 +654,7 @@ already_AddRefed<PAPZParent> CompositorBridgeParent::AllocPAPZParent(
   // The main process should pass in 0 because we assume mRootLayerTreeID
   MOZ_RELEASE_ASSERT(!aLayersId.IsValid());
 
-  auto controller = MakeRefPtr<RemoteContentController>();
+  auto controller = MakeRefPtr<RemoteContentController>(mRootLayerTreeID);
 
   StaticMonitorAutoLock lock(sIndirectLayerTreesLock);
   CompositorBridgeParent::LayerTreeState& state =

@@ -27,18 +27,21 @@ namespace layers {
 
 using namespace mozilla::gfx;
 
-RemoteContentController::RemoteContentController()
-    : mCompositorThread(NS_GetCurrentThread()), mCanSend(true) {
+RemoteContentController::RemoteContentController(const LayersId& aLayersId)
+    : mLayersId(aLayersId),
+      mCompositorThread(NS_GetCurrentThread()),
+      mCanSend(true) {
   MOZ_ASSERT(CompositorThread()->IsOnCurrentThread());
 }
 
 RemoteContentController::~RemoteContentController() = default;
 
+// Note APZInputBridgeParent is bound to the main thread (See
+// PAPZInputBridge.ipdl).
 void RemoteContentController::NotifyLayerTransforms(
     nsTArray<MatrixMessage>&& aTransforms) {
-  if (!mCompositorThread->IsOnCurrentThread()) {
-    // We have to send messages from the compositor thread
-    mCompositorThread->Dispatch(
+  if (!NS_IsMainThread()) {
+    NS_DispatchToMainThread(
         NewRunnableMethod<StoreCopyPassByRRef<nsTArray<MatrixMessage>>>(
             "layers::RemoteContentController::NotifyLayerTransforms", this,
             &RemoteContentController::NotifyLayerTransforms,
@@ -46,8 +49,10 @@ void RemoteContentController::NotifyLayerTransforms(
     return;
   }
 
-  if (mCanSend) {
-    (void)SendLayerTransforms(aTransforms);
+  auto apzib =
+      CompositorBridgeParent::GetApzInputBridgeParentForRoot(mLayersId);
+  if (apzib) {
+    (void)apzib->SendLayerTransforms(aTransforms);
   }
 }
 
@@ -260,8 +265,10 @@ void RemoteContentController::UpdateOverscrollVelocity(
       rootController->UpdateOverscrollVelocity(aGuid, aX, aY, aIsRootContent);
     }
   } else if (XRE_IsGPUProcess()) {
-    if (!mCompositorThread->IsOnCurrentThread()) {
-      mCompositorThread->Dispatch(
+    // Note APZInputBridgeParent is bound to the main thread (See
+    // PAPZInputBridge.ipdl).
+    if (!NS_IsMainThread()) {
+      NS_DispatchToMainThread(
           NewRunnableMethod<ScrollableLayerGuid, float, float, bool>(
               "layers::RemoteContentController::UpdateOverscrollVelocity", this,
               &RemoteContentController::UpdateOverscrollVelocity, aGuid, aX, aY,
@@ -269,14 +276,10 @@ void RemoteContentController::UpdateOverscrollVelocity(
       return;
     }
 
-    MOZ_RELEASE_ASSERT(mCompositorThread->IsOnCurrentThread());
-    GeckoContentController* rootController =
-        CompositorBridgeParent::GetGeckoContentControllerForRoot(
-            aGuid.mLayersId);
-    if (rootController) {
-      MOZ_RELEASE_ASSERT(rootController->IsRemote());
-      (void)static_cast<RemoteContentController*>(rootController)
-          ->SendUpdateOverscrollVelocity(aGuid, aX, aY, aIsRootContent);
+    auto apzib =
+        CompositorBridgeParent::GetApzInputBridgeParentForRoot(aGuid.mLayersId);
+    if (apzib) {
+      (void)apzib->SendUpdateOverscrollVelocity(aGuid, aX, aY, aIsRootContent);
     }
   }
 }
@@ -304,8 +307,10 @@ void RemoteContentController::UpdateOverscrollOffset(
       rootController->UpdateOverscrollOffset(aGuid, aX, aY, aIsRootContent);
     }
   } else if (XRE_IsGPUProcess()) {
-    if (!mCompositorThread->IsOnCurrentThread()) {
-      mCompositorThread->Dispatch(
+    // Note APZInputBridgeParent is bound to the main thread (See
+    // PAPZInputBridge.ipdl).
+    if (!NS_IsMainThread()) {
+      NS_DispatchToMainThread(
           NewRunnableMethod<ScrollableLayerGuid, float, float, bool>(
               "layers::RemoteContentController::UpdateOverscrollOffset", this,
               &RemoteContentController::UpdateOverscrollOffset, aGuid, aX, aY,
@@ -313,14 +318,10 @@ void RemoteContentController::UpdateOverscrollOffset(
       return;
     }
 
-    MOZ_RELEASE_ASSERT(mCompositorThread->IsOnCurrentThread());
-    GeckoContentController* rootController =
-        CompositorBridgeParent::GetGeckoContentControllerForRoot(
-            aGuid.mLayersId);
-    if (rootController) {
-      MOZ_RELEASE_ASSERT(rootController->IsRemote());
-      (void)static_cast<RemoteContentController*>(rootController)
-          ->SendUpdateOverscrollOffset(aGuid, aX, aY, aIsRootContent);
+    auto apzib =
+        CompositorBridgeParent::GetApzInputBridgeParentForRoot(aGuid.mLayersId);
+    if (apzib) {
+      (void)apzib->SendUpdateOverscrollOffset(aGuid, aX, aY, aIsRootContent);
     }
   }
 }
@@ -347,21 +348,19 @@ void RemoteContentController::HideDynamicToolbar(
       rootController->HideDynamicToolbar(aGuid);
     }
   } else if (XRE_IsGPUProcess()) {
-    if (!mCompositorThread->IsOnCurrentThread()) {
-      mCompositorThread->Dispatch(NewRunnableMethod<ScrollableLayerGuid>(
+    // Note APZInputBridgeParent is bound to the main thread (See
+    // PAPZInputBridge.ipdl).
+    if (!NS_IsMainThread()) {
+      NS_DispatchToMainThread(NewRunnableMethod<ScrollableLayerGuid>(
           "layers::RemoteContentController::HideDynamicToolbar", this,
           &RemoteContentController::HideDynamicToolbar, aGuid));
       return;
     }
 
-    MOZ_RELEASE_ASSERT(mCompositorThread->IsOnCurrentThread());
-    GeckoContentController* rootController =
-        CompositorBridgeParent::GetGeckoContentControllerForRoot(
-            aGuid.mLayersId);
-    if (rootController) {
-      MOZ_RELEASE_ASSERT(rootController->IsRemote());
-      (void)static_cast<RemoteContentController*>(rootController)
-          ->SendHideDynamicToolbar();
+    auto apzib =
+        CompositorBridgeParent::GetApzInputBridgeParentForRoot(aGuid.mLayersId);
+    if (apzib) {
+      (void)apzib->SendHideDynamicToolbar();
     }
   }
 }

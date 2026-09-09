@@ -66,6 +66,19 @@ class APZInputBridgeChild : public PAPZInputBridgeChild, public APZInputBridge {
   mozilla::ipc::IPCResult RecvNotifyScaleGestureComplete(
       const ScrollableLayerGuid::ViewID& aScrollId, float aScale);
 
+  mozilla::ipc::IPCResult RecvLayerTransforms(
+      nsTArray<MatrixMessage>&& aTransforms);
+
+  mozilla::ipc::IPCResult RecvUpdateOverscrollVelocity(
+      const ScrollableLayerGuid& aGuid, const float& aX, const float& aY,
+      const bool& aIsRootContent);
+
+  mozilla::ipc::IPCResult RecvUpdateOverscrollOffset(
+      const ScrollableLayerGuid& aGuid, const float& aX, const float& aY,
+      const bool& aIsRootContent);
+
+  mozilla::ipc::IPCResult RecvHideDynamicToolbar();
+
  protected:
   void ProcessUnhandledEvent(LayoutDeviceIntPoint* aRefPoint,
                              ScrollableLayerGuid* aOutTargetGuid,
@@ -97,6 +110,21 @@ class APZInputBridgeChild : public PAPZInputBridgeChild, public APZInputBridge {
                                       const Modifiers& aModifiers);
 
   void NotifyScaleGestureCompleteOnMainThread(float aScale);
+
+  void NotifyLayerTransformsOnMainThread(nsTArray<MatrixMessage>&& aTransforms);
+
+  void UpdateOverscrollVelocityOnMainThread(const ScrollableLayerGuid& aGuid,
+                                            float aX, float aY,
+                                            bool aIsRootContent);
+
+  void UpdateOverscrollOffsetOnMainThread(const ScrollableLayerGuid& aGuid,
+                                          float aX, float aY,
+                                          bool aIsRootContent);
+
+  void HideDynamicToolbarOnMainThread();
+
+  // Returns null if the compositor session has already been torn down.
+  GeckoContentController* GetContentController();
 
   bool mIsOpen;
   uint64_t mProcessToken;

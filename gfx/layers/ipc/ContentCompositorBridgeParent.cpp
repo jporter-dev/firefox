@@ -97,7 +97,7 @@ already_AddRefed<PAPZParent> ContentCompositorBridgeParent::AllocPAPZParent(
     return nullptr;
   }
 
-  auto controller = MakeRefPtr<RemoteContentController>();
+  auto controller = MakeRefPtr<RemoteContentController>(aLayersId);
 
   CompositorBridgeParent::WithIndirectLayerTreesLock(
       [&](const StaticMonitorAutoLock& aProofOfLock) {

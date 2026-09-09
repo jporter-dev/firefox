@@ -31,6 +31,8 @@ using class mozilla::layers::KeyboardMap from "mozilla/layers/KeyboardMap.h";
 
 using mozilla::layers::LayersId from "mozilla/layers/LayersTypes.h";
 
+using mozilla::layers::MatrixMessage from "mozilla/layers/MatrixMessage.h";
+
 namespace mozilla {
 namespace layers {
 
@@ -117,6 +119,14 @@ child:
   async CancelAutoscroll(ViewID aScrollId);
 
   async NotifyScaleGestureComplete(ViewID aScrollId, float aScale);
+
+  async LayerTransforms(MatrixMessage[] aTransforms);
+
+  async UpdateOverscrollVelocity(ScrollableLayerGuid aGuid, float aX, float aY, bool aIsRootContent);
+
+  async UpdateOverscrollOffset(ScrollableLayerGuid aGuid, float aX, float aY, bool aIsRootContent);
+
+  async HideDynamicToolbar();
 };
 
 } // namespace gfx

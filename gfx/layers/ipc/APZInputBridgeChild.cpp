@@ -4,7 +4,8 @@
 
 #include "mozilla/layers/APZInputBridgeChild.h"
 
-#include "InputData.h"                  // for InputData, etc
+#include "InputData.h"  // for InputData, etc
+#include "mozilla/Assertions.h"
 #include "mozilla/dom/BrowserParent.h"  // for BrowserParent
 #include "mozilla/gfx/GPUProcessManager.h"
 #include "mozilla/ipc/Endpoint.h"
@@ -198,9 +199,8 @@ void APZInputBridgeChild::HandleTapOnMainThread(
     const Maybe<DoubleTapToZoomMetrics>& aDoubleTapToZoomMetrics) {
   if (mCompositorSession &&
       mCompositorSession->RootLayerTreeId() == aGuid.mLayersId &&
-      mCompositorSession->GetContentController()) {
-    RefPtr<GeckoContentController> controller =
-        mCompositorSession->GetContentController();
+      GetContentController()) {
+    RefPtr<GeckoContentController> controller = GetContentController();
     controller->HandleTap(aType, aPoint, aModifiers, aGuid, aInputBlockId,
                           aDoubleTapToZoomMetrics);
     return;
@@ -457,6 +457,109 @@ void APZInputBridgeChild::SetLongTapEnabled(bool aTapGestureEnabled) {
   }
 
   SendSetLongTapEnabled(aTapGestureEnabled);
+}
+
+// Note mCompositorSession is currently used by the main thread.
+GeckoContentController* APZInputBridgeChild::GetContentController() {
+  MOZ_ASSERT(NS_IsMainThread());
+
+  if (!mCompositorSession) {
+    return nullptr;
+  }
+  return mCompositorSession->GetContentController();
+}
+
+void APZInputBridgeChild::NotifyLayerTransformsOnMainThread(
+    nsTArray<MatrixMessage>&& aTransforms) {
+  MOZ_ASSERT(NS_IsMainThread());
+
+  if (RefPtr<GeckoContentController> controller = GetContentController()) {
+    controller->NotifyLayerTransforms(std::move(aTransforms));
+  }
+}
+
+mozilla::ipc::IPCResult APZInputBridgeChild::RecvLayerTransforms(
+    nsTArray<MatrixMessage>&& aTransforms) {
+  if (NS_IsMainThread()) {
+    NotifyLayerTransformsOnMainThread(std::move(aTransforms));
+  } else {
+    NS_DispatchToMainThread(
+        NewRunnableMethod<StoreCopyPassByRRef<nsTArray<MatrixMessage>>>(
+            "layers::APZInputBridgeChild::NotifyLayerTransformsOnMainThread",
+            this, &APZInputBridgeChild::NotifyLayerTransformsOnMainThread,
+            std::move(aTransforms)));
+  }
+  return IPC_OK();
+}
+
+void APZInputBridgeChild::UpdateOverscrollVelocityOnMainThread(
+    const ScrollableLayerGuid& aGuid, float aX, float aY, bool aIsRootContent) {
+  MOZ_ASSERT(NS_IsMainThread());
+
+  if (RefPtr<GeckoContentController> controller = GetContentController()) {
+    controller->UpdateOverscrollVelocity(aGuid, aX, aY, aIsRootContent);
+  }
+}
+
+mozilla::ipc::IPCResult APZInputBridgeChild::RecvUpdateOverscrollVelocity(
+    const ScrollableLayerGuid& aGuid, const float& aX, const float& aY,
+    const bool& aIsRootContent) {
+  if (NS_IsMainThread()) {
+    UpdateOverscrollVelocityOnMainThread(aGuid, aX, aY, aIsRootContent);
+  } else {
+    NS_DispatchToMainThread(
+        NewRunnableMethod<ScrollableLayerGuid, float, float, bool>(
+            "layers::APZInputBridgeChild::UpdateOverscrollVelocityOnMainThread",
+            this, &APZInputBridgeChild::UpdateOverscrollVelocityOnMainThread,
+            aGuid, aX, aY, aIsRootContent));
+  }
+  return IPC_OK();
+}
+
+void APZInputBridgeChild::UpdateOverscrollOffsetOnMainThread(
+    const ScrollableLayerGuid& aGuid, float aX, float aY, bool aIsRootContent) {
+  MOZ_ASSERT(NS_IsMainThread());
+
+  if (RefPtr<GeckoContentController> controller = GetContentController()) {
+    controller->UpdateOverscrollOffset(aGuid, aX, aY, aIsRootContent);
+  }
+}
+
+mozilla::ipc::IPCResult APZInputBridgeChild::RecvUpdateOverscrollOffset(
+    const ScrollableLayerGuid& aGuid, const float& aX, const float& aY,
+    const bool& aIsRootContent) {
+  if (NS_IsMainThread()) {
+    UpdateOverscrollOffsetOnMainThread(aGuid, aX, aY, aIsRootContent);
+  } else {
+    NS_DispatchToMainThread(
+        NewRunnableMethod<ScrollableLayerGuid, float, float, bool>(
+            "layers::APZInputBridgeChild::UpdateOverscrollOffsetOnMainThread",
+            this, &APZInputBridgeChild::UpdateOverscrollOffsetOnMainThread,
+            aGuid, aX, aY, aIsRootContent));
+  }
+  return IPC_OK();
+}
+
+void APZInputBridgeChild::HideDynamicToolbarOnMainThread() {
+  MOZ_ASSERT(NS_IsMainThread());
+
+  if (RefPtr<GeckoContentController> controller = GetContentController()) {
+    // Only the RemoteContentController implementation uses the
+    // ScrollableLayerGuid parameter, and the controller here is never a
+    // RemoteContentController, so it's fine to invent a value here.
+    controller->HideDynamicToolbar(ScrollableLayerGuid{});
+  }
+}
+
+mozilla::ipc::IPCResult APZInputBridgeChild::RecvHideDynamicToolbar() {
+  if (NS_IsMainThread()) {
+    HideDynamicToolbarOnMainThread();
+  } else {
+    NS_DispatchToMainThread(NewRunnableMethod(
+        "layers::APZInputBridgeChild::HideDynamicToolbarOnMainThread", this,
+        &APZInputBridgeChild::HideDynamicToolbarOnMainThread));
+  }
+  return IPC_OK();
 }
 
 }  // namespace layers
