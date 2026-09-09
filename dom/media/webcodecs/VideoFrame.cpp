@@ -2108,7 +2108,7 @@ nsCString VideoFrame::ToString() const {
   Maybe<VideoPixelFormat> format = mResource->TryPixelFormat();
   rv.AppendPrintf(
       "VideoFrame ts: %" PRId64
-      ", %s, coded[%dx%d] visible[%dx%d], display[%dx%d], %s",
+      ", %s, coded[%dx%d] visible[%dx%d], display[%dx%d] color: %s",
       mTimestamp,
       format ? dom::GetEnumString(*format).get() : "unknown pixel format",
       mCodedSize.width, mCodedSize.height, mVisibleRect.width,

@@ -78,7 +78,7 @@ RefPtr<EncoderAgent::ConfigurePromise> EncoderAgent::Configure(
   SetState(State::Configuring);
 
   LOG("EncoderAgent #{} ({}) is creating an encoder ({})", mId, fmt::ptr(this),
-      aConfig.ToString().get());
+      mozilla::EnumValueToString(aConfig.mCodec));
 
   RefPtr<ConfigurePromise> p = mConfigurePromise.Ensure(__func__);
 

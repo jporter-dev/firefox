@@ -490,13 +490,6 @@ MediaResult FFmpegVideoEncoder<LIBAV_VER>::InitEncoderInternal(bool aHardware) {
     mCodecContext->color_trc =
         ToAVColorTransfer(colors.mTransferFunction.ref());
   }
-  FFMPEGV_LOG(
-      "Configured encoder color metadata: {} -> FFmpeg [range={}, matrix={}, "
-      "primaries={}, transfer={}]",
-      colors.ToString().get(), static_cast<int>(mCodecContext->color_range),
-      static_cast<int>(mCodecContext->colorspace),
-      static_cast<int>(mCodecContext->color_primaries),
-      static_cast<int>(mCodecContext->color_trc));
 
   mCodecContext->width = static_cast<int>(mConfig.mSize.width);
   mCodecContext->height = static_cast<int>(mConfig.mSize.height);

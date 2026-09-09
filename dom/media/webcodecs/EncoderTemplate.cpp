@@ -399,10 +399,9 @@ void EncoderTemplate<VideoEncoderTraits>::OutputEncodedVideoData(
     if (mOutputNewDecoderConfig) {
       RootedDictionary<VideoDecoderConfig> decoderConfig(cx);
       EncoderConfigToDecoderConfig(cx, data, *mActiveConfig, decoderConfig);
-      LOG("Encoder output ts={} decoder-config={}", encodedData->Timestamp(),
-          ConfigToString(decoderConfig).get());
       metadata.mDecoderConfig.Construct(std::move(decoderConfig));
       mOutputNewDecoderConfig = false;
+      LOG("New config passed to output callback");
     }
 
     nsAutoCString metadataInfo;

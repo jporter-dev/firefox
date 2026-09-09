@@ -15,7 +15,6 @@
 #include "MediaInfo.h"
 #include "PDMFactory.h"
 #include "RemoteCDMParent.h"
-#include "RemoteDecodeUtils.h"
 #include "RemoteImageHolder.h"
 #include "RemoteMediaManagerParent.h"
 #include "mozilla/StaticPrefs_media.h"
@@ -71,9 +70,6 @@ MediaResult RemoteVideoDecoderChild::ProcessOutput(
           data.base().offset(), data.base().time(), data.base().duration()));
       continue;
     }
-    MOZ_LOG_FMT(
-        gRemoteDecodeLog, LogLevel::Verbose, "Remote video ts={} received: {}",
-        data.base().time().ToMicroseconds(), data.image().ToString().get());
     RefPtr<Image> image = data.image().TransferToImage(mBufferRecycleBin);
 
     RefPtr<VideoData> video = VideoData::CreateFromImage(
@@ -260,13 +256,10 @@ MediaResult RemoteVideoDecoderParent::ProcessDecodedData(
     IntSize size;
     bool needStorage = false;
 
-    YUVColorSpace yuvColorSpace = gfx::YUVColorSpace::Default;
+    YUVColorSpace YUVColorSpace = gfx::YUVColorSpace::Default;
     ColorSpace2 colorPrimaries = gfx::ColorSpace2::UNKNOWN;
     TransferFunction transferFunction = gfx::TransferFunction::BT709;
     ColorRange colorRange = gfx::ColorRange::LIMITED;
-
-    PlanarYCbCrImage* image = video->mImage->AsPlanarYCbCrImage();
-    const PlanarYCbCrData* imageData = image ? image->GetData() : nullptr;
 
     if (mKnowsCompositor) {
       texture = video->mImage->GetTextureClient(mKnowsCompositor);
@@ -293,11 +286,16 @@ MediaResult RemoteVideoDecoderParent::ProcessDecodedData(
     // copying frames via shmem.
     if (!IsSurfaceDescriptorValid(sd)) {
       needStorage = false;
+      PlanarYCbCrImage* image = video->mImage->AsPlanarYCbCrImage();
       if (!image) {
         return MediaResult(NS_ERROR_UNEXPECTED,
                            "Expected Planar YCbCr image in "
                            "RemoteVideoDecoderParent::ProcessDecodedData");
       }
+      YUVColorSpace = image->GetData()->mYUVColorSpace;
+      colorPrimaries = image->GetData()->mColorPrimaries;
+      transferFunction = image->GetData()->mTransferFunction;
+      colorRange = image->GetData()->mColorRange;
 
       SurfaceDescriptorBuffer sdBuffer;
       nsresult rv = image->BuildSurfaceDescriptorBuffer(
@@ -320,38 +318,26 @@ MediaResult RemoteVideoDecoderParent::ProcessDecodedData(
       size = image->GetSize();
     }
 
-    if ((!needStorage ||
-         StaticPrefs::media_decoder_frame_color_metadata_enabled()) &&
-        imageData) {
-      yuvColorSpace = imageData->mYUVColorSpace;
-      colorPrimaries = imageData->mColorPrimaries;
-      transferFunction = imageData->mTransferFunction;
-      colorRange = imageData->mColorRange;
-    }
-
     if (needStorage) {
       MOZ_ASSERT(sd.type() != SurfaceDescriptor::TSurfaceDescriptorBuffer);
       mParent->StoreImage(static_cast<const SurfaceDescriptorGPUVideo&>(sd),
                           video->mImage, texture);
     }
 
-    RemoteImageHolder imageHolder(
-        mParent,
-        XRE_IsGPUProcess()
-            ? VideoBridgeSource::GpuProcess
-            : (XRE_IsRDDProcess() ? VideoBridgeSource::RddProcess
-                                  : VideoBridgeSource::MFMediaEngineCDMProcess),
-        size, video->mImage->GetColorDepth(), sd, yuvColorSpace, colorPrimaries,
-        transferFunction, colorRange);
-    MOZ_LOG_FMT(
-        gRemoteDecodeLog, LogLevel::Verbose,
-        "Remote video ts={} send via {}: {}", video->mTime.ToMicroseconds(),
-        needStorage ? "texture" : "shmem", imageHolder.ToString().get());
-
     RemoteVideoData output(
         MediaDataIPDL(data->mOffset, data->mTime, data->mTimecode,
                       data->mDuration, data->mKeyframe),
-        video->mDisplay, std::move(imageHolder), video->mFrameID);
+        video->mDisplay,
+        RemoteImageHolder(
+            mParent,
+            XRE_IsGPUProcess()
+                ? VideoBridgeSource::GpuProcess
+                : (XRE_IsRDDProcess()
+                       ? VideoBridgeSource::RddProcess
+                       : VideoBridgeSource::MFMediaEngineCDMProcess),
+            size, video->mImage->GetColorDepth(), sd, YUVColorSpace,
+            colorPrimaries, transferFunction, colorRange),
+        video->mFrameID);
 
     array.AppendElement(std::move(output));
   }
