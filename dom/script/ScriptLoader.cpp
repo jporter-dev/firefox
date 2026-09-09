@@ -4638,11 +4638,9 @@ void ScriptLoader::ProcessPendingRequests(bool aAllowBypassingParserBlocking) {
 
   if (mDeferCheckpointReached && mDocument && !mParserBlockingRequest &&
       mNonAsyncExternalScriptInsertedRequests.isEmpty() &&
-      mXSLTRequests.isEmpty() && mDeferRequests.isEmpty()) {
-    const RefPtr<ScriptLoader> self = this;
-    if (self->MaybeRemovedDeferRequests()) {
-      return self->ProcessPendingRequests();
-    }
+      mXSLTRequests.isEmpty() && mDeferRequests.isEmpty() &&
+      MaybeRemovedDeferRequests()) {
+    return ProcessPendingRequests();
   }
 
   if (mDeferCheckpointReached && mDocument && !mParserBlockingRequest &&
@@ -5671,7 +5669,7 @@ void ScriptLoader::MaybeMoveToLoadedList(ScriptLoadRequest* aRequest) {
 bool ScriptLoader::MaybeRemovedDeferRequests() {
   if (mDeferRequests.isEmpty() && mDocument && mBlockingDOMContentLoaded) {
     mBlockingDOMContentLoaded = false;
-    mDocument->UnblockDOMContentLoaded(/* aFireSync = */ true);
+    mDocument->UnblockDOMContentLoaded();
     return true;
   }
   return false;

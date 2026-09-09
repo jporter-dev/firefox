@@ -694,7 +694,7 @@ nsresult PrototypeDocumentContentSink::DoneWalking() {
 
   doc->SetScrollToRef(mDocument->GetDocumentURI());
 
-  doc->EndLoad(/* aFireDOMContentLoadedSync = */ true);
+  doc->EndLoad();
 
   return NS_OK;
 }

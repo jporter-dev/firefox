@@ -298,11 +298,11 @@ nsresult XMLDocument::StartDocumentLoad(
   return NS_OK;
 }
 
-void XMLDocument::EndLoad(bool aFireDOMContentLoadedSync) {
+void XMLDocument::EndLoad() {
   mChannelIsPending = false;
 
   mSynchronousDOMContentLoaded = mLoadedAsData;
-  Document::EndLoad(aFireDOMContentLoadedSync);
+  Document::EndLoad();
   if (mSynchronousDOMContentLoaded) {
     mSynchronousDOMContentLoaded = false;
     Document::SetReadyStateInternal(Document::READYSTATE_COMPLETE);

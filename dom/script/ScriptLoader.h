@@ -862,7 +862,7 @@ class ScriptLoader final : public JS::loader::ScriptLoaderInterface {
 
   void AddDeferRequest(ScriptLoadRequest* aRequest);
   void AddAsyncRequest(ScriptLoadRequest* aRequest);
-  MOZ_CAN_RUN_SCRIPT bool MaybeRemovedDeferRequests();
+  bool MaybeRemovedDeferRequests();
 
   bool ShouldApplyDelazifyStrategy(ScriptLoadRequest* aRequest);
   void ApplyDelazifyStrategy(JS::CompileOptions* aOptions);
