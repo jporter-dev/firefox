@@ -181,6 +181,14 @@ they do not agree:
 
         :doc:`Places </browser/places/index>`
 
+    A single backtick is the `title-reference` role, so `` `forceForeground` ``
+    comes out as italic prose; code needs double backticks. `|name|` is a
+    substitution reference, and an undefined one fails the build rather than
+    warning.
+-   **A `@param` description renders as one paragraph.** sphinx-js replaces every
+    newline in one with a space, so a list or a heading written inside a
+    parameter's description arrives glued to the parameter above it. Structure
+    belongs in the function's own description, which keeps it.
 -   **A JSDoc failure anywhere aborts every build.** `conf.py` hands sphinx-js
     the whole `js_source_paths` list whatever directory `./mach doc` was pointed
     at, so an aborting error names a file the change never touched and scoping
@@ -193,6 +201,9 @@ they do not agree:
     each log a build ERROR while the member still renders -- without the row for
     the parameter or return value being documented. Write `{Array<A|B>}` for the
     last of those, and put a predicate's meaning in the summary line.
+    Indexed access (`{Foo['id']}`) has no spelling jsdoc accepts, whatever the
+    quoting, so a derived type needs a named `@typedef` alias beside the one it
+    derives from.
 -   **A documented default value renders**, so `[options.animate=true]` is a
     claim about the code. Write one only where the signature supplies that
     default, and describe a computed default in the prose instead, where it can
