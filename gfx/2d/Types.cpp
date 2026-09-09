@@ -100,7 +100,8 @@ std::ostream& operator<<(std::ostream& aOut, const SamplingFilter& aFilter) {
   return aOut;
 }
 
-std::ostream& operator<<(std::ostream& aOut, const YUVColorSpace& aYUVColorSpace) {
+std::ostream& operator<<(std::ostream& aOut,
+                         const YUVColorSpace& aYUVColorSpace) {
 #define Emit(x) \
   case x:       \
     aOut << #x; \
@@ -136,7 +137,8 @@ std::ostream& operator<<(std::ostream& aOut, const ColorDepth& aColorDepth) {
   return aOut;
 }
 
-std::ostream& operator<<(std::ostream& aOut, const TransferFunction& aTransferFunction) {
+std::ostream& operator<<(std::ostream& aOut,
+                         const TransferFunction& aTransferFunction) {
 #define Emit(x) \
   case x:       \
     aOut << #x; \
@@ -167,7 +169,7 @@ std::ostream& operator<<(std::ostream& aOut, const ColorRange& aColorRange) {
   return aOut;
 }
 
-std::ostream& operator<<(std::ostream& aOut, const ColorSpace2& aColorSpace2){
+std::ostream& operator<<(std::ostream& aOut, const ColorSpace2& aColorSpace2) {
 #define Emit(x) \
   case x:       \
     aOut << #x; \
@@ -187,7 +189,8 @@ std::ostream& operator<<(std::ostream& aOut, const ColorSpace2& aColorSpace2){
   return aOut;
 }
 
-std::ostream& operator<<(std::ostream& aOut, const ChromaSubsampling& aChromaSubsampling) {
+std::ostream& operator<<(std::ostream& aOut,
+                         const ChromaSubsampling& aChromaSubsampling) {
 #define Emit(x) \
   case x:       \
     aOut << #x; \

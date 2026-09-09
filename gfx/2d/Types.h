@@ -548,7 +548,8 @@ enum class YUVColorSpace : uint8_t {
   _Last = Identity,
 };
 
-std::ostream& operator<<(std::ostream& aOut, const YUVColorSpace& aYUVColorSpace);
+std::ostream& operator<<(std::ostream& aOut,
+                         const YUVColorSpace& aYUVColorSpace);
 
 enum class ColorDepth : uint8_t {
   COLOR_8,
@@ -608,7 +609,8 @@ enum class TransferFunction : uint8_t {
   Default = BT709,
 };
 
-std::ostream& operator<<(std::ostream& aOut, const TransferFunction& aTransferFunction);
+std::ostream& operator<<(std::ostream& aOut,
+                         const TransferFunction& aTransferFunction);
 
 enum class ColorRange : uint8_t {
   LIMITED,
@@ -941,7 +943,8 @@ enum class ChromaSubsampling : uint8_t {
   _Last = HALF_WIDTH_AND_HEIGHT,
 };
 
-std::ostream& operator<<(std::ostream& aOut, const ChromaSubsampling& aChromaSubsampling);
+std::ostream& operator<<(std::ostream& aOut,
+                         const ChromaSubsampling& aChromaSubsampling);
 
 template <typename T>
 static inline T ChromaSize(const T& aYSize, ChromaSubsampling aSubsampling) {
