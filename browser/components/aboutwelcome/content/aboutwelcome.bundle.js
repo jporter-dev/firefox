@@ -1288,6 +1288,8 @@ __webpack_require__.r(__webpack_exports__);
 const DEFAULT_AUTO_ADVANCE_MS = 20000;
 const CORNER_IMAGE_POSITIONS = new Set(["bottom-left", "bottom-right", "top-left", "top-right"]);
 const DEFAULT_CORNER_IMAGE_POSITION = "bottom-right";
+const CORNER_IMAGE_ENTRANCE_ANIMATIONS = new Set(["none", "fade", "slide-block", "slide-inline", "slide-corner", "zoom"]);
+const DEFAULT_CORNER_IMAGE_ENTRANCE_ANIMATION = "none";
 const MultiStageProtonScreen = props => {
   const {
     autoAdvance,
@@ -1741,6 +1743,8 @@ class ProtonScreen extends (react__WEBPACK_IMPORTED_MODULE_0___default().PureCom
   renderCornerImage() {
     const cornerImage = this.props.content.corner_image;
     const position = CORNER_IMAGE_POSITIONS.has(cornerImage.position) ? cornerImage.position : DEFAULT_CORNER_IMAGE_POSITION;
+    const entranceAnimation = cornerImage.entrance_animation ?? {};
+    const entranceType = CORNER_IMAGE_ENTRANCE_ANIMATIONS.has(entranceAnimation.type) ? entranceAnimation.type : DEFAULT_CORNER_IMAGE_ENTRANCE_ANIMATION;
     return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", {
       className: "corner-image-container"
     }, this.renderPicture({
@@ -1752,8 +1756,15 @@ class ProtonScreen extends (react__WEBPACK_IMPORTED_MODULE_0___default().PureCom
       width: cornerImage.width,
       marginBlock: cornerImage.marginBlock,
       marginInline: cornerImage.marginInline,
-      style: cornerImage.style,
-      className: `corner-image ${position}`
+      style: {
+        // Read indirectly by _multistage.scss, so reduced motion can
+        // override them. Undefined values fall through to its defaults.
+        "--corner-image-entrance-distance": entranceAnimation.distance,
+        "--corner-image-entrance-duration": entranceAnimation.duration,
+        "--corner-image-entrance-delay": entranceAnimation.delay,
+        ...cornerImage.style
+      },
+      className: `corner-image ${position} entrance-${entranceType}`
     }));
   }
   renderLanguageSwitcher() {
@@ -2192,7 +2203,7 @@ const buttonPropTypes = prop_types_prop_types__WEBPACK_IMPORTED_MODULE_13___defa
 });
 const screenContentShape = {
   // The layout position of the screen.
-  position: prop_types_prop_types__WEBPACK_IMPORTED_MODULE_13___default().oneOf(["center", "split", "callout"]),
+  position: prop_types_prop_types__WEBPACK_IMPORTED_MODULE_13___default().oneOf(["center", "center-large", "split", "callout"]),
   // If true, the screens are displayed in fullscreen.
   fullscreen: (prop_types_prop_types__WEBPACK_IMPORTED_MODULE_13___default().bool),
   // If true, the progress bar will be shown. Defaults to true.
@@ -2301,6 +2312,48 @@ const screenContentShape = {
     width: (prop_types_prop_types__WEBPACK_IMPORTED_MODULE_13___default().string),
     // The CSS style overriding the height property.
     height: (prop_types_prop_types__WEBPACK_IMPORTED_MODULE_13___default().string)
+  }),
+  // An optional object representing an illustration anchored to a corner of the
+  // screen. Only rendered for screens with 'position' set to 'center-large' and
+  // 'fullscreen' set to true, which are the only ones that style it.
+  corner_image: prop_types_prop_types__WEBPACK_IMPORTED_MODULE_13___default().shape({
+    // The image URL.
+    imageURL: (prop_types_prop_types__WEBPACK_IMPORTED_MODULE_13___default().string),
+    // The dark mode image URL.
+    darkModeImageURL: (prop_types_prop_types__WEBPACK_IMPORTED_MODULE_13___default().string),
+    // The reduced motion image URL.
+    reducedMotionImageURL: (prop_types_prop_types__WEBPACK_IMPORTED_MODULE_13___default().string),
+    // The dark mode reduced motion image URL.
+    darkModeReducedMotionImageURL: (prop_types_prop_types__WEBPACK_IMPORTED_MODULE_13___default().string),
+    // The corner the illustration is anchored to. Defaults to 'bottom-right'.
+    position: prop_types_prop_types__WEBPACK_IMPORTED_MODULE_13___default().oneOf(["bottom-left", "bottom-right", "top-left", "top-right"]),
+    // The CSS style overriding the width property.
+    width: (prop_types_prop_types__WEBPACK_IMPORTED_MODULE_13___default().string),
+    // The CSS style overriding the height property.
+    height: (prop_types_prop_types__WEBPACK_IMPORTED_MODULE_13___default().string),
+    // The CSS style overriding the marginBlock property.
+    marginBlock: (prop_types_prop_types__WEBPACK_IMPORTED_MODULE_13___default().string),
+    // The CSS style overriding the marginInline property.
+    marginInline: (prop_types_prop_types__WEBPACK_IMPORTED_MODULE_13___default().string),
+    // CSS overrides applied to the illustration container. Avoid 'translate'
+    // and 'scale' when using 'entrance_animation', which animates those two
+    // properties and would be overridden by them. 'transform' is unaffected.
+    style: (prop_types_prop_types__WEBPACK_IMPORTED_MODULE_13___default().object),
+    // How the illustration animates in each time the screen is entered. The
+    // direction is derived from 'position', so a 'bottom-left' illustration
+    // rises and a 'top-left' one descends. Every type degrades to an
+    // opacity-only fade for users who prefer reduced motion.
+    entrance_animation: prop_types_prop_types__WEBPACK_IMPORTED_MODULE_13___default().shape({
+      // The animation to run. Defaults to 'none'.
+      type: prop_types_prop_types__WEBPACK_IMPORTED_MODULE_13___default().oneOf(["none", "fade", "slide-block", "slide-inline", "slide-corner", "zoom"]),
+      // The CSS length the illustration travels, for the 'slide-*' types.
+      distance: (prop_types_prop_types__WEBPACK_IMPORTED_MODULE_13___default().string),
+      // The CSS time the animation takes.
+      duration: (prop_types_prop_types__WEBPACK_IMPORTED_MODULE_13___default().string),
+      // The CSS time to wait before starting, for staggering the illustration
+      // against the screen's other content.
+      delay: (prop_types_prop_types__WEBPACK_IMPORTED_MODULE_13___default().string)
+    })
   }),
   // The text for the headline.
   title: localizableThingPropTypes,
