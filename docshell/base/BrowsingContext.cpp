@@ -895,6 +895,10 @@ const char* BrowsingContext::BrowsingContextCoherencyChecks(
     return "Content cannot create chrome BCs";
   }
 
+  if (aOriginProcess && GetServiceWorkersTestingEnabled()) {
+    return "Content cannot enable ServiceWorkersTestingEnabled";
+  }
+
   // LoadContext should generally match our opener or parent.
   if (IsContent()) {
     if (RefPtr<BrowsingContext> opener = GetOpener()) {

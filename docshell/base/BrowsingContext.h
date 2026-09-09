@@ -1309,13 +1309,13 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
               nsILoadInfo::CrossOriginOpenerPolicy, ContentParent*);
 
   bool CanSet(FieldIndex<IDX_ServiceWorkersTestingEnabled>, bool,
-              ContentParent*) {
-    return IsTop();
+              ContentParent* aSource) {
+    return XRE_IsParentProcess() && !aSource && IsTop();
   }
 
   bool CanSet(FieldIndex<IDX_ServiceWorkersDisabledByPolicy>, bool,
-              ContentParent*) {
-    return IsTop();
+              ContentParent* aSource) {
+    return XRE_IsParentProcess() && !aSource && IsTop();
   }
 
   bool CanSet(FieldIndex<IDX_LanguageOverride>, const nsCString&,
