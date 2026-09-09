@@ -3075,9 +3075,16 @@ void SVGTextFrame::NotifySVGChanged(ChangeFlags aFlags) {
 
   bool needNewBounds = false;
   bool needGlyphMetricsUpdate = false;
-  if (aFlags.contains(ChangeFlag::CoordContextChanged) &&
-      HasAnyStateBits(NS_STATE_SVG_POSITIONING_MAY_USE_PERCENTAGES)) {
-    needGlyphMetricsUpdate = true;
+  if (aFlags.contains(ChangeFlag::CoordContextChanged)) {
+    if (HasAnyStateBits(NS_STATE_SVG_POSITIONING_MAY_USE_PERCENTAGES)) {
+      needGlyphMetricsUpdate = true;
+    }
+    if (SVGContentUtils::HasPercentageDependentStroke(
+            Style(), SVGContextPaint::GetContextPaint(GetContent())) ||
+        SVGIntegrationUtils::UsingEffectsForFrame(this)) {
+      // Stroke and effects may have percentage dependent units.
+      needNewBounds = true;
+    }
   }
 
   if (aFlags.contains(ChangeFlag::TransformChanged)) {

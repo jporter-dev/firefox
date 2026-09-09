@@ -331,15 +331,15 @@ void SVGGeometryFrame::NotifySVGChanged(ChangeFlags aFlags) {
   if (aFlags.contains(ChangeFlag::CoordContextChanged)) {
     auto* geom = static_cast<SVGGeometryElement*>(GetContent());
     // Stroke currently contributes to our mRect, which is why we have to take
-    // account of stroke-width here. Note that we do not need to take account
-    // of stroke-dashoffset since, although that can have a percentage value
-    // that is resolved against our coordinate context, it does not affect our
-    // mRect.
-    const auto& strokeWidth = StyleSVG()->mStrokeWidth;
-    if (geom->GeometryDependsOnCoordCtx() ||
-        (strokeWidth.IsLengthPercentage() &&
-         strokeWidth.AsLengthPercentage().HasPercent())) {
+    // account of stroke-width here.
+    if (geom->GeometryDependsOnCoordCtx()) {
       geom->ClearAnyCachedPath();
+      SVGUtils::ScheduleReflowSVG(this);
+    } else if (SVGContentUtils::HasPercentageDependentStroke(
+                   Style(), SVGContextPaint::GetContextPaint(geom)) ||
+               (StyleSVG()->HasMarker() && geom->IsMarkable()) ||
+               SVGIntegrationUtils::UsingEffectsForFrame(this)) {
+      // Stroke, effects and markers may have percentage dependent units.
       SVGUtils::ScheduleReflowSVG(this);
     }
   }

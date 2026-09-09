@@ -839,6 +839,11 @@ void SVGImageFrame::NotifySVGChanged(ChangeFlags aFlags) {
   MOZ_ASSERT(aFlags.contains(ChangeFlag::TransformChanged) ||
                  aFlags.contains(ChangeFlag::CoordContextChanged),
              "Invalidation logic may need adjusting");
+  if (aFlags.contains(ChangeFlag::CoordContextChanged) &&
+      SVGIntegrationUtils::UsingEffectsForFrame(this)) {
+    // Effects may have percentage dependent units.
+    SVGUtils::ScheduleReflowSVG(this);
+  }
 }
 
 SVGBBox SVGImageFrame::GetBBoxContribution(const Matrix& aToBBoxUserspace,
