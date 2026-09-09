@@ -99,6 +99,13 @@ const SIDE_PORTAIT_MODE_WIDTH_THRESHOLD = 1000;
 const THREE_PANE_ENABLED_PREF = "devtools.inspector.three-pane-enabled";
 const THREE_PANE_CHROME_ENABLED_PREF =
   "devtools.inspector.chrome.three-pane-enabled";
+const SPLIT_ORIENTATION_PREF = "devtools.inspector.split-orientation";
+// Possible values for SPLIT_ORIENTATION_PREF; AUTO keeps the width-threshold behavior.
+const SPLIT_ORIENTATIONS = {
+  AUTO: "auto",
+  SIDE: "side",
+  STACKED: "stacked",
+};
 const DEFAULT_COLOR_UNIT_PREF = "devtools.defaultColorUnit";
 
 /**
@@ -168,6 +175,14 @@ class Inspector extends EventEmitter {
       DEFAULT_COLOR_UNIT_PREF,
       this.#handleDefaultColorUnitPrefChange
     );
+    this.prefObserver.on(
+      SPLIT_ORIENTATION_PREF,
+      this.#onSplitOrientationPrefChange
+    );
+    this.#splitOrientationPrefValue = Services.prefs.getCharPref(
+      SPLIT_ORIENTATION_PREF,
+      SPLIT_ORIENTATIONS.AUTO
+    );
     this.defaultColorUnit = Services.prefs.getStringPref(
       DEFAULT_COLOR_UNIT_PREF
     );
@@ -197,6 +212,11 @@ class Inspector extends EventEmitter {
   #InspectorTabPanel;
   #InspectorSplitBox;
   #TabBar;
+  #MenuButton;
+  #MenuItem;
+  #MenuList;
+  #splitOrientationL10nStrings;
+  #splitOrientationPrefValue;
   #updateProgress;
 
   /**
@@ -236,6 +256,7 @@ class Inspector extends EventEmitter {
     // parent of the iframe in the DOM tree which would reset the state of the
     // iframe if it had already been initialized.
     this.#setupSplitter();
+    this.#setupSplitOrientationMenu();
 
     // Optional NodeFront/ElementIdentifier set on inspector startup, to be selected once the first root
     // node is available.
@@ -942,14 +963,48 @@ class Inspector extends EventEmitter {
     return this.#TabBar;
   }
 
+  get MenuButton() {
+    if (!this.#MenuButton) {
+      this.#MenuButton = this.React.createFactory(
+        this.browserRequire("devtools/client/shared/components/menu/MenuButton")
+      );
+    }
+    return this.#MenuButton;
+  }
+
+  get MenuItem() {
+    if (!this.#MenuItem) {
+      this.#MenuItem = this.React.createFactory(
+        this.browserRequire("devtools/client/shared/components/menu/MenuItem")
+      );
+    }
+    return this.#MenuItem;
+  }
+
+  get MenuList() {
+    if (!this.#MenuList) {
+      this.#MenuList = this.React.createFactory(
+        this.browserRequire("devtools/client/shared/components/menu/MenuList")
+      );
+    }
+    return this.#MenuList;
+  }
+
   /**
-   * Check if the inspector should use the landscape mode.
+   * Check if the Inspector panels should be laid out side by side.
    *
-   * @return {boolean} true if the inspector should be in landscape mode.
+   * @return {boolean} true if the inspector should use the side-by-side layout.
    */
-  #useLandscapeMode() {
+  #useSideBySideLayout() {
     if (!this.panelDoc) {
       return true;
+    }
+
+    if (this.#splitOrientationPrefValue === SPLIT_ORIENTATIONS.SIDE) {
+      return true;
+    }
+    if (this.#splitOrientationPrefValue === SPLIT_ORIENTATIONS.STACKED) {
+      return false;
     }
 
     const splitterBox = this.panelDoc.getElementById("inspector-splitter-box");
@@ -996,7 +1051,7 @@ class Inspector extends EventEmitter {
         }),
         ref: this.sidebarSplitBoxRef,
       }),
-      vert: this.#useLandscapeMode(),
+      vert: this.#useSideBySideLayout(),
       onControlledPanelResized: this.onSidebarResized,
     });
 
@@ -1019,12 +1074,118 @@ class Inspector extends EventEmitter {
         return;
       }
 
-      this.splitBox.setState({ vert: this.#useLandscapeMode() });
+      this.splitBox.setState({ vert: this.#useSideBySideLayout() });
       this.emit("inspector-resize");
     },
     LAZY_RESIZE_INTERVAL_MS,
     this
   );
+
+  /**
+   * Build the toolbar button opening the menu that controls the orientation of
+   * the splitter between the Inspector panels.
+   */
+  async #setupSplitOrientationMenu() {
+    const [buttonTitle, auto, sideBySide, stacked] =
+      await this.panelDoc.l10n.formatValues([
+        { id: "inspector-split-orientation-button-title" },
+        { id: "inspector-split-orientation-auto" },
+        { id: "inspector-split-orientation-side-by-side" },
+        { id: "inspector-split-orientation-stacked" },
+      ]);
+
+    // The inspector could have been destroyed while waiting for the strings.
+    if (!this.panelDoc) {
+      return;
+    }
+
+    this.#splitOrientationL10nStrings = {
+      buttonTitle,
+      auto,
+      sideBySide,
+      stacked,
+    };
+    this.#renderSplitOrientationMenu();
+  }
+
+  #renderSplitOrientationMenu() {
+    const strings = this.#splitOrientationL10nStrings;
+    const container = this.panelDoc?.getElementById(
+      "inspector-split-orientation-menu"
+    );
+    if (!strings || !container) {
+      return;
+    }
+
+    const orientation = this.#splitOrientationPrefValue;
+    const items = [
+      this.MenuItem({
+        key: SPLIT_ORIENTATIONS.AUTO,
+        id: "inspector-split-orientation-auto",
+        role: "menuitemradio",
+        checked: orientation === SPLIT_ORIENTATIONS.AUTO,
+        label: strings.auto,
+        icon: "chrome://devtools/skin/images/dock-auto.svg",
+        onClick: () =>
+          Services.prefs.setCharPref(
+            SPLIT_ORIENTATION_PREF,
+            SPLIT_ORIENTATIONS.AUTO
+          ),
+      }),
+      this.MenuItem({
+        key: SPLIT_ORIENTATIONS.SIDE,
+        id: "inspector-split-orientation-side",
+        role: "menuitemradio",
+        checked: orientation === SPLIT_ORIENTATIONS.SIDE,
+        label: strings.sideBySide,
+        icon: "chrome://devtools/skin/images/dock-side-right.svg",
+        onClick: () =>
+          Services.prefs.setCharPref(
+            SPLIT_ORIENTATION_PREF,
+            SPLIT_ORIENTATIONS.SIDE
+          ),
+      }),
+      this.MenuItem({
+        key: SPLIT_ORIENTATIONS.STACKED,
+        id: "inspector-split-orientation-stacked",
+        role: "menuitemradio",
+        checked: orientation === SPLIT_ORIENTATIONS.STACKED,
+        label: strings.stacked,
+        icon: "chrome://devtools/skin/images/dock-bottom.svg",
+        onClick: () =>
+          Services.prefs.setCharPref(
+            SPLIT_ORIENTATION_PREF,
+            SPLIT_ORIENTATIONS.STACKED
+          ),
+      }),
+    ];
+
+    this.ReactDOM.render(
+      this.MenuButton(
+        {
+          id: "inspector-split-orientation-button",
+          menuId: "inspector-split-orientation-menu-panel",
+          toolboxDoc: this.#toolbox.doc,
+          className: "devtools-button",
+          title: strings.buttonTitle,
+        },
+        () => this.MenuList({}, items)
+      ),
+      container
+    );
+  }
+
+  #onSplitOrientationPrefChange = () => {
+    this.#splitOrientationPrefValue = Services.prefs.getCharPref(
+      SPLIT_ORIENTATION_PREF,
+      SPLIT_ORIENTATIONS.AUTO
+    );
+    if (this.#destroyed || !this.splitBox) {
+      return;
+    }
+    this.splitBox.setState({ vert: this.#useSideBySideLayout() });
+    this.#renderSplitOrientationMenu();
+  };
 
   getSidebarSize() {
     let width;
@@ -1139,7 +1300,7 @@ class Inspector extends EventEmitter {
     // bottom-right panel in vertical mode width in 3 pane mode.
     let sidebarSplitboxWidth;
 
-    if (this.#useLandscapeMode()) {
+    if (this.#useSideBySideLayout()) {
       // Whether or not doubling the inspector sidebar's (right panel in horizontal mode
       // or bottom panel in vertical mode) width will be bigger than half of the
       // toolbox's width.
@@ -1224,7 +1385,7 @@ class Inspector extends EventEmitter {
         "inspector-splitter-box"
       );
       this.splitBox.setState({
-        width: this.#useLandscapeMode()
+        width: this.#useSideBySideLayout()
           ? this.sidebarSplitBoxRef.current.state.width
           : splitterBox.clientWidth,
       });

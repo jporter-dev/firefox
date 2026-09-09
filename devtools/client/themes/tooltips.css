@@ -715,7 +715,7 @@ strong {
   }
 
   /* Use :where to avoid having a high specificity that would take over the rule above */
-  .menuitem > button.command:where([role="menuitem"], [role="menuitemcheckbox"], [role="link"]) {
+  .menuitem > button.command:where([role="menuitem"], [role="menuitemcheckbox"], [role="menuitemradio"], [role="link"]) {
     appearance: none;
     border: none;
     background-color: transparent;
