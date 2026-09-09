@@ -7,8 +7,8 @@
 #ifndef DOM_MEDIA_WEBSPEECH_RECOGNITION_SPEECHRECOGNITIONMODELMAPPING_H_
 #define DOM_MEDIA_WEBSPEECH_RECOGNITION_SPEECHRECOGNITIONMODELMAPPING_H_
 
+#include "mozilla/Maybe.h"
 #include "nsString.h"
-#include "nsTArray.h"
 
 namespace mozilla::dom {
 
@@ -27,16 +27,21 @@ struct SpeechModelIdentifier {
   nsCString ToString() const;
 };
 
-// Maps a set of requested BCP-47 languages to a model id (the model table's
-// own "id" field, e.g. "english_tdt_ctc_q6_k"), honoring the
-// media.webspeech.recognition.model.<prefix> pref override. The id, not the
-// artifact itself, is what the utility process sends onward: it can only ever
-// select among the ids this function can return, never name a
-// model/revision/filename directly. The model table (generated from
-// models.yaml) lives only in this translation unit's .cpp.
-nsCString LanguagesToSpeechModelId(const nsTArray<nsCString>& aLanguages);
+struct SpeechModelMatch {
+  nsCString mId;
+  nsCString mLocale;
+};
 
-// Expands aId (as returned by LanguagesToSpeechModelId) to the concrete
+// The first model in models.yaml recognizing aLanguage and that model's own
+// locale for it. Nothing if no model recognizes the language.
+Maybe<SpeechModelMatch> SpeechModelFor(const nsACString& aLanguage);
+
+// The first model in models.yaml, with no locale so the engine uses its own
+// default. Used when neither SpeechRecognition.lang nor the document provides
+// a language.
+SpeechModelMatch DefaultSpeechModel();
+
+// Expands aId (as returned by SpeechModelFor) to the concrete
 // ModelHub artifact it names. Returns false if aId is unknown. Used trusted-
 // side (see SpeechModelResolver) to validate an id supplied by the utility
 // process before it is passed to ModelHub.

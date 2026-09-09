@@ -7,10 +7,10 @@
 #include "SpeechRecognitionModelMapping.h"
 
 #include "SpeechRecognitionModels.h"
-#include "mozilla/Assertions.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/intl/Locale.h"
+#include "mozilla/intl/LocaleService.h"
 #include "nsFmtString.h"
-#include "nsReadableUtils.h"
 
 namespace mozilla::dom {
 
@@ -19,64 +19,50 @@ nsCString SpeechModelIdentifier::ToString() const {
                       mRevision.get());
 }
 
-nsCString LanguagesToSpeechModelId(const nsTArray<nsCString>& aLanguages) {
-  // Determine the primary-subtag locale prefix (e.g. "en" from "en-US"). This
-  // discards script/region subtags, so e.g. zh-Hans and zh-Hant both collapse
-  // to zh; proper BCP-47 canonicalization is tracked in bug 2060247.
-  nsCString prefix;
-  if (!aLanguages.IsEmpty()) {
-    prefix = aLanguages[0];
-    int32_t dash = prefix.FindChar('-');
-    if (dash != kNotFound) {
-      prefix.Truncate(dash);
-    }
+Maybe<SpeechModelMatch> SpeechModelFor(const nsACString& aLanguage) {
+  intl::Locale requested;
+  if (intl::LocaleParser::TryParse(aLanguage, requested).isErr()) {
+    return Nothing();
   }
 
-  // A pref may override the default model for a locale prefix:
-  // media.webspeech.recognition.model.<prefix> (or .multilingual for the
-  // fallback). Empty prefix uses the multilingual fallback.
+  // media.webspeech.recognition.model.<language subtag> restricts the choice
+  // to the model it names.
+  Span<const char> subtag = requested.Language().Span();
   nsAutoCString prefKey("media.webspeech.recognition.model.");
-  prefKey.Append(prefix.IsEmpty() ? "multilingual"_ns : prefix);
+  prefKey.Append(subtag.data(), subtag.size());
   nsAutoCString prefModelId;
   Preferences::GetCString(prefKey.get(), prefModelId);
 
-  if (!prefModelId.IsEmpty()) {
-    for (const auto& m : kSpeechRecognitionModels) {
-      if (m.id && prefModelId.Equals(m.id)) {
-        return nsCString(m.id);
-      }
-    }
-  }
-
-  // No usable pref: pick the default model whose locale list matches the
-  // prefix, falling back to the default fallback model (empty locale list).
-  const SpeechRecognitionModelInfo* fallback = nullptr;
+  AutoTArray<nsCString, 1> requestedLocales{nsCString(aLanguage)};
   for (const auto& m : kSpeechRecognitionModels) {
     if (!m.id) {
       break;
     }
-    if (!m.locales[0]) {
-      if (m.is_default && !fallback) {
-        fallback = &m;
-      }
+    if (!prefModelId.IsEmpty() && !prefModelId.Equals(m.id)) {
       continue;
     }
-    for (const char* const* l = m.locales; *l; ++l) {
-      if (!prefix.IsEmpty() &&
-          StringBeginsWith(prefix, nsDependentCString(*l))) {
-        if (m.is_default) {
-          return nsCString(m.id);
-        }
-      }
+
+    AutoTArray<nsCString, 128> available;
+    for (const char* const* l = m.supported_locales; *l; ++l) {
+      available.AppendElement(nsDependentCString(*l));
     }
+
+    AutoTArray<nsCString, 1> negotiated;
+    intl::LocaleService::GetInstance()->NegotiateLanguages(
+        requestedLocales, available, EmptyCString(),
+        intl::LocaleService::kLangNegStrategyFiltering, negotiated);
+    if (negotiated.IsEmpty()) {
+      continue;
+    }
+
+    return Some(SpeechModelMatch{nsCString(m.id), std::move(negotiated[0])});
   }
 
-  if (fallback) {
-    return nsCString(fallback->id);
-  }
+  return Nothing();
+}
 
-  MOZ_ASSERT_UNREACHABLE("No default model found in kSpeechRecognitionModels");
-  return {};
+SpeechModelMatch DefaultSpeechModel() {
+  return {nsCString(kSpeechRecognitionModels[0].id), {}};
 }
 
 bool ResolveSpeechModelId(const nsACString& aId, SpeechModelIdentifier& aOut) {
