@@ -417,7 +417,7 @@ skip-if(Android) == chrome://reftest/content/bugs/315920-21.svg chrome://reftest
 == chrome://reftest/content/bugs/321402-5.xhtml chrome://reftest/content/bugs/321402-5-ref.xhtml
 == chrome://reftest/content/bugs/321402-6.xhtml chrome://reftest/content/bugs/321402-6-ref.xhtml
 == 321738-1.html 321738-1-ref.html
-== 322461-1.xml 322461-1-ref.html
+pref(dom.xslt.enabled,true) == 322461-1.xml 322461-1-ref.html
 == 323656-1.html 323656-1-ref.html
 == 323656-2.html 323656-2-ref.html
 == 323656-3.html 323656-3-ref.html

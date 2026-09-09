@@ -1,4 +1,5 @@
 [DEFAULT]
+prefs = ["dom.xslt.enabled=true"]
 
 ["test_bug319374.html"]
 
