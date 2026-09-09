@@ -3,6 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "Cookie.h"
+#include "CookieDBWriteQueue.h"
 #include "CookieParser.h"
 #include "CookieStorage.h"
 #include "TestCommon.h"
@@ -1287,7 +1288,7 @@ class TestableCookieStorage final : public CookieStorage {
   const char* NotificationTopic() const override { return "test-cookie"; }
   void NotifyChangedInternal(nsICookieNotification*, bool) override {}
   void RemoveAllInternal() override {}
-  void RemoveCookieFromDB(const Cookie&) override {}
+  void RemoveCookieFromDB(Cookie*) override {}
   void StoreCookie(const nsACString&, const OriginAttributes&,
                    Cookie*) override {}
 
@@ -1427,3 +1428,39 @@ TEST(TestCookie, HasCookiesForSite)
   addCookie(partAttrs);
   EXPECT_TRUE(storage->HasCookiesForSite(baseDomain, nonPbPattern));
 }
+
+namespace mozilla::net {
+
+TEST(TestCookieDBWriteQueue, Coalesce)
+{
+  using OpType = CookieDBWriteQueue::OpType;
+
+  EXPECT_EQ(CookieDBWriteQueue::Coalesce(OpType::Remove, OpType::Insert),
+            Some(OpType::RemoveAndInsert));
+  EXPECT_EQ(
+      CookieDBWriteQueue::Coalesce(OpType::RemoveAndInsert, OpType::Insert),
+      Some(OpType::RemoveAndInsert));
+
+  EXPECT_EQ(CookieDBWriteQueue::Coalesce(OpType::Insert, OpType::Update),
+            Some(OpType::Insert));
+  EXPECT_EQ(CookieDBWriteQueue::Coalesce(OpType::Update, OpType::Update),
+            Some(OpType::Update));
+  EXPECT_EQ(
+      CookieDBWriteQueue::Coalesce(OpType::RemoveAndInsert, OpType::Update),
+      Some(OpType::RemoveAndInsert));
+
+  // The insertion is still in this batch, so it never reached the disk and
+  // the row cancels out entirely.
+  EXPECT_EQ(CookieDBWriteQueue::Coalesce(OpType::Insert, OpType::Remove),
+            Nothing());
+
+  EXPECT_EQ(CookieDBWriteQueue::Coalesce(OpType::Update, OpType::Remove),
+            Some(OpType::Remove));
+  EXPECT_EQ(CookieDBWriteQueue::Coalesce(OpType::Remove, OpType::Remove),
+            Some(OpType::Remove));
+  EXPECT_EQ(
+      CookieDBWriteQueue::Coalesce(OpType::RemoveAndInsert, OpType::Remove),
+      Some(OpType::Remove));
+}
+
+}  // namespace mozilla::net
