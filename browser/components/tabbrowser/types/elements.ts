@@ -3,9 +3,9 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 // The tab strip's custom elements, as the modules that drive them see them.
-// content/tab.js, content/tabgroup.mjs and content/tabsplitview.mjs are loaded as
-// subscripts, so nothing can import the classes and these interfaces stand in
-// for them. Nothing checks an interface against the class it describes: a
+// content/tab.js is loaded as a subscript, so nothing can import its class and
+// the interfaces below stand in for it and for the label element, which has no
+// class at all. Nothing checks an interface against the element it describes: a
 // member that changes shape has to be changed here too.
 //
 // Projects outside browser/components/tabbrowser reach these by naming this
@@ -62,41 +62,8 @@ interface MozTabbrowserTab extends XULElement {
   _originalRegisteredOpenURI: any;
 }
 
-// The colours the group menu offers, which is the whole set: tabgroup.mjs
-// interpolates the code into `var(--tab-group-${code})`, so anything else
-// resolves to no colour at all.
-type TabGroupColor =
-  | "blue"
-  | "purple"
-  | "cyan"
-  | "orange"
-  | "yellow"
-  | "pink"
-  | "green"
-  | "gray"
-  | "red";
-
-interface MozTabbrowserTabGroup extends XULElement {
-  // Constant: a group is neither pinned, nor in a split view, nor inside
-  // another group.
-  pinned: false;
-  splitview: null;
-  group: null;
-
-  tabs: MozTabbrowserTab[];
-  tabsAndSplitViews: (MozTabbrowserTab | MozTabSplitViewWrapper)[];
-  label: string;
-  name: string;
-  color: TabGroupColor;
-  collapsed: boolean;
-  saveOnWindowClose: boolean;
-  removedByAdoption: boolean;
-  select(): void;
-  addTabs(
-    tabsOrSplitViews: (MozTabbrowserTab | MozTabSplitViewWrapper)[],
-    metricsContext?: import("../TabMetrics.sys.mjs").TabMetricsContext
-  ): void;
-}
+type MozTabbrowserTabGroup =
+  import("../content/tabgroup.mjs").MozTabbrowserTabGroup;
 
 interface MozTabbrowserTabGroupLabel extends XULElement {
   // Constant, as on the tab group the label stands in for. The label is a plain
@@ -108,30 +75,10 @@ interface MozTabbrowserTabGroupLabel extends XULElement {
   group: MozTabbrowserTabGroup;
 }
 
+type MozTabSplitViewWrapper =
+  import("../content/tabsplitview.mjs").MozTabSplitViewWrapper;
+
 // What a split view contributes to session state, as its `state` getter builds
-// it and sessionstore stores it. tabsplitview.mjs documents the same shape in a
-// JSDoc typedef nothing can import.
-type TabSplitViewStateData = { id: number; numberOfTabs: number };
-
-interface MozTabSplitViewWrapper extends XULElement {
-  // Constant: a split view is not itself in one.
-  splitview: null;
-
-  tabs: MozTabbrowserTab[];
-  splitViewId: number;
-  state: TabSplitViewStateData;
-  group: MozTabbrowserTabGroup | null;
-  pinned: false;
-  visible: boolean;
-  multiselected: boolean;
-  hasActiveTab: boolean;
-  shouldMoveAllTabsAtOnce: boolean;
-  addTabs(
-    tabs: MozTabbrowserTab[],
-    options?: { isSessionRestore?: boolean; indexOfReplacedTab?: number }
-  ): void;
-  replaceTab(tabToReplace: MozTabbrowserTab, newTab: MozTabbrowserTab): void;
-  unsplitTabs(trigger?: string): void;
-  reverseTabs(trigger?: string): void;
-  close(trigger?: string): void;
-}
+// it and sessionstore stores it.
+type TabSplitViewStateData =
+  import("../content/tabsplitview.mjs").TabSplitViewStateData;

@@ -8,6 +8,12 @@ const { TabMetrics } = ChromeUtils.importESModule(
   "moz-src:///browser/components/tabbrowser/TabMetrics.sys.mjs"
 );
 
+/**
+ * Supported tab group colors.
+ *
+ * @typedef {"blue"|"purple"|"cyan"|"orange"|"yellow"|"pink"|"green"|"gray"|"red"} TabGroupColor
+ */
+
 export class MozTabbrowserTabGroup extends MozXULElement {
   static markup = `
     <vbox class="tab-group-label-container" pack="center">
@@ -39,7 +45,7 @@ export class MozTabbrowserTabGroup extends MozXULElement {
   /** @type {MozXULElement} */
   overflowContainer;
 
-  /** @type {string} */
+  /** @type {TabGroupColor} */
   #colorCode;
 
   /** @type {MutationObserver} */
@@ -57,6 +63,15 @@ export class MozTabbrowserTabGroup extends MozXULElement {
    * @type {boolean}
    */
   collapsedByDrag = false;
+
+  /**
+   * Whether the group is leaving this window for another one rather than being
+   * closed. `Tabbrowser.adoptTabGroup` sets it on the group it takes the tabs
+   * from, which is discarded once they have moved.
+   *
+   * @type {boolean}
+   */
+  removedByAdoption;
 
   #observerRemoved = false;
 
@@ -239,6 +254,9 @@ export class MozTabbrowserTabGroup extends MozXULElement {
     return this.#colorCode;
   }
 
+  /**
+   * @param {TabGroupColor} code
+   */
   set color(code) {
     let diff = code !== this.#colorCode;
     this.#colorCode = code;
@@ -525,7 +543,7 @@ export class MozTabbrowserTabGroup extends MozXULElement {
   }
 
   /**
-   * @returns {MozTabbrowserTab|MozTabSplitViewWrapper[]}
+   * @returns {(MozTabbrowserTab|MozTabSplitViewWrapper)[]}
    */
   get tabsAndSplitViews() {
     return Array.from(this.children).filter(

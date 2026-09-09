@@ -29,6 +29,16 @@ const updateUrlbarButton = new DeferredTask(() => {
   }
 }, 0);
 
+/**
+ * State of a tab splitview inside of an open window.
+ *
+ * @typedef {object} TabSplitViewStateData
+ * @property {number} id
+ *   Unique ID of the tab splitview.
+ * @property {number} numberOfTabs
+ *   Number of expected tabs in the splitview.
+ */
+
 export class MozTabSplitViewWrapper extends MozXULElement {
   /** @type {MutationObserver} */
   #tabChangeObserver;
@@ -56,20 +66,13 @@ export class MozTabSplitViewWrapper extends MozXULElement {
   }
 
   /**
-   * @returns {MozTabbrowserGroup}
+   * @returns {MozTabbrowserTabGroup}
    */
   get group() {
     return gBrowser.isTabGroup(this.parentElement) ? this.parentElement : null;
   }
 
   /**
-   * @typedef {object} TabSplitViewStateData
-   *   State of a tab group inside of an open window.
-   * @property {number} id
-   *   Unique ID of the tab splitview.
-   * @property {number} numberOfTabs
-   *   Number of expected tabs in the splitview.
-   *
    * Collect data related to a single tab splitview, synchronously.
    *
    * @returns {TabSplitViewStateData}
