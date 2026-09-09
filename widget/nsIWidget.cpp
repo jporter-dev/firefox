@@ -2102,11 +2102,11 @@ void nsIWidget::StartAsyncScrollbarDrag(const AsyncDragMetrics& aDragMetrics) {
   mAPZC->StartScrollbarDrag(guid, aDragMetrics);
 }
 
-bool nsIWidget::StartAsyncAutoscroll(const ScreenPoint& aAnchorLocation,
+void nsIWidget::StartAsyncAutoscroll(const ScreenPoint& aAnchorLocation,
                                      const ScrollableLayerGuid& aGuid) {
   MOZ_ASSERT(XRE_IsParentProcess() && AsyncPanZoomEnabled());
 
-  return mAPZC->StartAutoscroll(aGuid, aAnchorLocation);
+  mAPZC->StartAutoscroll(aGuid, aAnchorLocation);
 }
 
 void nsIWidget::StopAsyncAutoscroll(const ScrollableLayerGuid& aGuid) {

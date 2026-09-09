@@ -116,7 +116,7 @@ class IAPZCTreeManager {
   virtual void StartScrollbarDrag(const ScrollableLayerGuid& aGuid,
                                   const AsyncDragMetrics& aDragMetrics) = 0;
 
-  virtual bool StartAutoscroll(const ScrollableLayerGuid& aGuid,
+  virtual void StartAutoscroll(const ScrollableLayerGuid& aGuid,
                                const ScreenPoint& aAnchorLocation) = 0;
 
   virtual void StopAutoscroll(const ScrollableLayerGuid& aGuid) = 0;

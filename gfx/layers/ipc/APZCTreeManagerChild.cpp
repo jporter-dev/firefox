@@ -106,10 +106,10 @@ void APZCTreeManagerChild::StartScrollbarDrag(
   SendStartScrollbarDrag(aGuid, aDragMetrics);
 }
 
-bool APZCTreeManagerChild::StartAutoscroll(const ScrollableLayerGuid& aGuid,
+void APZCTreeManagerChild::StartAutoscroll(const ScrollableLayerGuid& aGuid,
                                            const ScreenPoint& aAnchorLocation) {
   MOZ_ASSERT(NS_IsMainThread());
-  return SendStartAutoscroll(aGuid, aAnchorLocation);
+  SendStartAutoscroll(aGuid, aAnchorLocation);
 }
 
 void APZCTreeManagerChild::StopAutoscroll(const ScrollableLayerGuid& aGuid) {

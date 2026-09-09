@@ -57,7 +57,7 @@ class APZCTreeManagerChild final : public IAPZCTreeManager,
   void StartScrollbarDrag(const ScrollableLayerGuid& aGuid,
                           const AsyncDragMetrics& aDragMetrics) override;
 
-  bool StartAutoscroll(const ScrollableLayerGuid& aGuid,
+  void StartAutoscroll(const ScrollableLayerGuid& aGuid,
                        const ScreenPoint& aAnchorLocation) override;
 
   void StopAutoscroll(const ScrollableLayerGuid& aGuid) override;

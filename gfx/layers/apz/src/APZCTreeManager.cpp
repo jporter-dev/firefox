@@ -1151,24 +1151,17 @@ void APZCTreeManager::StartScrollbarDrag(const ScrollableLayerGuid& aGuid,
   mInputQueue->ConfirmDragBlock(inputBlockId, apzc, aDragMetrics);
 }
 
-bool APZCTreeManager::StartAutoscroll(const ScrollableLayerGuid& aGuid,
+void APZCTreeManager::StartAutoscroll(const ScrollableLayerGuid& aGuid,
                                       const ScreenPoint& aAnchorLocation) {
   APZThreadUtils::AssertOnControllerThread();
 
   RefPtr<AsyncPanZoomController> apzc = GetTargetAPZC(aGuid);
   if (!apzc) {
-    if (XRE_IsGPUProcess()) {
-      // If we're in the compositor process, the "return false" will be
-      // ignored because the query comes over the PAPZCTreeManager protocol
-      // via an async message. In this case, send an explicit rejection
-      // message to content.
-      NotifyAutoscrollRejected(aGuid);
-    }
-    return false;
+    NotifyAutoscrollRejected(aGuid);
+    return;
   }
 
   apzc->StartAutoscroll(aAnchorLocation);
-  return true;
 }
 
 void APZCTreeManager::StopAutoscroll(const ScrollableLayerGuid& aGuid) {
@@ -1203,8 +1196,9 @@ void APZCTreeManager::NotifyAutoscrollRejected(
     const ScrollableLayerGuid& aGuid) const {
   RefPtr<GeckoContentController> controller =
       GetContentController(aGuid.mLayersId);
-  MOZ_ASSERT(controller);
-  controller->NotifyAsyncAutoscrollRejected(aGuid.mScrollId);
+  if (controller) {
+    controller->NotifyAsyncAutoscrollRejected(aGuid.mScrollId);
+  }
 }
 
 void SetHitTestData(HitTestingTreeNode* aNode,
