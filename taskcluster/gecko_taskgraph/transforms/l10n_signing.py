@@ -22,9 +22,10 @@ def make_signing_description(config, jobs):
     for job in jobs:
         dep_job = get_primary_dependency(config, job)
 
-        # add the chunk number to the TH symbol
+        # add the chunk number to the TH symbol (the non-shippable `l10n` kind
+        # is unchunked, so there is no chunk number to add)
         symbol = job.get("treeherder", {}).get("symbol", "Bs")
-        symbol = "{}{}".format(symbol, dep_job.attributes.get("l10n_chunk"))
+        symbol = "{}{}".format(symbol, dep_job.attributes.get("l10n_chunk", ""))
         group = "L10n"
 
         job["treeherder"] = {
@@ -45,6 +46,12 @@ def define_upstream_artifacts(config, jobs):
         if dep_job.attributes.get("chunk_locales"):
             # Used for l10n attribute passthrough
             job["attributes"]["chunk_locales"] = dep_job.attributes.get("chunk_locales")
+
+        # The shippable `l10n` kind is chunked and carries `chunk_locales`; the
+        # non-shippable `l10n` kind is unchunked, so fall back to `all_locales`.
+        locales = dep_job.attributes.get("chunk_locales") or dep_job.attributes.get(
+            "all_locales", []
+        )
 
         locale_specifications = generate_specifications_of_artifacts_to_sign(
             config,
@@ -68,7 +75,7 @@ def define_upstream_artifacts(config, jobs):
                 # and we remove any duplicates (e.g. hardcoded ja-JP-mac langpack)
                 "paths": sorted({
                     path_template.format(locale=locale)
-                    for locale in dep_job.attributes.get("chunk_locales", [])
+                    for locale in locales
                     for path_template in spec["artifacts"]
                 }),
                 "formats": spec["formats"],
