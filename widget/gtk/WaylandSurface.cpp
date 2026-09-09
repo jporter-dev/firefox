@@ -17,10 +17,6 @@
 #include "mozilla/gfx/gfxVars.h"
 #include "nsGtkUtils.h"
 #include "nsWindow.h"
-#ifdef MOZ_LOGGING
-#  include "EncoderConfig.h"
-#endif
-
 #undef LOG
 #ifdef MOZ_LOGGING
 #  include "Units.h"
@@ -1548,7 +1544,7 @@ void WaylandSurface::SetColorRepresentationLocked(
       "WaylandSurface::SetColorRepresentationLocked() colorspace %s full "
       "range "
       "%d",
-      YUVColorSpaceToString(aColorSpace), aFullRange);
+      mozilla::ToString(aColorSpace).c_str(), aFullRange);
 
   MOZ_DIAGNOSTIC_ASSERT(!mColorRepresentationSurface);
   mColorRepresentationSurface = WUniquePtr<wp_color_representation_surface_v1>(

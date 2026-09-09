@@ -4,7 +4,6 @@
 
 #include "FFmpegVideoDecoder.h"
 
-#include "EncoderConfig.h"
 #include "FFmpegLibWrapper.h"
 #include "FFmpegLog.h"
 #include "FFmpegUtils.h"
@@ -2133,12 +2132,12 @@ MediaResult FFmpegVideoDecoder<LIBAV_VER>::CreateImage(
             "Uploaded frame DMABuf surface UID {} HDR {} color space {}/{} "
             "transfer {}",
             surface->GetDMABufSurface()->GetUID(), IsLinuxHDR(),
-            YUVColorSpaceToString(GetFrameColorSpace()),
+            mozilla::ToString(GetFrameColorSpace()),
             mInfo.mColorPrimaries
-                ? ColorSpace2ToString(mInfo.mColorPrimaries.value())
+                ? mozilla::ToString(mInfo.mColorPrimaries.value())
                 : "unknown",
             mInfo.mTransferFunction
-                ? TransferFunctionToString(mInfo.mTransferFunction.value())
+                ? mozilla::ToString(mInfo.mTransferFunction.value())
                 : "unknown");
         v = VideoData::CreateFromImage(
             mInfo.mDisplay, aOffset, TimeUnit::FromMicroseconds(aPts),
@@ -2240,12 +2239,11 @@ MediaResult FFmpegVideoDecoder<LIBAV_VER>::CreateImageVAAPI(
 
   FFMPEG_LOG(
       "VA-API frame pts={} dts={} duration={} color space {}/{} transfer {}",
-      aPts, mFrame->pkt_dts, aDuration,
-      YUVColorSpaceToString(GetFrameColorSpace()),
-      mInfo.mColorPrimaries ? ColorSpace2ToString(mInfo.mColorPrimaries.value())
+      aPts, mFrame->pkt_dts, aDuration, mozilla::ToString(GetFrameColorSpace()),
+      mInfo.mColorPrimaries ? mozilla::ToString(mInfo.mColorPrimaries.value())
                             : "unknown",
       mInfo.mTransferFunction
-          ? TransferFunctionToString(mInfo.mTransferFunction.value())
+          ? mozilla::ToString(mInfo.mTransferFunction.value())
           : "unknown");
   RefPtr<VideoData> vp = VideoData::CreateFromImage(
       mInfo.mDisplay, aOffset, TimeUnit::FromMicroseconds(aPts),
