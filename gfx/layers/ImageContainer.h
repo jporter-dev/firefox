@@ -850,6 +850,8 @@ struct PlanarYCbCrData {
   static Maybe<PlanarYCbCrData> From(const VideoData::YCbCrBuffer&);
 };
 
+std::ostream& operator<<(std::ostream& aOut, const PlanarYCbCrData& aData);
+
 /****** Image subtypes for the different formats ******/
 
 /**
