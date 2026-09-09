@@ -1491,6 +1491,11 @@ class nsDisplayListBuilder {
     // TODO(emilio, bug 1968754): Deal with nested captures properly.
     bool mContainingBlockInViewTransitionCapture;
 
+#ifdef DEBUG
+    // Assert that the asr is as expected.
+    void CheckASR(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame);
+#endif
+
     static nsRect ComputeVisibleRectForFrame(nsDisplayListBuilder* aBuilder,
                                              nsIFrame* aFrame,
                                              const nsRect& aVisibleRect,

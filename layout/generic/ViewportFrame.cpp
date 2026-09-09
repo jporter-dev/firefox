@@ -116,6 +116,9 @@ static void BuildDisplayListForTopLayerFrame(nsDisplayListBuilder* aBuilder,
   nsDisplayListBuilder::AutoCurrentActiveScrolledRootSetter asrSetter(aBuilder);
   if (auto* savedOutOfFlowData =
           nsDisplayListBuilder::GetOutOfFlowData(aFrame)) {
+#ifdef DEBUG
+    savedOutOfFlowData->CheckASR(aBuilder, aFrame);
+#endif
     visible =
         savedOutOfFlowData->GetVisibleRectForFrame(aBuilder, aFrame, &dirty);
     // If we are in the top layer, our containing block is the viewport, which
