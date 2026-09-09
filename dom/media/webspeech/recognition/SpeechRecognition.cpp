@@ -718,12 +718,18 @@ void SpeechRecognition::StartImpl(MediaStreamTrack* aAudioTrack,
     }
   }
 
-  // Per spec: if lang is unset, default to the document root element's language
+  // lang "will default to use the language of the html document root element
+  // and associated hierarchy".
   nsString effectiveLang = mLang;
   if (effectiveLang.IsEmpty()) {
     if (nsCOMPtr<Document> doc = win->GetExtantDoc()) {
       if (Element* root = doc->GetRootElement()) {
         root->GetLang(effectiveLang);
+      }
+      if (effectiveLang.IsEmpty()) {
+        if (nsAtom* language = doc->GetContentLanguageAsAtomForStyle()) {
+          language->ToString(effectiveLang);
+        }
       }
     }
   }
