@@ -129,10 +129,8 @@ sysroot-wasm32-wasi-clang-23:
         script: build-wasi-sdk.sh
         arguments:
             - wasi-sdk-compat.patch
-            - wasi-sdk-no-llvm-patches.patch
         resources:
             - taskcluster/scripts/misc/wasi-sdk-compat.patch
-            - taskcluster/scripts/misc/wasi-sdk-no-llvm-patches.patch
         toolchain-artifact: public/build/sysroot-wasm32-wasi.tar.zst
     fetches:
         fetch:
