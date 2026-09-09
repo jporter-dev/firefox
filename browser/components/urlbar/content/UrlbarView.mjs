@@ -28,13 +28,6 @@ const RESULT_MENU_COMMANDS = {
   MANAGE: "manage",
 };
 
-// The context menu items that we handle with pickResult.
-const CONTEXT_MENU_OPEN_IDS = new Set([
-  "urlbar-view-context-menu-open-in-tab",
-  "urlbarView-context-menu-open-in-window",
-  "urlbarView-context-menu-open-in-private-window",
-]);
-
 const getBoundsWithoutFlushing = UrlbarShared.getBoundsWithoutFlushing;
 
 // Used to get a unique id to use for row elements, it wraps at 9999, that
@@ -1208,18 +1201,12 @@ export class UrlbarView {
   }
 
   isResultMenuOpen() {
-    return (
-      this.resultMenu.hasAttribute("open") ||
-      // Also checks the contextmenu but will be addressed by:
-      // https://bugzilla.mozilla.org/show_bug.cgi?id=2064747
-      !!this.#contextMenu?.hasAttribute("open")
-    );
+    return this.resultMenu.hasAttribute("open");
   }
 
   // Private properties and methods below.
   #announceTabToSearchOnSelection;
   #blobUrlsByResultUrl = null;
-  #contextMenu;
   #containerWidthOnLastClose = 0;
   #l10nCache;
   #mousedownSelectedElement;
@@ -4151,10 +4138,72 @@ export class UrlbarView {
   }
 
   /**
+   * The commands that open a result in a new tab or window. They're offered
+   * alongside a result's own menu commands, gated on `contextMenu.featureGate`.
+   *
+   * @returns {UrlbarResultCommand[]}
+   */
+  get #openInCommands() {
+    /** @type {UrlbarResultCommand[]} */
+    let commands = [
+      {
+        openIn: "tab",
+        l10n: { id: "urlbar-view-context-menu-open-in-tab2" },
+      },
+    ];
+    if (
+      !this.input.isPrivate &&
+      UrlbarPrefs.get("privacy.userContext.enabled")
+    ) {
+      commands.push({
+        openIn: "container-tab",
+        submenu: true,
+        l10n: { id: "urlbar-view-context-menu-open-in-container-tab2" },
+      });
+    }
+    commands.push(
+      {
+        openIn: "window",
+        l10n: { id: "urlbar-view-context-menu-open-in-window2" },
+      },
+      {
+        openIn: "private-window",
+        l10n: { id: "urlbar-view-context-menu-open-in-private-window2" },
+      }
+    );
+    return commands;
+  }
+
+  /**
+   * @param {UrlbarResult} result
+   *   The result to get menu commands for.
+   * @returns {?UrlbarResultCommand[]}
+   *   Everything the result's menu shows, null if it has nothing to show. The
+   *   three-dot button and a right-click both open this menu, so it combines
+   *   the result's own commands with the ones that open it in a new tab or
+   *   window.
+   */
+  #getMenuCommands(result) {
+    let commands = this.#getResultMenuCommands(result);
+    if (
+      !UrlbarPrefs.get("contextMenu.featureGate") ||
+      !this.input.handlesOpenInCommands ||
+      !UrlbarShared.getLoadRequestFromResult(result)
+    ) {
+      return commands;
+    }
+    let openInCommands = this.#openInCommands;
+    return commands
+      ? [...openInCommands, { name: "separator" }, ...commands]
+      : openInCommands;
+  }
+
+  /**
    * @param {UrlbarResult} result
    *   The result to get menu commands for.
    * @returns {Array}
-   *   Array of menu commands available for the result, null if there are none.
+   *   Array of the result's own menu commands, null if there are none. This
+   *   also decides whether the result's row gets a three-dot button.
    */
   #getResultMenuCommands(result) {
     if (this.#resultMenuCommands.has(result)) {
@@ -4217,9 +4266,31 @@ export class UrlbarView {
         continue;
       }
       let menuitem = this.document.createElement("panel-item");
-      menuitem.dataset.command = data.name;
       menuitem.classList.add("urlbarView-result-menuitem");
-      this.#l10nCache.setElementL10n(menuitem, data.l10n);
+      if (data.openIn) {
+        menuitem.dataset.openIn = data.openIn;
+      } else {
+        menuitem.dataset.command = data.name;
+      }
+      if (data.submenu) {
+        // The submenu is populated when it's about to be shown, so that it
+        // doesn't go stale. Fluent replaces the contents of the element it
+        // localizes, so the label goes in a child and its accesskey stays on
+        // the item, where pressing it activates the item.
+        menuitem.toggleAttribute("submenu", true);
+        let label = this.document.createElement("span");
+        this.#l10nCache.setElementL10n(label, data.l10n);
+        if (label.hasAttribute("accesskey")) {
+          menuitem.setAttribute("accesskey", label.getAttribute("accesskey"));
+          label.removeAttribute("accesskey");
+        }
+        menuitem.appendChild(label);
+        let submenu = this.document.createElement("panel-list");
+        submenu.slot = "submenu";
+        menuitem.appendChild(submenu);
+      } else {
+        this.#l10nCache.setElementL10n(menuitem, data.l10n);
+      }
       panel.appendChild(menuitem);
     }
   }
@@ -4523,81 +4594,47 @@ export class UrlbarView {
   }
 
   on_click(event) {
-    if (event.currentTarget == this.resultMenu) {
-      let result = this.#resultMenuResult;
-      this.#resultMenuResult = null;
-      let menuitem = event.target;
-      switch (menuitem.dataset.command) {
-        case RESULT_MENU_COMMANDS.HELP:
-          menuitem.dataset.url =
-            result.payload.helpUrl ||
-            UrlbarContentUtils.getSupportUrl("awesome-bar-result-menu");
-          break;
-      }
-      this.input.pickResult({ result, event, element: menuitem });
-    } else if (event.currentTarget == this.#contextMenu) {
-      let target = event
-        .composedPath()
-        .find(node => node.localName == "panel-item");
-      if (
-        !target ||
-        (!CONTEXT_MENU_OPEN_IDS.has(target.id) && !target.dataset.usercontextid)
-      ) {
-        return;
-      }
-      let row = this.#contextMenu.lastAnchorNode?.closest(".urlbarView-row");
-      if (!row) {
-        return;
-      }
-      this.input.pickResult({
-        result: row.result,
-        event,
-        element: target,
-      });
+    let menuitem = event
+      .composedPath()
+      .find(node => node.localName == "panel-item");
+    if (
+      !menuitem ||
+      // Clicking a submenu's parent item only opens the submenu.
+      menuitem.hasSubmenu ||
+      // The container submenu also holds items that manage containers, which
+      // bring up their own UI instead of picking the result.
+      !(
+        menuitem.dataset.command ||
+        menuitem.dataset.openIn ||
+        menuitem.dataset.usercontextid
+      )
+    ) {
+      return;
     }
+    let result = this.#resultMenuResult;
+    this.#resultMenuResult = null;
+    if (menuitem.dataset.command == RESULT_MENU_COMMANDS.HELP) {
+      menuitem.dataset.url =
+        result.payload.helpUrl ||
+        UrlbarContentUtils.getSupportUrl("awesome-bar-result-menu");
+    }
+    this.input.pickResult({ result, event, element: menuitem });
   }
 
   on_showing(event) {
-    if (event.target.id == "urlbarView-context-menu") {
-      let row = this.#contextMenu.lastAnchorNode.closest(".urlbarView-row");
-
-      // Set the menu-trigger attribute on the row so it can be styled
-      // as if it were hovered while the context menu is open.
-      row.toggleAttribute("menu-trigger", true);
-
-      let loadRequest = UrlbarShared.getLoadRequestFromResult(row.result, {
-        element: row,
-      });
-      for (let item of event.target.querySelectorAll("panel-item")) {
-        item.disabled = !loadRequest;
-      }
-
-      let containerTabItem = event.target.querySelector(
-        "#urlbarView-context-menu-open-in-container-tab-menu"
-      );
-      if (containerTabItem) {
-        containerTabItem.hidden =
-          this.input.isPrivate ||
-          !UrlbarPrefs.get("privacy.userContext.enabled");
-      }
-    } else if (
-      event.target.id == "urlbarView-context-menu-open-in-container-tab-menu"
-    ) {
-      event.target.documentGlobal.createUserContextMenu(event, {
-        target: event.target.submenuPanel,
-        isContextMenu: true,
-        isPanelList: true,
-        containerSource: "urlbar_result_context_menu",
-      });
-    } else if (event.currentTarget == this.resultMenu) {
-      let commands;
-      let splitButton = event.target.triggeringEvent.detail.target.closest(
-        ".urlbarView-splitbutton"
-      );
+    if (event.target == this.resultMenu) {
+      // Set the menu-trigger attribute on the row so it can be styled as if it
+      // were hovered while the menu is open.
       this.resultMenu.lastAnchorNode
         .closest(".urlbarView-row")
         .toggleAttribute("menu-trigger", true);
 
+      let triggeringEvent = this.resultMenu.triggeringEvent;
+      let splitButton =
+        triggeringEvent.type == "ResultMenuTriggered" &&
+        triggeringEvent.detail.target.closest(".urlbarView-splitbutton");
+
+      let commands;
       if (splitButton) {
         // Show the commands the are defined in its Split Button.
         let mainButton = splitButton.firstElementChild;
@@ -4606,10 +4643,17 @@ export class UrlbarView {
           b => b.name == buttonName
         ).menu;
       } else {
-        commands = this.#getResultMenuCommands(this.#resultMenuResult);
+        commands = this.#getMenuCommands(this.#resultMenuResult);
       }
 
       this.#populateResultMenu({ commands });
+    } else if (event.target.dataset.openIn == "container-tab") {
+      this.chromeWindow.createUserContextMenu(event, {
+        target: event.target.submenuPanel,
+        isContextMenu: true,
+        isPanelList: true,
+        containerSource: "urlbar_result_context_menu",
+      });
     }
   }
 
@@ -4626,31 +4670,26 @@ export class UrlbarView {
     // The context menu associated with this event is either for something above
     // the urlbar in the DOM, like the toolbar, or for something specific in the
     // input, like the `<html:input>`. We want to suppress the former, propagate
-    // the latter, and open our own context menu for events on rows.
+    // the latter, and open the result menu for events on rows.
     if (event.target.closest(".urlbar-input-container")) {
       return;
     }
 
     event.preventDefault();
 
-    if (
-      !UrlbarPrefs.get("contextMenu.featureGate") ||
-      !event.target.closest(".urlbarView-row")
-    ) {
-      // Don't show the context menu from the background or the group label etc.
+    if (!UrlbarPrefs.get("contextMenu.featureGate")) {
       return;
     }
 
-    if (!this.#contextMenu) {
-      this.#contextMenu = this.document.querySelector(
-        "#urlbarView-context-menu"
-      );
-      this.#contextMenu.addEventListener("click", this);
-      this.#contextMenu.addEventListener("showing", this);
-      this.#contextMenu.addEventListener("hidden", this);
+    // Don't open the menu from the background or the group label etc., nor for
+    // a result that has nothing to show in it.
+    let row = event.target.closest(".urlbarView-row");
+    if (!row || !this.#getMenuCommands(row.result)) {
+      return;
     }
 
-    this.#contextMenu.toggle(event);
+    this.#resultMenuResult = row.result;
+    this.resultMenu.toggle(event);
   }
 
   clearTopSitesCache() {

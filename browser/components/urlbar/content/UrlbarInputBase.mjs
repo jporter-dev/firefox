@@ -1715,6 +1715,17 @@ ${
   }
 
   /**
+   * Whether pickResult() implements the result menu's commands for opening a
+   * result in a new tab or window. The container-tab submenu is built by a
+   * chrome window helper, so a bar hosted in a content page can't offer them.
+   *
+   * @returns {boolean}
+   */
+  get handlesOpenInCommands() {
+    return typeof this.window.createUserContextMenu == "function";
+  }
+
+  /**
    * Called when a result is picked.
    *
    * @param {object} options
@@ -1820,34 +1831,31 @@ ${
       private: this.isPrivate,
     };
 
-    let isContextMenu = event
-      ?.composedPath()
-      .some(el => el.id == "urlbarView-context-menu");
+    let userContextId = element?.dataset.usercontextid;
+    let openIn = userContextId ? "container-tab" : element?.dataset.openIn;
 
-    if (isContextMenu) {
-      switch (element.id) {
-        case "urlbar-view-context-menu-open-in-tab": {
+    if (openIn) {
+      switch (openIn) {
+        case "tab": {
           where = "tab";
           break;
         }
-        case "urlbarView-context-menu-open-in-window": {
-          where = "window";
-          break;
-        }
-        case "urlbarView-context-menu-open-in-private-window": {
-          where = "window";
-          openParams.private = true;
-          break;
-        }
-        default: {
-          // Open in a container tab.
+        case "container-tab": {
           where = "tab";
-          openParams.userContextId = parseInt(
-            element.getAttribute("data-usercontextid")
-          );
+          openParams.userContextId = parseInt(userContextId);
           openParams.eventDetail = {
             containerSource: "urlbar_result_context_menu",
           };
+          break;
+        }
+        case "window": {
+          where = "window";
+          break;
+        }
+        case "private-window": {
+          where = "window";
+          openParams.private = true;
+          break;
         }
       }
 
@@ -5429,9 +5437,7 @@ ${
         }
         // Don't close the view when clicking on a tab; we may want to keep the
         // view open on tab switch, and the TabSelect event arrived earlier.
-        // Also ignore mousedown on the urlbarView context menu: opening/closing the
-        // view is already handled by the result opening flow.
-        if (event.target.closest?.("tab, #urlbarView-context-menu")) {
+        if (event.target.closest?.("tab")) {
           break;
         }
 
