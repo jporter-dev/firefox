@@ -33,11 +33,23 @@ function expandPaneName(category) {
 /** @import { AttributePart } from "chrome://global/content/vendor/lit.all.mjs" */
 
 /**
+ * Attributes applied to a setting's control. `headingLevel` variants
+ * are forbidden here — set `headingLevel` at the top level of the
+ * setting config instead.
+ *
+ * @typedef {Record<string, any> & {
+ *   headingLevel?: never,
+ *   headinglevel?: never,
+ *   ".headingLevel"?: never,
+ * }} SettingElementConfigControlAttrs
+ */
+
+/**
  * @typedef {object} SettingElementConfig
  * @property {string} [id] - The ID for the Setting, this should match the layout id
  * @property {string} [l10nId] - The Fluent l10n ID for the setting
  * @property {Record<string, string>} [l10nArgs] - An object containing l10n IDs and their values that will be translated with Fluent
- * @property {Record<string, any>} [controlAttrs] - An object of additional attributes to be set on the control. These can be used to further customize the control for example a message bar of the warning type, or what dialog a button should open
+ * @property {SettingElementConfigControlAttrs} [controlAttrs] - An object of additional attributes to be set on the control. These can be used to further customize the control for example a message bar of the warning type, or what dialog a button should open
  * @property {string} [iconSrc] - A path to the icon for the control (if the control supports one)
  * @property {string} [slot] - The named slot for the control
  * @property {string} [supportPage] - The SUMO support page slug for the setting
