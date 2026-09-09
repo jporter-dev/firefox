@@ -8942,11 +8942,6 @@
   value: 12
   mirror: always
 
-- name: idle_period.cross_process_scheduling
-  type: RelaxedAtomicBool
-  value: true
-  mirror: always
-
 #---------------------------------------------------------------------------
 # Prefs starting with "image."
 #---------------------------------------------------------------------------
