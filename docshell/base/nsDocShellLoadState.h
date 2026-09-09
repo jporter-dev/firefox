@@ -38,8 +38,16 @@ class FormData;
 class DocShellLoadStateInit;
 struct NavigationAPIMethodTracker;
 class SessionHistoryEntry;
+struct RemoteType;
 }  // namespace dom
 }  // namespace mozilla
+
+namespace mozilla::dom {
+
+bool ContentTriggeredURILoadIsAllowed(
+    nsIURI* aURI, const mozilla::dom::RemoteType& aEffectiveRemoteType);
+
+}
 
 /**
  * nsDocShellLoadState contains setup information used in a nsIDocShell::loadURI
