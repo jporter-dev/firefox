@@ -5,7 +5,7 @@ android-lint = "32.4.0"
 
 # Kotlin
 coroutines = "1.11.0"
-kotlin = "2.4.10"
+kotlin = "2.4.20"
 serialization = "1.11.0"
 
 # AndroidX
@@ -75,7 +75,7 @@ kaml = "0.104.0"
 protobuf-plugin = "0.10.0"
 python-envs-plugin = "0.0.31"
 semanticdb-javac = "0.12.0"
-semanticdb-kotlinc = "0.10.0"
+semanticdb-kotlinc = "0.11.0"
 tomlj = "1.1.1"
 
 # Linters
