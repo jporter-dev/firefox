@@ -88,12 +88,28 @@ add_task(async function region_the_model_lacks_is_still_recognized() {
   is(outcome.error, undefined, "the session ran without an error");
 });
 
-add_task(async function unset_language_starts() {
-  // With no language anywhere, the engine is left to its own default.
+add_task(async function unset_language_uses_the_user_language() {
+  // Neither this page nor the object names a language, so recognition runs in
+  // the user's own, which the multilingual model recognizes.
+  await SpecialPowers.pushPrefEnv({ set: [["intl.accept_languages", "fr-CA"]] });
   const outcome = await startAndWaitForOutcome("");
   ok(outcome.started,
      "start() with an unset lang starts, got error: " + outcome.error);
   is(outcome.error, undefined, "the session ran without an error");
+  await SpecialPowers.popPrefEnv();
+});
+
+add_task(async function unset_language_with_an_unsupported_user_language() {
+  // Same path, but nothing recognizes what the user speaks.
+  await SpecialPowers.pushPrefEnv({
+    set: [["intl.accept_languages", UNSUPPORTED]],
+  });
+  const outcome = await startAndWaitForOutcome("");
+  ok(!outcome.started,
+     "start() does not start when no model recognizes the user's language");
+  is(outcome.error, "service-not-allowed",
+     "start() fails with service-not-allowed for an unsupported user language");
+  await SpecialPowers.popPrefEnv();
 });
 </script>
 </pre>

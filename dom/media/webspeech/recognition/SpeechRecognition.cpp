@@ -33,6 +33,7 @@
 #include "mozilla/dom/MediaStreamBinding.h"
 #include "mozilla/dom/MediaStreamError.h"
 #include "mozilla/dom/MediaStreamTrackBinding.h"
+#include "mozilla/dom/Navigator.h"
 #include "mozilla/dom/PromiseNativeHandler.h"
 #include "mozilla/dom/RootedDictionary.h"
 #include "mozilla/dom/SpeechGrammar.h"
@@ -749,6 +750,19 @@ void SpeechRecognition::StartImpl(MediaStreamTrack* aAudioTrack,
         }
       }
     }
+  }
+
+  // A document that declares no language at all leaves HTML's "language of a
+  // node" unknown, which is the common case: no lang attribute, and no
+  // Content-Language for anything the network did not serve. Recognition has
+  // to run in some language, so use the user's own, which says more about what
+  // is about to be spoken than the document does anyway. Chrome does the same.
+  if (effectiveLang.IsEmpty()) {
+    if (Document* doc = win->GetExtantDoc()) {
+      doc->WarnOnceAbout(
+          Document::eSpeechRecognitionLangDefaultedToUserLanguage);
+    }
+    win->Navigator()->GetLanguage(effectiveLang);
   }
 
   // Step 4.1: "If the user agent determines that local speech recognition is
