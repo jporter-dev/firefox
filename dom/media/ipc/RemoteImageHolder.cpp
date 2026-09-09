@@ -118,6 +118,8 @@ already_AddRefed<Image> RemoteImageHolder::DeserializeImage(
     pData.mStereoMode = descriptor.stereoMode();
     pData.mColorDepth = descriptor.colorDepth();
     pData.mYUVColorSpace = descriptor.yUVColorSpace();
+    pData.mColorPrimaries = mColorPrimaries;
+    pData.mTransferFunction = descriptor.transferFunction();
     pData.mHDRMetadata = descriptor.hdrMetadata();
     pData.mColorRange = descriptor.colorRange();
     pData.mChromaSubsampling = descriptor.chromaSubsampling();
