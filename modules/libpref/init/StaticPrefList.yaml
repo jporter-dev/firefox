@@ -13149,6 +13149,13 @@
   value: @IS_ANDROID@
   mirror: always
 
+# Whether to preserve color metadata from decoded video frames. Disabled by
+# default until encoder color-space signaling is complete (Bug 1869825).
+- name: media.decoder.frame-color-metadata.enabled
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+
 # Should MFR try to skip to the next key frame?
 - name: media.decoder.skip-to-next-key-frame.enabled
   type: RelaxedAtomicBool
