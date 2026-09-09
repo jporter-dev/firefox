@@ -35,6 +35,10 @@ notes = "This is a first-party crate which is no longer published through crates
 audit-as-crates-io = true
 notes = "This is the upstream code plus a few local fixes, see bug 1685697."
 
+[policy.cc]
+audit-as-crates-io = true
+notes = "This is the upstream code plus a fix for https://github.com/rust-lang/cc-rs/issues/1883"
+
 [policy.cose]
 audit-as-crates-io = true
 notes = "This is upstream plus a warning fix from bug 1823866."
