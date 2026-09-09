@@ -34,6 +34,7 @@
 
 #include <algorithm>
 
+#include "mozilla/ToString.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/gfx/gfxVars.h"
 #include "mozilla/layers/KnowsCompositor.h"
@@ -1305,11 +1306,9 @@ FFmpegVideoDecoder<LIBAV_VER>::AllocateTextureClientForImage(
 
   FFMPEG_LOGV(
       "Created plane data, YSize=({}, {}), CbCrSize=({}, {}), "
-      "CroppedYSize=({}, {}), CroppedCbCrSize=({}, {}), ColorDepth={}",
+      "Adjusted plane data={}",
       paddedYSize.Width(), paddedYSize.Height(), paddedCbCrSize.Width(),
-      paddedCbCrSize.Height(), data.YPictureSize().Width(),
-      data.YPictureSize().Height(), data.CbCrPictureSize().Width(),
-      data.CbCrPictureSize().Height(), static_cast<uint8_t>(data.mColorDepth));
+      paddedCbCrSize.Height(), mozilla::ToString(data).c_str());
 
   // Allocate a shmem buffer for image.
   if (NS_FAILED(aImage->CreateEmptyBuffer(data, paddedYSize, paddedCbCrSize))) {
