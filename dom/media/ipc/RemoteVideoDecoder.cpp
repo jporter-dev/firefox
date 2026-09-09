@@ -266,12 +266,7 @@ MediaResult RemoteVideoDecoderParent::ProcessDecodedData(
     ColorRange colorRange = gfx::ColorRange::LIMITED;
 
     PlanarYCbCrImage* image = video->mImage->AsPlanarYCbCrImage();
-    if (const PlanarYCbCrData* imageData = image ? image->GetData() : nullptr) {
-      yuvColorSpace = imageData->mYUVColorSpace;
-      colorPrimaries = imageData->mColorPrimaries;
-      transferFunction = imageData->mTransferFunction;
-      colorRange = imageData->mColorRange;
-    }
+    const PlanarYCbCrData* imageData = image ? image->GetData() : nullptr;
 
     if (mKnowsCompositor) {
       texture = video->mImage->GetTextureClient(mKnowsCompositor);
@@ -323,6 +318,15 @@ MediaResult RemoteVideoDecoderParent::ProcessDecodedData(
 
       sd = sdBuffer;
       size = image->GetSize();
+    }
+
+    if ((!needStorage ||
+         StaticPrefs::media_decoder_frame_color_metadata_enabled()) &&
+        imageData) {
+      yuvColorSpace = imageData->mYUVColorSpace;
+      colorPrimaries = imageData->mColorPrimaries;
+      transferFunction = imageData->mTransferFunction;
+      colorRange = imageData->mColorRange;
     }
 
     if (needStorage) {
