@@ -777,6 +777,15 @@ bool Connection::VerifyRequestParams(const SDBRequestParams& aParams) const {
 
   switch (aParams.type()) {
     case SDBRequestParams::TSDBRequestOpenParams: {
+      const auto& name = aParams.get_SDBRequestOpenParams().name();
+
+      // The name becomes part of a path passed to NUL-terminated OS APIs.
+      // Reject embedded NULs before they can truncate the on-disk leaf name.
+      if (NS_WARN_IF(name.Contains(u'\0'))) {
+        MOZ_CRASH_UNLESS_FUZZING();
+        return false;
+      }
+
       if (NS_WARN_IF(mOpen)) {
         MOZ_CRASH_UNLESS_FUZZING();
         return false;
