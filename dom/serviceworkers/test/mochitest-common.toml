@@ -205,8 +205,6 @@ support-files = [
   "offline_fetch/sw.js",
 ]
 
-["include:mochitest-xslt.toml"]
-
 ["test_abrupt_completion.html"]
 skip-if = [
   "os == 'android' && os_version == '14' && arch == 'x86_64'", # Bug 1776997
@@ -475,3 +473,9 @@ skip-if = [
 ["test_worker_reference_gc_timeout.html"]
 
 ["test_workerupdatefoundevent.html"]
+
+["test_xslt.html"]
+skip-if = [
+  "http2",
+  "http3",
+]

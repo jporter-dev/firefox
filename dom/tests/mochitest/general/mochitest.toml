@@ -67,8 +67,6 @@ support-files = [
   "postback.html",
 ]
 
-["include:mochitest-xslt.toml"]
-
 ["test_497898.html"]
 
 ["test_CCW_optimization.html"]
@@ -145,6 +143,11 @@ skip-if = [
 
 ["test_img_mutations.html"]
 
+["test_interfaces.html"]
+skip-if = [
+  "http2",
+  "http3",
+]
 support-files = [
   "test_interfaces.js",
   "interface_exposure_checker.js",

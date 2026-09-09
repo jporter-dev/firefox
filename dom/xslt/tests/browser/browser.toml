@@ -1,5 +1,4 @@
 [DEFAULT]
-prefs = ["dom.xslt.enabled=true"]
 
 ["browser_bug1309630.js"]
 support-files = [
