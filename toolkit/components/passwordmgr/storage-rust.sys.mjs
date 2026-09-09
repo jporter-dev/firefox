@@ -608,12 +608,34 @@ export class LoginManagerRustStorage {
     return null;
   }
 
+  /**
+   * Resolves a stored login from a login passed by value, so callers may pass
+   * a login without a guid. findLoginToUpdate() has dedupe semantics: having
+   * already matched on origin, it picks by username alone, ignoring the
+   * password, and falls back to an entry with an empty username. Require the
+   * credentials to agree too, so a caller never acts on a record it did not
+   * describe.
+   *
+   * This deliberately does not use nsILoginInfo.equals() the way the JSON
+   * backend's _getIdForLogin() does: the Rust store normalizes origin and
+   * formActionOrigin on write, so a stored login is frequently not
+   * field-for-field identical to the one the caller holds.
+   */
+  async #findLoginWithSameCredentials(login) {
+    const storedLogin = await this.#storageAdapter.findLoginToUpdate(login);
+    if (
+      !storedLogin ||
+      storedLogin.username !== login.username ||
+      storedLogin.password !== login.password
+    ) {
+      return null;
+    }
+    return storedLogin;
+  }
+
   async modifyLoginAsync(oldLogin, newLoginData, _fromSync) {
     try {
-      // Resolve the stored login by value so callers may pass a login without a
-      // guid, matching the JSON storage backend.
-      const oldStoredLogin =
-        await this.#storageAdapter.findLoginToUpdate(oldLogin);
+      const oldStoredLogin = await this.#findLoginWithSameCredentials(oldLogin);
 
       if (!oldStoredLogin) {
         throw new Error("No matching logins");
@@ -686,8 +708,7 @@ export class LoginManagerRustStorage {
 
   async recordPasswordUseAsync(login) {
     try {
-      const oldStoredLogin =
-        await this.#storageAdapter.findLoginToUpdate(login);
+      const oldStoredLogin = await this.#findLoginWithSameCredentials(login);
 
       if (!oldStoredLogin) {
         throw new Error("No matching logins");
@@ -936,9 +957,7 @@ export class LoginManagerRustStorage {
   }
 
   async removeLoginAsync(login, _fromSync) {
-    // Resolve the stored login by value so callers may pass a login without a
-    // guid, matching the JSON storage backend.
-    const storedLogin = await this.#storageAdapter.findLoginToUpdate(login);
+    const storedLogin = await this.#findLoginWithSameCredentials(login);
     if (!storedLogin) {
       throw new Error("No matching logins");
     }
