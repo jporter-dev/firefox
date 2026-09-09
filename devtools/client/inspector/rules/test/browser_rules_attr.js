@@ -27,12 +27,25 @@ const TEST_URI = `data:text/html,<meta charset=utf8>
     article {
       background-color: attr(unknown, attr(data-x type(<color>), attr(data-y type(<color>), tomato)));
     }
+
+    aside {
+      --my-color: gold;
+      color: attr(data-color type(<color>));
+      outline-color: attr(data-outline type(<color>));
+    }
   </style>
   <main data-before="before-on-main">
     <div id=with-attr data-before="→" data-after="←" data-marker="❥"></div>
     <div id=without-attr></div>
     <article data-x=10 data-y=gold>hello</article>
-  </main>`;
+  </main>
+  <aside
+    id="with-substitutions"
+    data-color="var(--my-color)"
+    data-outline="attr(data-color type(<color>)"
+  >
+    fries
+  </aside>`;
 
 add_task(async function () {
   await pushPref("layout.css.attr.enabled", true);
@@ -195,6 +208,34 @@ add_task(async function () {
       attributeUnmatched: true,
       tooltipText: `Attribute data-marker is not set`,
       fallback: `"-"`,
+    },
+  });
+
+  await selectNode("#with-substitutions", inspector);
+  await assertAttr({
+    view,
+    description: `matched "data-color" on #with-substitutions node`,
+    propertyName: "color",
+    selector: "aside",
+    expected: {
+      text: `attr(data-color type(<color>))`,
+      attributeName: "data-color",
+      attributeUnmatched: false,
+      tooltipText: `"var(--my-color)"`,
+      fallback: null,
+    },
+  });
+  await assertAttr({
+    view,
+    description: `matched "data-outline" on #with-substitutions node`,
+    propertyName: "outline-color",
+    selector: "aside",
+    expected: {
+      text: `attr(data-outline type(<color>))`,
+      attributeName: "data-outline",
+      attributeUnmatched: false,
+      tooltipText: `"attr(data-color type(<color>)"`,
+      fallback: null,
     },
   });
 
