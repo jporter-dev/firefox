@@ -55,6 +55,17 @@ class APZInputBridgeChild : public PAPZInputBridgeChild, public APZInputBridge {
   mozilla::ipc::IPCResult RecvCallInputBlockCallback(
       uint64_t aInputBlockId, const APZHandledResult& handledResult);
 
+  mozilla::ipc::IPCResult RecvNotifyPinchGesture(
+      const PinchGestureType& aType, const ScrollableLayerGuid& aGuid,
+      const LayoutDevicePoint& aFocusPoint,
+      const LayoutDeviceCoord& aSpanChange, const Modifiers& aModifiers);
+
+  mozilla::ipc::IPCResult RecvCancelAutoscroll(
+      const ScrollableLayerGuid::ViewID& aScrollId);
+
+  mozilla::ipc::IPCResult RecvNotifyScaleGestureComplete(
+      const ScrollableLayerGuid::ViewID& aScrollId, float aScale);
+
  protected:
   void ProcessUnhandledEvent(LayoutDeviceIntPoint* aRefPoint,
                              ScrollableLayerGuid* aOutTargetGuid,
@@ -80,8 +91,16 @@ class APZInputBridgeChild : public PAPZInputBridgeChild, public APZInputBridge {
       const uint64_t& aInputBlockId,
       const Maybe<DoubleTapToZoomMetrics>& aDoubleTapToZoomMetrics);
 
+  void NotifyPinchGestureOnMainThread(const PinchGestureType& aType,
+                                      const LayoutDevicePoint& aFocusPoint,
+                                      const LayoutDeviceCoord& aSpanChange,
+                                      const Modifiers& aModifiers);
+
+  void NotifyScaleGestureCompleteOnMainThread(float aScale);
+
   bool mIsOpen;
   uint64_t mProcessToken;
+  // Currently, this can only be used by the main thread
   MOZ_NON_OWNING_REF RemoteCompositorSession* mCompositorSession = nullptr;
 
   using InputBlockCallbackMap =

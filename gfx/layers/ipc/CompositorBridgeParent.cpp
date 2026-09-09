@@ -1791,16 +1791,6 @@ static CompositorBridgeParent::LayerTreeState* GetStateForRoot(
 }
 
 /* static */
-RefPtr<APZCTreeManagerParent>
-CompositorBridgeParent::GetApzcTreeManagerParentForRoot(
-    LayersId aContentLayersId) {
-  StaticMonitorAutoLock lock(sIndirectLayerTreesLock);
-  CompositorBridgeParent::LayerTreeState* state =
-      GetStateForRoot(aContentLayersId, lock);
-  return state ? state->mApzcTreeManagerParent : nullptr;
-}
-
-/* static */
 RefPtr<APZInputBridgeParent>
 CompositorBridgeParent::GetApzInputBridgeParentForRoot(
     LayersId aContentLayersId) {

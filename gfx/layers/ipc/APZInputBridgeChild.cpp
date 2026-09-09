@@ -8,12 +8,14 @@
 #include "mozilla/dom/BrowserParent.h"  // for BrowserParent
 #include "mozilla/gfx/GPUProcessManager.h"
 #include "mozilla/ipc/Endpoint.h"
+#include "mozilla/layers/APZCCallbackHelper.h"
 #include "mozilla/layers/APZThreadUtils.h"
 #include "mozilla/layers/DoubleTapToZoom.h"  // for DoubleTapToZoomMetrics
 #include "mozilla/layers/GeckoContentController.h"  // for GeckoContentController
 #include "mozilla/layers/KeyboardMap.h"             // for KeyboardMap
 #include "mozilla/layers/RemoteCompositorSession.h"  // for RemoteCompositorSession
 #include "mozilla/layers/SynchronousTask.h"
+#include "nsThreadUtils.h"
 #ifdef MOZ_WIDGET_ANDROID
 #  include "mozilla/jni/Utils.h"  // for DispatchToGeckoPriorityQueue
 #endif
@@ -257,6 +259,76 @@ mozilla::ipc::IPCResult APZInputBridgeChild::RecvCallInputBlockCallback(
     mInputBlockCallbacks.erase(it);
   }
 
+  return IPC_OK();
+}
+
+// Note mCompositorSession is currently used by the main thread.
+void APZInputBridgeChild::NotifyPinchGestureOnMainThread(
+    const PinchGestureType& aType, const LayoutDevicePoint& aFocusPoint,
+    const LayoutDeviceCoord& aSpanChange, const Modifiers& aModifiers) {
+  MOZ_ASSERT(NS_IsMainThread());
+
+  if (mCompositorSession && mCompositorSession->GetWidget()) {
+    APZCCallbackHelper::NotifyPinchGesture(aType, aFocusPoint, aSpanChange,
+                                           aModifiers,
+                                           mCompositorSession->GetWidget());
+  }
+}
+
+mozilla::ipc::IPCResult APZInputBridgeChild::RecvNotifyPinchGesture(
+    const PinchGestureType& aType, const ScrollableLayerGuid& aGuid,
+    const LayoutDevicePoint& aFocusPoint, const LayoutDeviceCoord& aSpanChange,
+    const Modifiers& aModifiers) {
+  // We want to handle it in this process regardless of what the target guid
+  // of the pinch is. This may change in the future.
+  if (NS_IsMainThread()) {
+    NotifyPinchGestureOnMainThread(aType, aFocusPoint, aSpanChange, aModifiers);
+  } else {
+    NS_DispatchToMainThread(
+        NewRunnableMethod<PinchGestureType, LayoutDevicePoint,
+                          LayoutDeviceCoord, Modifiers>(
+            "layers::APZInputBridgeChild::NotifyPinchGestureOnMainThread", this,
+            &APZInputBridgeChild::NotifyPinchGestureOnMainThread, aType,
+            aFocusPoint, aSpanChange, aModifiers));
+  }
+  return IPC_OK();
+}
+
+// Note APZCCallbackHelper::CancelAutoscroll() must be called on the main
+// thread.
+mozilla::ipc::IPCResult APZInputBridgeChild::RecvCancelAutoscroll(
+    const ScrollableLayerGuid::ViewID& aScrollId) {
+  if (NS_IsMainThread()) {
+    APZCCallbackHelper::CancelAutoscroll(aScrollId);
+  } else {
+    NS_DispatchToMainThread(
+        NewRunnableFunction("layers::APZCCallbackHelper::CancelAutoscroll",
+                            &APZCCallbackHelper::CancelAutoscroll, aScrollId));
+  }
+  return IPC_OK();
+}
+
+// Note APZCCallbackHelper::NotifyScaleGestureComplete() must be called on the
+// main thread.
+void APZInputBridgeChild::NotifyScaleGestureCompleteOnMainThread(float aScale) {
+  MOZ_ASSERT(NS_IsMainThread());
+
+  if (mCompositorSession && mCompositorSession->GetWidget()) {
+    APZCCallbackHelper::NotifyScaleGestureComplete(
+        mCompositorSession->GetWidget(), aScale);
+  }
+}
+
+mozilla::ipc::IPCResult APZInputBridgeChild::RecvNotifyScaleGestureComplete(
+    const ScrollableLayerGuid::ViewID& aScrollId, float aScale) {
+  if (NS_IsMainThread()) {
+    NotifyScaleGestureCompleteOnMainThread(aScale);
+  } else {
+    NS_DispatchToMainThread(NewRunnableMethod<float>(
+        "layers::APZInputBridgeChild::NotifyScaleGestureCompleteOnMainThread",
+        this, &APZInputBridgeChild::NotifyScaleGestureCompleteOnMainThread,
+        aScale));
+  }
   return IPC_OK();
 }
 

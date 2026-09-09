@@ -55,17 +55,6 @@ class APZCTreeManagerChild final : public IAPZCTreeManager,
   APZInputBridge* InputBridge() override;
 
  protected:
-  mozilla::ipc::IPCResult RecvNotifyPinchGesture(
-      const PinchGestureType& aType, const ScrollableLayerGuid& aGuid,
-      const LayoutDevicePoint& aFocusPoint,
-      const LayoutDeviceCoord& aSpanChange, const Modifiers& aModifiers);
-
-  mozilla::ipc::IPCResult RecvCancelAutoscroll(
-      const ScrollableLayerGuid::ViewID& aScrollId);
-
-  mozilla::ipc::IPCResult RecvNotifyScaleGestureComplete(
-      const ScrollableLayerGuid::ViewID& aScrollId, float aScale);
-
   virtual ~APZCTreeManagerChild();
 
  private:

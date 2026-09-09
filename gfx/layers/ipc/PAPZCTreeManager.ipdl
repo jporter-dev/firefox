@@ -4,26 +4,18 @@
 
 include "mozilla/GfxMessageUtils.h";
 include "mozilla/layers/LayersMessageUtils.h";
-include "ipc/nsGUIEventIPC.h";
 
 include protocol PCompositorBridge;
 
 using mozilla::CSSRect from "Units.h";
-using mozilla::LayoutDeviceCoord from "Units.h";
-using mozilla::LayoutDevicePoint from "Units.h";
 using mozilla::layers::ZoomTarget from "mozilla/layers/DoubleTapToZoom.h";
 using mozilla::layers::DoubleTapToZoomMetrics from "mozilla/layers/DoubleTapToZoom.h";
 using mozilla::layers::ZoomConstraints from "mozilla/layers/ZoomConstraints.h";
 using mozilla::layers::ScrollableLayerGuid from "mozilla/layers/ScrollableLayerGuid.h";
-using mozilla::layers::ScrollableLayerGuid::ViewID from "mozilla/layers/ScrollableLayerGuid.h";
 using mozilla::layers::TouchBehaviorFlags from "mozilla/layers/LayersTypes.h";
 using mozilla::layers::AsyncDragMetrics from "mozilla/layers/AsyncDragMetrics.h";
 using mozilla::layers::GeckoContentController_TapType from "mozilla/layers/GeckoContentControllerTypes.h";
 using mozilla::layers::APZHandledResult from "mozilla/layers/APZInputBridge.h";
-using mozilla::wr::RenderRoot from "mozilla/webrender/WebRenderTypes.h";
-
-using mozilla::Modifiers from "mozilla/EventForwards.h";
-using mozilla::PinchGestureInput::PinchGestureType from "InputData.h";
 
 namespace mozilla {
 namespace layers {
@@ -70,16 +62,6 @@ parent:
   async NotifyApzAwareListenerAdded(ScrollableLayerGuid aGuid);
 
   async __delete__();
-
-child:
-
-  async NotifyPinchGesture(PinchGestureType aType, ScrollableLayerGuid aGuid,
-                           LayoutDevicePoint aFocusPoint, LayoutDeviceCoord aSpanChange,
-                           Modifiers aModifiers);
-
-  async CancelAutoscroll(ViewID aScrollId);
-
-  async NotifyScaleGestureComplete(ViewID aScrollId, float aScale);
 };
 
 } // namespace gfx
