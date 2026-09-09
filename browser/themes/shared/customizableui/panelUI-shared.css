@@ -502,7 +502,7 @@ menupopup[emptyplacesresult] > .hide-if-empty-places-result {
  * Target it specifically in this rule to make it the same width
  * as if it was a standard panelview opened from the app menu. */
 #report-broken-site-popup-mainView[mainview] {
-  width: 22.5em;
+  width: 25em;
 }
 
 :where(#customizationui-widget-multiview) panelview:not([extension]) {
