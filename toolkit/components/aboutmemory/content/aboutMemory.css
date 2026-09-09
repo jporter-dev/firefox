@@ -257,6 +257,7 @@ a.treemapEntry {
   --root-border-color: color-mix(in srgb, var(--background-color-box), transparent 10%);
   --color-ccgc-node-text: #fbfbfe;
   --background-color-grid-header: color-mix(in srgb, var(--color-gray-50) 10%, transparent);
+  --border-dead-row: 1px solid color-mix(in srgb, var(--color-gray-60) 30%, transparent);
   --color-ccgc-log-filepath: color-mix(in srgb, currentColor 40%, transparent);
 
   --box-shadow-color-selected-node: light-dark(#8f8f9d, #f9f9fa);
@@ -704,7 +705,7 @@ a.treemapEntry {
 
 .nodeInspector .deadRow {
   grid-column: 1/4;
-  border: var(--border-color-dead-row);
+  border: var(--border-dead-row);
   border-radius: var(--border-radius-small);
   padding: var(--space-xsmall) var(--space-large);
   width: 25em;
