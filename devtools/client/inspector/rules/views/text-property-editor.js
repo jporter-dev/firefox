@@ -620,10 +620,16 @@ class TextPropertyEditor {
           this.rule.pseudoElement
         ),
       getAttributeValue: attrName => {
-        const nodeFront = this.rule.elementStyle.element.isPseudoElement
-          ? // get the closest non pseudo element
-            this.rule.elementStyle.element.getUltimateOriginatingElement()
-          : this.rule.elementStyle.element;
+        let nodeFront;
+        if (this.rule.inherited) {
+          nodeFront = this.rule.inherited;
+        } else if (this.rule.elementStyle.element.isPseudoElement) {
+          // get the closest non pseudo element
+          nodeFront =
+            this.rule.elementStyle.element.getUltimateOriginatingElement();
+        } else {
+          nodeFront = this.rule.elementStyle.element;
+        }
 
         const attribute = nodeFront.attributes.find(
           attr => attr.name === attrName

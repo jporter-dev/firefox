@@ -7,6 +7,10 @@
 
 const TEST_URI = `data:text/html,<meta charset=utf8>
   <style>
+    main {
+      --before: attr(data-before);
+    }
+
     div::before {
       content: attr(data-before);
     }
@@ -24,9 +28,11 @@ const TEST_URI = `data:text/html,<meta charset=utf8>
       background-color: attr(unknown, attr(data-x type(<color>), attr(data-y type(<color>), tomato)));
     }
   </style>
-  <div id=with-attr data-before="→" data-after="←" data-marker="❥"></div>
-  <div id=without-attr></div>
-  <article data-x=10 data-y=gold>hello</article>`;
+  <main data-before="before-on-main">
+    <div id=with-attr data-before="→" data-after="←" data-marker="❥"></div>
+    <div id=without-attr></div>
+    <article data-x=10 data-y=gold>hello</article>
+  </main>`;
 
 add_task(async function () {
   await pushPref("layout.css.attr.enabled", true);
@@ -137,6 +143,20 @@ add_task(async function () {
       attributeUnmatched: true,
       tooltipText: `Attribute data-after is not set`,
       fallback: `"✕"`,
+    },
+  });
+
+  await assertAttr({
+    view,
+    description: `matched "data-before" on inherited rule for #without-attr node`,
+    propertyName: "--before",
+    selector: "main",
+    expected: {
+      text: `attr(data-before)`,
+      attributeName: "data-before",
+      attributeUnmatched: false,
+      tooltipText: `"before-on-main"`,
+      fallback: null,
     },
   });
 
