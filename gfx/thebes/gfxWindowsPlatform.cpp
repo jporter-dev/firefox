@@ -1367,16 +1367,8 @@ void gfxWindowsPlatform::RecordStartupTelemetry() {
   }
 
   DeviceManagerDx* dx = DeviceManagerDx::Get();
-  nsTArray<DXGI_OUTPUT_DESC1> outputs = dx->EnumerateOutputs();
-
-  uint32_t allSupportedColorSpaces = 0;
-  for (auto& output : outputs) {
-    uint32_t colorSpace = 1 << output.ColorSpace;
-    allSupportedColorSpaces |= colorSpace;
-  }
-
   glean::gfx_hdr::windows_display_colorspace_bitfield.Set(
-      allSupportedColorSpaces);
+      dx->MonitorColorSpaceBitfield());
 }
 
 // Supports lazy device initialization on Windows, so that WebRender can avoid
