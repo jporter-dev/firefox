@@ -489,9 +489,6 @@ contentblocking:
     type: labeled_counter
     description: >
       True if tracking protection is enabled globally at startup.
-
-      This metric was generated to correspond to the Legacy Telemetry boolean
-      histogram TRACKING_PROTECTION_ENABLED.
     labels:
       - "false"
       - "true"
@@ -502,16 +499,12 @@ contentblocking:
     notification_emails:
       - privacy-team@mozilla.org
     expires: never
-    telemetry_mirror: h#TRACKING_PROTECTION_ENABLED
 
   tracking_protection_pbm_disabled:
     type: labeled_counter
     description: >
       True if tracking protection in Private Browsing mode is disabled at
       startup.
-
-      This metric was generated to correspond to the Legacy Telemetry boolean
-      histogram TRACKING_PROTECTION_PBM_DISABLED.
     labels:
       - "false"
       - "true"
@@ -522,7 +515,6 @@ contentblocking:
     notification_emails:
       - privacy-team@mozilla.org
     expires: never
-    telemetry_mirror: h#TRACKING_PROTECTION_PBM_DISABLED
 
   tracking_protection_shield:
     type: custom_distribution
@@ -532,9 +524,6 @@ contentblocking:
       load, this is used as a baseline, 1 = shield crossed out because CB was
       disabled on this page by the user, 2 = shield shown because some content
       was blocked)
-
-      This metric was generated to correspond to the Legacy Telemetry enumerated
-      histogram TRACKING_PROTECTION_SHIELD.
     range_min: 0
     range_max: 4
     bucket_count: 5
@@ -548,7 +537,6 @@ contentblocking:
     notification_emails:
       - safebrowsing-telemetry@mozilla.org
     expires: never
-    telemetry_mirror: TRACKING_PROTECTION_SHIELD
 
   fingerprinters_blocked_count:
     type: labeled_counter
