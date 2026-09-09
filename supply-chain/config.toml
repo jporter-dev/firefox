@@ -51,10 +51,6 @@ notes = "Upstream not yet published changes"
 audit-as-crates-io = true
 notes = "Upstream not yet published changes"
 
-[policy.encoding_rs]
-audit-as-crates-io = true
-notes = "This is upstream plus a build fix for bug 2033279."
-
 [policy.firefox-on-glean]
 audit-as-crates-io = false
 notes = "The crates.io version of this is just a placeholder to allow public crates to depend on firefox-on-glean."
