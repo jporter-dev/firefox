@@ -357,9 +357,6 @@ export class UrlbarQueryContext {
       let flags =
         Ci.nsIURIFixup.FIXUP_FLAG_FIX_SCHEME_TYPOS |
         Ci.nsIURIFixup.FIXUP_FLAG_ALLOW_KEYWORD_LOOKUP;
-      if (this.isSearchbarSAP) {
-        flags |= Ci.nsIURIFixup.FIXUP_FLAG_FORCE_KEYWORD_LOOKUP;
-      }
       if (this.isPrivate) {
         flags |= Ci.nsIURIFixup.FIXUP_FLAG_PRIVATE_CONTEXT;
       }
@@ -438,9 +435,9 @@ export class UrlbarQueryContext {
 
     // Disallow remote results for strings containing tokens that look like URIs
     // to avoid disclosing information about networks and passwords.
-    // (Unless the search is happening in a search bar.)
+    // (Unless the search is happening in the searchbar.)
     if (
-      !this.isSearchbarSAP &&
+      this.sapName != "searchbar" &&
       this.fixupInfo?.href &&
       !this.fixupInfo?.isSearch
     ) {

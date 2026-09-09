@@ -390,38 +390,19 @@ add_task(async function () {
     ],
   });
 
-  for (let sapName of ["searchbar", "newtab_searchbar"]) {
-    info(`Forced search through ${sapName}, keyword.enabled = false`);
-    query = "bacon";
-    context = createContext(query, { isPrivate: false, sapName });
-    await check_results({
-      context,
-      matches: [
-        makeSearchResult(context, {
-          engineName: SUGGESTIONS_ENGINE_NAME,
-          heuristic: true,
-          query: "bacon",
-        }),
-      ],
-    });
-  }
-
-  info(
-    "A URL is still a visit in the newtab search bar, keyword.enabled = false"
-  );
-  query = "https://mozilla.org";
+  info("Forced search through searchbar, keyword.enabled = false");
+  query = "bacon";
   context = createContext(query, {
     isPrivate: false,
-    sapName: "newtab_searchbar",
+    sapName: "searchbar",
   });
   await check_results({
     context,
     matches: [
-      makeVisitResult(context, {
-        source: UrlbarShared.RESULT_SOURCE.OTHER_LOCAL,
-        uri: `${query}/`,
-        title: `${query}/`,
+      makeSearchResult(context, {
+        engineName: SUGGESTIONS_ENGINE_NAME,
         heuristic: true,
+        query: "bacon",
       }),
     ],
   });

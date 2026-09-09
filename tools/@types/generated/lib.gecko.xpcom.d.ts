@@ -3312,8 +3312,6 @@ interface nsIURIFixup extends nsISupports {
   readonly FIXUP_FLAG_PRIVATE_CONTEXT?: 4;
   /** <!-- binding_to(idl, const, XPIDL_nsIURIFixup_FIXUP_FLAG_FIX_SCHEME_TYPOS) --> */
   readonly FIXUP_FLAG_FIX_SCHEME_TYPOS?: 8;
-  /** <!-- binding_to(idl, const, XPIDL_nsIURIFixup_FIXUP_FLAG_FORCE_KEYWORD_LOOKUP) --> */
-  readonly FIXUP_FLAG_FORCE_KEYWORD_LOOKUP?: 16;
 
   /** <!-- binding_to(idl, method, XPIDL_nsIURIFixup_getFixupURIInfo) --> */
   getFixupURIInfo(aURIText: string, aFixupFlags?: u32): nsIURIFixupInfo;

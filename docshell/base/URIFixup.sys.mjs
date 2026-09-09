@@ -83,7 +83,6 @@ const {
   FIXUP_FLAGS_MAKE_ALTERNATE_URI,
   FIXUP_FLAG_PRIVATE_CONTEXT,
   FIXUP_FLAG_FIX_SCHEME_TYPOS,
-  FIXUP_FLAG_FORCE_KEYWORD_LOOKUP,
 } = Ci.nsIURIFixup;
 
 const COMMON_PROTOCOLS = ["http", "https", "file"];
@@ -338,7 +337,7 @@ URIFixup.prototype = {
     // instead of FIXUP_FLAG_FIX_SCHEME_TYPOS.
     if (
       info.fixedURI &&
-      keywordFixupEnabled(fixupFlags) &&
+      lazy.keywordEnabled &&
       fixupFlags & FIXUP_FLAG_FIX_SCHEME_TYPOS &&
       scheme &&
       !canHandleProtocol
@@ -422,9 +421,8 @@ URIFixup.prototype = {
 
     // See if it is a keyword and whether a keyword must be fixed up.
     if (
-      keywordFixupEnabled(fixupFlags) &&
-      fixupFlags &
-        (FIXUP_FLAG_ALLOW_KEYWORD_LOOKUP | FIXUP_FLAG_FORCE_KEYWORD_LOOKUP) &&
+      lazy.keywordEnabled &&
+      fixupFlags & FIXUP_FLAG_ALLOW_KEYWORD_LOOKUP &&
       !inputHadDuffProtocol &&
       !checkSuffix(info).suffix &&
       keywordURIFixup(uriString, info, isPrivateContext)
@@ -443,11 +441,7 @@ URIFixup.prototype = {
 
     // If we still haven't been able to construct a valid URI, try to force a
     // keyword match.
-    if (
-      keywordFixupEnabled(fixupFlags) &&
-      fixupFlags &
-        (FIXUP_FLAG_ALLOW_KEYWORD_LOOKUP | FIXUP_FLAG_FORCE_KEYWORD_LOOKUP)
-    ) {
+    if (lazy.keywordEnabled && fixupFlags & FIXUP_FLAG_ALLOW_KEYWORD_LOOKUP) {
       tryKeywordFixupForURIInfo(info.originalInput, info, isPrivateContext);
     }
 
@@ -1012,19 +1006,6 @@ function makeURIWithFixedLocalHosts(uriString, fixupFlags) {
 }
 
 /**
- * Whether keyword lookup is enabled, either by the keyword.enabled pref or
- * because it's forced via fixup flags.
- *
- * @param {number} fixupFlags The fixup flags.
- * @returns {boolean} Whether keyword lookup is enabled.
- */
-function keywordFixupEnabled(fixupFlags) {
-  return (
-    lazy.keywordEnabled || !!(fixupFlags & FIXUP_FLAG_FORCE_KEYWORD_LOOKUP)
-  );
-}
-
-/**
  * Tries to fixup a string to a search url.
  *
  * @param {string} uriString the string to fixup.
@@ -1191,9 +1172,7 @@ function extractScheme(uriString, fixupFlags = FIXUP_FLAG_NONE) {
 function fixupViewSource(uriString, fixupFlags) {
   // We disable keyword lookup and alternate URIs so that small typos don't
   // cause us to look at very different domains.
-  let newFixupFlags =
-    fixupFlags &
-    ~(FIXUP_FLAG_ALLOW_KEYWORD_LOOKUP | FIXUP_FLAG_FORCE_KEYWORD_LOOKUP);
+  let newFixupFlags = fixupFlags & ~FIXUP_FLAG_ALLOW_KEYWORD_LOOKUP;
   let innerURIString = uriString.substring(12).trim();
 
   // Prevent recursion.

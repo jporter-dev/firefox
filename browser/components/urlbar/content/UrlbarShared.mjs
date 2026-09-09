@@ -669,14 +669,9 @@ export const UrlbarShared = {
   },
 
   /**
-   * The SAPs that are inputs dedicated to querying a search engine -- the
+   * Whether a SAP is an input dedicated to querying a search engine -- the
    * toolbar search bar and New Tab's -- as opposed to the address bar and its
    * variants, whose search also covers history and bookmarks.
-   */
-  SEARCHBAR_SAPS: ["searchbar", "newtab_searchbar"],
-
-  /**
-   * Whether a SAP is one of SEARCHBAR_SAPS.
    *
    * @param {string} sapName
    *   The SAP name to check.
@@ -684,7 +679,7 @@ export const UrlbarShared = {
    *   Whether the SAP is dedicated to search-engine queries.
    */
   isSearchbarSAP(sapName) {
-    return this.SEARCHBAR_SAPS.includes(sapName);
+    return sapName == "searchbar" || sapName == "newtab_searchbar";
   },
 
   /**

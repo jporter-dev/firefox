@@ -10,6 +10,7 @@ const { UrlbarProviderSearchSuggestions } = ChromeUtils.importESModule(
 const KEYWORD_ENABLED = "keyword.enabled";
 const SUGGEST_ENABLED = "browser.search.suggest.enabled";
 const URLBAR_SUGGEST = "browser.urlbar.suggest.searches";
+const SEARCH_BAR_SAPS = ["searchbar", "newtab_searchbar"];
 
 add_setup(async function () {
   await SearchService.init();
@@ -41,17 +42,15 @@ add_task(async function test_allowRemoteSuggestions() {
     "Remote suggestions should be disabled with keyword disabled"
   );
 
-  for (let sapName of UrlbarShared.SEARCHBAR_SAPS) {
-    context = createContext("bacon", {
-      isPrivate: false,
-      sapName,
-      sources: [UrlbarShared.RESULT_SOURCE.SEARCH],
-    });
-    Assert.ok(
-      suggestionsProvider._allowRemoteSuggestions(context),
-      `Remote suggestions should still be enabled on ${sapName}`
-    );
-  }
+  context = createContext("bacon", {
+    isPrivate: false,
+    sapName: "searchbar",
+    sources: [UrlbarShared.RESULT_SOURCE.SEARCH],
+  });
+  Assert.ok(
+    suggestionsProvider._allowRemoteSuggestions(context),
+    "Remote suggestions should still be enabled on searchbar"
+  );
 
   Services.prefs.clearUserPref(KEYWORD_ENABLED);
 });
@@ -69,7 +68,7 @@ add_task(async function test_allowSuggestions() {
     "Suggestions in the urlbar should be enabled by default"
   );
 
-  for (let sapName of UrlbarShared.SEARCHBAR_SAPS) {
+  for (let sapName of SEARCH_BAR_SAPS) {
     context = createContext("bacon eggs", {
       isPrivate: false,
       sapName,
@@ -94,7 +93,7 @@ add_task(async function test_allowSuggestions() {
     "Suggestions in the urlbar should be disabled"
   );
 
-  for (let sapName of UrlbarShared.SEARCHBAR_SAPS) {
+  for (let sapName of SEARCH_BAR_SAPS) {
     context = createContext("bacon eggs", {
       isPrivate: false,
       sapName,
@@ -119,7 +118,7 @@ add_task(async function test_allowSuggestions() {
     "Suggestions in the urlbar should be disabled"
   );
 
-  for (let sapName of UrlbarShared.SEARCHBAR_SAPS) {
+  for (let sapName of SEARCH_BAR_SAPS) {
     context = createContext("bacon eggs", {
       isPrivate: false,
       sapName,
