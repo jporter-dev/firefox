@@ -77,11 +77,11 @@ type TabGroupColor =
   | "red";
 
 interface MozTabbrowserTabGroup extends XULElement {
-  // Never set. The modules read these off a tab-or-group and take a group to be
-  // neither pinned, nor in a split view, nor inside another group.
-  pinned?: undefined;
-  splitview?: undefined;
-  group?: undefined;
+  // Constant: a group is neither pinned, nor in a split view, nor inside
+  // another group.
+  pinned: false;
+  splitview: null;
+  group: null;
 
   tabs: MozTabbrowserTab[];
   tabsAndSplitViews: (MozTabbrowserTab | MozTabSplitViewWrapper)[];
@@ -99,9 +99,10 @@ interface MozTabbrowserTabGroup extends XULElement {
 }
 
 interface MozTabbrowserTabGroupLabel extends XULElement {
-  // Never set, as on a tab group: the label stands in for the group.
-  pinned?: undefined;
-  splitview?: undefined;
+  // Constant, as on the tab group the label stands in for. The label is a plain
+  // element with no class of its own, so tabgroup.js assigns all four.
+  pinned: false;
+  splitview: null;
 
   container: any;
   group: MozTabbrowserTabGroup;
@@ -113,15 +114,14 @@ interface MozTabbrowserTabGroupLabel extends XULElement {
 type TabSplitViewStateData = { id: number; numberOfTabs: number };
 
 interface MozTabSplitViewWrapper extends XULElement {
-  // Never set, for the same reason as on a tab group: a split view is not
-  // itself in one.
-  splitview?: undefined;
+  // Constant: a split view is not itself in one.
+  splitview: null;
 
   tabs: MozTabbrowserTab[];
   splitViewId: number;
   state: TabSplitViewStateData;
   group: MozTabbrowserTabGroup | null;
-  pinned: boolean;
+  pinned: false;
   visible: boolean;
   multiselected: boolean;
   hasActiveTab: boolean;

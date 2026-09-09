@@ -209,6 +209,16 @@
     }
 
     /**
+     * A split view can be handed to code that also takes tabs, which reads
+     * this off whatever it was given.
+     *
+     * @returns {null}
+     */
+    get splitview() {
+      return null;
+    }
+
+    /**
      * Get the list of tab panels from this split view.
      *
      * @returns {XULElement[]}
