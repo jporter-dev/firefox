@@ -120,6 +120,7 @@ if CONFIG["OS_TARGET"] != "Android":
         "TestGMPCrossOrigin.cpp",
         "TestGMPPluginScan.cpp",
         "TestGMPRemoveAndDelete.cpp",
+        "TestSpeechModelMapping.cpp",
     ]
 
 if CONFIG["MOZ_APPLEMEDIA"]:
