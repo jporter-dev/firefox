@@ -150,7 +150,7 @@ function ctaDestination(action) {
   }
 }
 
-// eslint-disable-next-line max-statements
+// eslint-disable-next-line max-statements, complexity
 function Privacy({ dispatch, widgetsMayBeMaximized, widgetEnabledMap }) {
   const prefs = useSelector(state => state.Prefs.values);
   const privacyData = useSelector(state => state.PrivacyWidget);
@@ -578,7 +578,7 @@ function Privacy({ dispatch, widgetsMayBeMaximized, widgetEnabledMap }) {
         className="privacy-cta"
         data-l10n-id={`${messageId}-cta`}
         onClick={handleCtaClick}
-        size="small"
+        size={isLarge ? undefined : "small"}
         type="primary"
       />
     ) : null;
@@ -591,7 +591,7 @@ function Privacy({ dispatch, widgetsMayBeMaximized, widgetEnabledMap }) {
         className="privacy-cta"
         data-l10n-id="newtab-privacy-message-info-1-cta"
         onClick={handleCtaClick}
-        size="small"
+        size={isLarge ? undefined : "small"}
         type="primary"
       />
     ) : null;
@@ -604,6 +604,8 @@ function Privacy({ dispatch, widgetsMayBeMaximized, widgetEnabledMap }) {
       }${initialized && !isEtpOff && isEmptyState ? " is-empty" : ""}${
         initialized && isTip ? " has-tip-msg" : ""
       }${initialized && isStreak ? " has-streak" : ""}${
+        initialized && showCount && !hasMessage ? " is-count-only" : ""
+      }${
         isCelebrating && activeCelebration.isMajor
           ? " is-major-celebration"
           : ""
@@ -696,6 +698,7 @@ function Privacy({ dispatch, widgetsMayBeMaximized, widgetEnabledMap }) {
               >
                 <div className="privacy-empty-message-wrapper">
                   <p data-l10n-id="newtab-privacy-empty-state" />
+                  {/* Adding a string literal here to add spaces to the sentences in the medium widget */}{" "}
                   <p
                     className="privacy-empty-message"
                     data-l10n-id="newtab-privacy-empty-state-tally"
