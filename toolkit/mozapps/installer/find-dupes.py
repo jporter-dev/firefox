@@ -9,7 +9,6 @@ from mozbuild.preprocessor import Preprocessor
 from mozbuild.util import DefinesAction
 from mozpack.packager.unpack import UnpackFinder
 from mozpack.files import DeflatedFile
-from collections import OrderedDict
 from io import StringIO
 import argparse
 import buildconfig
@@ -66,7 +65,7 @@ class AllowedDupes:
 
 def find_dupes(source, allowed_dupes, bail=True):
     chunk_size = 1024 * 10
-    checksums = OrderedDict()
+    checksums = {}
     for p, f in UnpackFinder(source):
         checksum = hashlib.sha1()
         content_size = 0

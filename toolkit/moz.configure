@@ -118,8 +118,8 @@ def all_configure_options():
     previous = None
     for option in __sandbox__._options.values():
         # __sandbox__._options contains items for both option.name and
-        # option.env. But it's also an OrderedDict, meaning both are
-        # consecutive.
+        # option.env. But it's also a dict, meaning it is ordered and both
+        # are consecutive.
         # Also ignore MOZCONFIG because they're not
         # interesting.
         if option == previous or option.env in ("MOZCONFIG",):
