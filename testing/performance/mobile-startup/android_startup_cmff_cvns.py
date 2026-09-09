@@ -135,6 +135,7 @@ class Startup_test:
         # Bug 1934023 - create way to pass median and still have replicates available
         # Bug 1971336 Remove the .mean metric once we have a sufficient data redundancy
         measurements[f"{self.test_name}.mean"] = test_measurements
+        measurements[self.test_name] = test_measurements
         return measurements
 
     def get_measurement(self, test_name, stdout):
