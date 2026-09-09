@@ -182,7 +182,7 @@ let propNameAllowlist = [
   },
 
   // These variables define accent colors for tab group chrome
-  // and are used in JS in tabgroup.js
+  // and are used in JS in tabgroup.mjs
   { propName: "--tab-group-blue", isFromDevTools: false },
   { propName: "--tab-group-blue-invert", isFromDevTools: false },
   { propName: "--tab-group-blue-pale", isFromDevTools: false },

@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 // The tab strip's custom elements, as the modules that drive them see them.
-// content/tab.js, content/tabgroup.js and content/tabsplitview.js are loaded as
+// content/tab.js, content/tabgroup.mjs and content/tabsplitview.mjs are loaded as
 // subscripts, so nothing can import the classes and these interfaces stand in
 // for them. Nothing checks an interface against the class it describes: a
 // member that changes shape has to be changed here too.
@@ -62,7 +62,7 @@ interface MozTabbrowserTab extends XULElement {
   _originalRegisteredOpenURI: any;
 }
 
-// The colours the group menu offers, which is the whole set: tabgroup.js
+// The colours the group menu offers, which is the whole set: tabgroup.mjs
 // interpolates the code into `var(--tab-group-${code})`, so anything else
 // resolves to no colour at all.
 type TabGroupColor =
@@ -100,7 +100,7 @@ interface MozTabbrowserTabGroup extends XULElement {
 
 interface MozTabbrowserTabGroupLabel extends XULElement {
   // Constant, as on the tab group the label stands in for. The label is a plain
-  // element with no class of its own, so tabgroup.js assigns all four.
+  // element with no class of its own, so tabgroup.mjs assigns all four.
   pinned: false;
   splitview: null;
 
@@ -109,7 +109,7 @@ interface MozTabbrowserTabGroupLabel extends XULElement {
 }
 
 // What a split view contributes to session state, as its `state` getter builds
-// it and sessionstore stores it. tabsplitview.js documents the same shape in a
+// it and sessionstore stores it. tabsplitview.mjs documents the same shape in a
 // JSDoc typedef nothing can import.
 type TabSplitViewStateData = { id: number; numberOfTabs: number };
 

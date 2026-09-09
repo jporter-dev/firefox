@@ -24,11 +24,11 @@
   Services.scriptloader.loadSubScript("chrome://browser/content/tabbrowser/tab.js", this);
   Services.scriptloader.loadSubScript("chrome://browser/content/tabbrowser/tab-bar-visibility.js", this);
   Services.scriptloader.loadSubScript("chrome://browser/content/tabbrowser/tab-context-menu.js", this);
-  Services.scriptloader.loadSubScript("chrome://browser/content/tabbrowser/tabgroup.js", this);
+  Services.scriptloader.loadSubScript("chrome://browser/content/tabbrowser/tabgroup.mjs", this);
   Services.scriptloader.loadSubScript("chrome://browser/content/tabbrowser/tabgroup-menu.js", this);
   Services.scriptloader.loadSubScript("chrome://browser/content/tabbrowser/tabnote-menu.js", this);
   Services.scriptloader.loadSubScript("chrome://browser/content/tabbrowser/tabs.js", this);
-  Services.scriptloader.loadSubScript("chrome://browser/content/tabbrowser/tabsplitview.js", this);
+  Services.scriptloader.loadSubScript("chrome://browser/content/tabbrowser/tabsplitview.mjs", this);
   Services.scriptloader.loadSubScript("chrome://browser/content/places/places-menupopup.js", this);
   Services.scriptloader.loadSubScript("chrome://browser/content/search/autocomplete-popup.js", this);
   Services.scriptloader.loadSubScript("chrome://browser/content/search/searchbar.js", this);
