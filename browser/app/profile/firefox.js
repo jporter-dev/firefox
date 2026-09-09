@@ -1381,9 +1381,6 @@ pref("privacy.temporary_permission_expire_time_ms",  3600000);
 // See bug 791594
 pref("privacy.authPromptSpoofingProtection",         true);
 
-// Enable GPC if the user turns it on in about:preferences
-pref("privacy.globalprivacycontrol.functionality.enabled",  true);
-
 // Enable GPC in private browsing mode
 pref("privacy.globalprivacycontrol.pbmode.enabled", true);
 

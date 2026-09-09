@@ -103,12 +103,6 @@ OTHER_PRIVACY_PREFS = {
             "privacy.globalprivacycontrol.pbmode.enabled",
             "Sends Sec-GPC: 1 HTTP header and exposes navigator.globalPrivacyControl=true.",
         ),
-        (
-            "GPC Functionality",
-            "privacy.globalprivacycontrol.functionality.enabled",
-            None,
-            "Master switch that controls whether GPC signals are sent (requires .enabled to also be true).",
-        ),
     ],
     "Fingerprinting Resistance": [
         (

@@ -18048,14 +18048,6 @@
   value: false
   mirror: always
 
-# Controls whether or not GPC signals are sent. Meant to act as a third option
-# of 'undecided' by leaving the navigator property undefined and not attaching
-# the Sec-GPC HTTP header.
-- name: privacy.globalprivacycontrol.functionality.enabled
-  type: RelaxedAtomicBool
-  value: false
-  mirror: always
-
 # Lower the priority of network loads for resources on the tracking protection
 # list.  Note that this requires the
 # privacy.trackingprotection.annotate_channels pref to be on in order to have
