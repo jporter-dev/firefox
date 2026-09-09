@@ -237,6 +237,15 @@ button:disabled {
     margin-top: calc(150px - var(--error-page-padding, 0px));
     padding-block-end: var(--space-xxlarge);
 
+    /* Without the illustration, shrink to the widest text line so the text
+       itself centers rather than the box around it, capped at the width the
+       text column has beside the security illustration (its 8.75em image
+       plus the 2.5em gutter). */
+    @media not -moz-pref("browser.netError.illustration.enabled") {
+      width: fit-content;
+      max-width: min(100%, calc(720px - 11.25em));
+    }
+
     @media (max-width: 640px) {
       /* min-content holds the card wider than a narrow viewport, which is what
          forces a horizontal scrollbar. */

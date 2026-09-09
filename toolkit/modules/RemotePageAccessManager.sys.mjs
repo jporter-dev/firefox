@@ -56,6 +56,7 @@ export let RemotePageAccessManager = {
         // CTA itself only ever renders on about:neterror. A denied read throws,
         // which would leave every cert error page blank.
         "browser.netError.searchCTA.enabled",
+        "browser.netError.illustration.enabled",
       ],
       RPMGetIntPref: [
         "security.dialog_enable_delay",
@@ -141,6 +142,7 @@ export let RemotePageAccessManager = {
         "browser.ipProtection.userEnabled",
         "network.sslkeylog_warning",
         "browser.netError.searchCTA.enabled",
+        "browser.netError.illustration.enabled",
       ],
       RPMGetHostForDisplay: ["*"],
       RPMGetInnermostAsciiHost: ["*"],
