@@ -22,7 +22,7 @@ Labels with non-text child nodes are not supported. This means that accesskey un
 Enabling center cropping is done by setting `enable-center-crop=""` on the label. When this occurs, `moz-label` will automatically take any text within the element and set it as its `"value"` attribute, and replace the text content of the element with the center-cropped version. Reads of `textContent` will read the uncropped value, and writes to `textContent` will cause the center cropped value to update.
 
 ```html story
-<label is="moz-label" enable-center-crop="" style={{ max-width: "150px" }}>
+<label is="moz-label" enable-center-crop="" style={{ display: "inline-block", maxWidth: "150px" }}>
     This is a long label with center cropping and a maximum width set upon it.
 </label>
 ```
