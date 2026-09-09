@@ -838,16 +838,17 @@ toolbarbutton[constrain-size="true"][cui-areatype="panel"] > .toolbarbutton-badg
   }
 }
 
-/* When signed out with no menu message or update banner taking up the top of
-   the app menu, show the richer sign-in promo in place of the compact
-   "Sync and Save Data" sign-in row. */
+/* When the user has never signed in and no menu message or update banner is
+   taking up the top of the app menu, show the richer sign-in promo in place of
+   the compact "Sync and Save Data" sign-in row. A user who signed out keeps the
+   compact row, which tells them so. */
 #appMenu-fxa-sign-in-promo {
   display: none;
 }
 
 /* FIXME(bug 2061145): Remove :has() usage, use showing-* selectors instead */
 /* stylelint-disable-next-line stylelint-plugin-mozilla/no-has-selector */
-:root[fxastatus="not_configured"]:not([fxadisabled="true"])
+:root[fxastatus="not_configured"]:not([fxadisabled="true"], [fxasignedout])
   #appMenu-mainView:not([showing-fxa-menu-message], [showing-default-cta-menu-message]):not(:has(#appMenu-update-banner:not([hidden]))) {
   & #appMenu-fxa-status2 {
     display: none;
@@ -907,11 +908,15 @@ toolbarbutton[constrain-size="true"][cui-areatype="panel"] > .toolbarbutton-badg
   }
 }
 
-#PanelUI-fxa-menu-signed-out-card {
+/* The account menu's signed-out card and the app menu's signed-out row are the
+   same component: copy explaining the state, next to a "Sign in" button. They
+   are spaced like the sync status card, which plays the same role further down
+   the account menu. */
+#PanelUI-fxa-menu-signed-out-card,
+#appMenu-fxa-signed-out-row {
   gap: var(--space-medium);
-  /* stylelint-disable-next-line stylelint-plugin-mozilla/use-design-tokens */
-  padding: var(--panel-subview-body-padding-block) var(--space-medium);
-  margin: var(--panel-padding-block) var(--panel-padding-block);
+  padding: var(--panel-menuitem-padding);
+  margin: var(--panel-menuitem-margin);
 
   & .fxa-menu-signed-out-avatar {
     width: var(--icon-size-small);
