@@ -1480,7 +1480,7 @@ class TabTrackerBase extends EventEmitter {
    *
    * @param {integer} _tabId
    *        The numeric ID of the tab to return.
-   * @param {any} _default
+   * @param {*} _default
    *        The value to return if no tab exists with the given ID.
    *
    * @returns {NativeTab}
@@ -2420,7 +2420,7 @@ class WindowManagerBase {
    *
    * @param {DOMWindow} window
    *        The browser window to convert.
-   * @param {any} args
+   * @param {*} args
    *        Additional arguments to be passed to {@link WindowBase#convert}.
    *
    * @returns {object}

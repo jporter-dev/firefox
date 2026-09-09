@@ -1,22 +1,21 @@
 __all__ = (
     "StateBlock",
-    "blockquote",
+    "paragraph",
+    "heading",
+    "lheading",
     "code",
     "fence",
-    "heading",
     "hr",
-    "html_block",
-    "lheading",
     "list_block",
-    "make_fence_rule",
-    "paragraph",
     "reference",
+    "blockquote",
+    "html_block",
     "table",
 )
 
 from .blockquote import blockquote
 from .code import code
-from .fence import fence, make_fence_rule
+from .fence import fence
 from .heading import heading
 from .hr import hr
 from .html_block import html_block

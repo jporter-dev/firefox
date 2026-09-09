@@ -26,7 +26,6 @@ _PRESETS: dict[str, PresetType] = {
     "zero": presets.zero.make(),
     "commonmark": presets.commonmark.make(),
     "gfm-like": presets.gfm_like.make(),
-    "gfm-like2": presets.gfm_like2.make(),
 }
 
 
@@ -69,19 +68,24 @@ class MarkdownIt:
         return f"{self.__class__.__module__}.{self.__class__.__name__}()"
 
     @overload
-    def __getitem__(self, name: Literal["inline"]) -> ParserInline: ...
+    def __getitem__(self, name: Literal["inline"]) -> ParserInline:
+        ...
 
     @overload
-    def __getitem__(self, name: Literal["block"]) -> ParserBlock: ...
+    def __getitem__(self, name: Literal["block"]) -> ParserBlock:
+        ...
 
     @overload
-    def __getitem__(self, name: Literal["core"]) -> ParserCore: ...
+    def __getitem__(self, name: Literal["core"]) -> ParserCore:
+        ...
 
     @overload
-    def __getitem__(self, name: Literal["renderer"]) -> RendererProtocol: ...
+    def __getitem__(self, name: Literal["renderer"]) -> RendererProtocol:
+        ...
 
     @overload
-    def __getitem__(self, name: str) -> Any: ...
+    def __getitem__(self, name: str) -> Any:
+        ...
 
     def __getitem__(self, name: str) -> Any:
         return {
@@ -126,7 +130,7 @@ class MarkdownIt:
         if options_update:
             options = {**options, **options_update}  # type: ignore
 
-        self.set(options)
+        self.set(options)  # type: ignore
 
         if "components" in config:
             for name, component in config["components"].items():

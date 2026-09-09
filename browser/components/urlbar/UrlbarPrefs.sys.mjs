@@ -1180,7 +1180,7 @@ class Preferences {
    *
    * @param {string} pref
    *        The name of the preference to get.
-   * @returns {any} The preference value.
+   * @returns {*} The preference value.
    */
   get(pref) {
     let value = this._map.get(pref);
@@ -1199,7 +1199,7 @@ class Preferences {
    *
    * @param {string} pref
    *        The name of the preference to set.
-   * @param {any} value The preference value.
+   * @param {*} value The preference value.
    */
   set(pref, value) {
     let { defaultValue, set } = this._getPrefDescriptor(pref);
@@ -1215,7 +1215,7 @@ class Preferences {
    *
    * @param {string} pref
    *   The name of the preference to set.
-   * @param {any} value
+   * @param {*} value
    *   The preference value.
    */
   add(pref, value) {
@@ -1262,7 +1262,7 @@ class Preferences {
    *
    * @param {string} pref
    *        The name of the preference to clear.
-   * @returns {any} The preference value.
+   * @returns {*} The preference value.
    */
   getScotchBonnetPref(pref) {
     return this.get("scotchBonnet.enableOverride") || this.get(pref);
@@ -1475,7 +1475,7 @@ class Preferences {
    *
    * @param {string} pref
    *        The name of the preference to get.
-   * @returns {any} The raw preference value.
+   * @returns {*} The raw preference value.
    */
   _readPref(pref) {
     let { defaultValue, get } = this._getPrefDescriptor(pref);
@@ -1493,7 +1493,7 @@ class Preferences {
    *
    * @param {string} pref
    *        The name of the preference to get.
-   * @returns {any} The validated and/or fixed-up preference value.
+   * @returns {*} The validated and/or fixed-up preference value.
    */
   _getPrefValue(pref) {
     switch (pref) {

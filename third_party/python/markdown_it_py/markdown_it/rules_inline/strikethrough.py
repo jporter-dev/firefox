@@ -1,16 +1,11 @@
-# ~~strike through~~ (and optionally ~single tilde~)
+# ~~strike through~~
 from __future__ import annotations
 
 from .state_inline import Delimiter, StateInline
 
 
 def tokenize(state: StateInline, silent: bool) -> bool:
-    """Insert each marker as a separate text token, and add it to delimiter list.
-
-    When the ``strikethrough_single_tilde`` option is enabled on the
-    ``MarkdownIt`` instance, single ``~`` delimiters are also accepted and
-    runs of three or more tildes are rejected (matching GitHub's rendering behaviour).
-    """
+    """Insert each marker as a separate text token, and add it to delimiter list"""
     start = state.pos
     ch = state.src[start]
 
@@ -23,59 +18,30 @@ def tokenize(state: StateInline, silent: bool) -> bool:
     scanned = state.scanDelims(state.pos, True)
     length = scanned.length
 
-    single_tilde = state.md.options.get("strikethrough_single_tilde", False)
+    if length < 2:
+        return False
 
-    if single_tilde:
-        # GitHub mode: only accept exactly 1 or 2 tildes.
-        if length < 1:
-            return False
-        if length > 2:
-            # Consume 3+ tildes as plain text so the parser doesn't
-            # re-enter and match a subset of them.  This intentionally
-            # matches GitHub's rendering, where ≥3 tildes are literal text.
-            token = state.push("text", "", 0)
-            token.content = ch * length
-            state.pos += scanned.length
-            return True
-
+    if length % 2:
         token = state.push("text", "", 0)
-        token.content = ch * length
+        token.content = ch
+        length -= 1
+
+    i = 0
+    while i < length:
+        token = state.push("text", "", 0)
+        token.content = ch + ch
         state.delimiters.append(
             Delimiter(
                 marker=ord(ch),
-                length=0,  # disable "rule of 3" length checks
+                length=0,  # disable "rule of 3" length checks meant for emphasis
                 token=len(state.tokens) - 1,
                 end=-1,
                 open=scanned.can_open,
                 close=scanned.can_close,
             )
         )
-    else:
-        # Original markdown-it behaviour: minimum 2, split odd runs.
-        if length < 2:
-            return False
 
-        if length % 2:
-            token = state.push("text", "", 0)
-            token.content = ch
-            length -= 1
-
-        i = 0
-        while i < length:
-            token = state.push("text", "", 0)
-            token.content = ch + ch
-            state.delimiters.append(
-                Delimiter(
-                    marker=ord(ch),
-                    length=0,  # disable "rule of 3" length checks
-                    token=len(state.tokens) - 1,
-                    end=-1,
-                    open=scanned.can_open,
-                    close=scanned.can_close,
-                )
-            )
-
-            i += 2
+        i += 2
 
     state.pos += scanned.length
 
@@ -85,7 +51,6 @@ def tokenize(state: StateInline, silent: bool) -> bool:
 def _postProcess(state: StateInline, delimiters: list[Delimiter]) -> None:
     loneMarkers = []
     maximum = len(delimiters)
-    single_tilde = state.md.options.get("strikethrough_single_tilde", False)
 
     i = 0
     while i < maximum:
@@ -101,29 +66,18 @@ def _postProcess(state: StateInline, delimiters: list[Delimiter]) -> None:
 
         endDelim = delimiters[startDelim.end]
 
-        # In single-tilde mode, opener and closer must have the same width
-        # (both `~` or both `~~`).  The width is stored in the text token.
-        if single_tilde:
-            opener_content = state.tokens[startDelim.token].content
-            closer_content = state.tokens[endDelim.token].content
-            if opener_content != closer_content:
-                i += 1
-                continue
-
-        markup = state.tokens[startDelim.token].content
-
         token = state.tokens[startDelim.token]
         token.type = "s_open"
         token.tag = "s"
         token.nesting = 1
-        token.markup = markup
+        token.markup = "~~"
         token.content = ""
 
         token = state.tokens[endDelim.token]
         token.type = "s_close"
         token.tag = "s"
         token.nesting = -1
-        token.markup = markup
+        token.markup = "~~"
         token.content = ""
 
         if (

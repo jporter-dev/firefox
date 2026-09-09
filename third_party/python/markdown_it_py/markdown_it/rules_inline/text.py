@@ -3,14 +3,44 @@
 from .state_inline import StateInline
 
 # Rule to skip pure text
+# '{}$%@~+=:' reserved for extensions
+
+# !!!! Don't confuse with "Markdown ASCII Punctuation" chars
+# http://spec.commonmark.org/0.15/#ascii-punctuation-character
+
+
+_TerminatorChars = {
+    "\n",
+    "!",
+    "#",
+    "$",
+    "%",
+    "&",
+    "*",
+    "+",
+    "-",
+    ":",
+    "<",
+    "=",
+    ">",
+    "@",
+    "[",
+    "\\",
+    "]",
+    "^",
+    "_",
+    "`",
+    "{",
+    "}",
+    "~",
+}
 
 
 def text(state: StateInline, silent: bool) -> bool:
     pos = state.pos
     posMax = state.posMax
-
-    terminator_char = state.md.inline.terminator_re.search(state.src, pos)
-    pos = terminator_char.start() if terminator_char else posMax
+    while (pos < posMax) and state.src[pos] not in _TerminatorChars:
+        pos += 1
 
     if pos == state.pos:
         return False
