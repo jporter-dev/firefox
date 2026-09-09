@@ -4213,7 +4213,7 @@ export class UrlbarView {
     await this.#l10nCache.ensureAll(commands.map(e => e.l10n).filter(e => e));
     for (let data of commands) {
       if (data.name == "separator") {
-        panel.appendChild(this.document.createElement("separator"));
+        panel.appendChild(this.document.createElement("hr"));
         continue;
       }
       let menuitem = this.document.createElement("panel-item");
