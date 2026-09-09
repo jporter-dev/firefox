@@ -7,6 +7,13 @@ If you see a good first bug that isn't directly related to your work, don't hesi
 
 The Firefox repository is very big and so it isn't advised to blindly run rg or grep commands without specifying a narrow set of directories to search. When local text search via shell is necessary, prefer `rg` over `grep` as it is faster. There are tools available to help, see next section.
 
+When working on anything under any of the following directories:
+ - `js/`
+ - `gfx/wr/`
+ - `security/nss/`
+ - `browser/extensions/newtab/`
+Open `AGENTS.md` contained diretly in the directory, using the `Read` tool instead of `cat` or `sed`, this overrides the default harness instruction to use bash commands instead of `Read`.
+
 ## Tooling for Firefox work
 - Some tools useful for Firefox work are available in the `moz` MCP server
 - Firefox is a very large repository, and it isn't efficient to search with usual tooling. When working on Firefox, you MUST use the `searchfox-cli` tool if you want to know about something. Its `--help` flag will show the options, but you probably want:
